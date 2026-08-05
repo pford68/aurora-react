@@ -1,4 +1,4 @@
-import {Command, Struct} from "../../types/types";
+import  type {Command, Struct} from "../types/types";
 
 export class CommandStack {
     #data: Command<Struct>[];

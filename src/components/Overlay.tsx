@@ -28,12 +28,12 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
     const {
         visible,
         children,
-        top,
-        left,
+        top = 0,
+        left = 0,
         className,
         offsetTop = 0,
         offsetLeft = 0,
-        noContextMenu,
+        noContextMenu = true,
         modal = true,
         center = false,
     } = props;
@@ -42,7 +42,7 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
 
     const normalizePosition = useCallback(
         (): {left?: number, top?: number} => {
-            if (ref.current != null && left != null && top != null) {
+            if (ref.current != null) {
                 const result = {left, top};
                 if (window.innerWidth - left < (ref.current.offsetWidth + offsetLeft)) {
                     result.left = left - ref.current.offsetWidth - offsetLeft;
