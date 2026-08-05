@@ -1,5 +1,5 @@
 import * as React from "react";
-import type {Meta, StoryObj} from "@storybook/react";
+import type {Meta, StoryObj} from "@storybook/react-vite";
 import Menu from "../components/Menu";
 import styles from "./css/Popup.stories.module.css"
 import {useRef, useState} from "react";

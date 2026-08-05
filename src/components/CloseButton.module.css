@@ -1,0 +1,8 @@
+.close {
+    mask-image: url("../../assets/icons/close-line.svg");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    width: 2em;
+    height: 2em;
+    background-color: var(--color-dark);
+}

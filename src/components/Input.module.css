@@ -1,0 +1,36 @@
+.input {
+    padding-block-end: var(--input-padding-block-end, initial);
+    padding-block-start: var(--input-padding-block-start, initial);
+    padding-bottom: var(--input-padding-bottom, initial);
+    padding-inline-end: var(--input-padding-inline-end, initial);
+    padding-inline-start: var(--input-padding-inline-start, initial);
+    padding-left: var(--input-padding-left, initial);
+    padding-right: var(--input-padding-right, initial);
+    padding-top: var(--input-padding-top, initial);
+    border-radius: var(--input-border-radius, initial);
+    border: var(--input-border, initial);
+    line-height: var(--input-line-height);
+    box-sizing: border-box;
+}
+
+.input:focus {
+    border-color: #3e3edf;
+}
+
+.input.visited:invalid {
+    background-color: ivory;
+    border-color: red;
+}
+
+.multiline {
+    min-height: 8rem;
+}
+
+label.left span {
+    display: inline;
+}
+
+label.top span {
+    display: block;
+}
+
