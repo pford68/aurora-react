@@ -20,6 +20,7 @@ const meta: Meta<PropsAndArgs> = {
         width: 800,
         height: 300,
         className: styles.popup,
+        noContextMenu: true,
     },
 };
 

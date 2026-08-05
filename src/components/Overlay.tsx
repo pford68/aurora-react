@@ -7,15 +7,15 @@ import type {Consumer} from "../types/types";
 type OverlayProps = {
     visible: boolean,
     children: ReactNode | ReactNode[],
-    offsetLeft: number,
-    offsetTop: number,
+    offsetLeft?: number,
+    offsetTop?: number,
     top?: number,
     left?: number,
     noContextMenu?: boolean,
     className?: string;
     onClickOutside?: Consumer<void>,
-    modal: boolean,
-    center: boolean,
+    modal?: boolean,
+    center?: boolean,
 }
 
 /**
@@ -31,11 +31,11 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
         top,
         left,
         className,
-        offsetTop,
-        offsetLeft,
+        offsetTop = 0,
+        offsetLeft = 0,
         noContextMenu,
-        modal,
-        center,
+        modal = true,
+        center = false,
     } = props;
 
     const ref = useRef<HTMLDivElement | null>(null);
@@ -109,9 +109,4 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
     }
     return "";
 }
-Overlay.defaultProps = {
-    offsetLeft: 0,
-    offsetTop: 0,
-    modal: true,
-    center: false,
-}
+

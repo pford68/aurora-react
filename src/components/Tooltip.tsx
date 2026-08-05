@@ -9,8 +9,7 @@ type TooltipProps = {
     className?: string,
 }
 
-export default function Tooltip(props: TooltipProps): ReactElement {
-    const {text, children, className} = props;
+export default function Tooltip({text, children, className}: TooltipProps): ReactElement {
     const [state, setState] = useState({
         visible: false,
         top: 0,
