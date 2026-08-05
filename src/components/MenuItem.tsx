@@ -7,8 +7,7 @@ type MenuItemProps<T>= {
     command: Command<T>,
 }
 
-export default function MenuItem<T>(props: MenuItemProps<T>): ReactElement {
-    const {command} = props;
+export default function MenuItem<T>({command}: MenuItemProps<T>): ReactElement {
 
     return (
         <div
