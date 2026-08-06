@@ -1,9 +1,10 @@
-import type {ReactElement, MouseEvent} from "react";
+import {type ReactElement, type MouseEvent, useRef} from "react";
 import type {Command, Consumer} from "../../types/types.ts";
 import Overlay from "./Overlay.tsx";
 import MenuItem from "./MenuItem.tsx";
 import {joinCss} from "../../util/utils.ts";
 import styles from "./menus.module.css";
+import useNormalizedPosition from "../../hooks/useNormalizedPosition.tsx";
 
 type MenuProps = {
     commands: Command<unknown>[],
@@ -24,24 +25,26 @@ export default function Menu(props: MenuProps): ReactElement {
         onClick,
     } = props;
 
-    const popupProps = {
-        visible,
-        top,
-        left,
-    }
+    const contentRef = useRef<HTMLDivElement | null>(null)
 
+    useNormalizedPosition(contentRef, {top, left}, {left: 0, top: 0});
 
     return (
         <Overlay
-            {...popupProps}
-            className={joinCss(styles.menu, className)}
+            visible={visible}
             noContextMenu
         >
-            <section onClick={onClick}>
+            <div
+                role="menu"
+                ref={contentRef}
+                onClick={onClick}
+                className={joinCss(styles.popup, styles.menu, className)}
+                style={{top: `${top}px`, left: `${left}px`}}
+            >
                 {commands.map((c, index) => {
                     return <MenuItem key={index} command={c}/>;
                 })}
-            </section>
+            </div>
         </Overlay>
     );
 }

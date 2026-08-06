@@ -7,6 +7,7 @@ import styles from "./css/Popup.stories.module.css"
 type PropsAndArgs = React.ComponentProps<typeof Overlay> & {
     width: number,
     height: number,
+    top: number,
 };
 
 
@@ -17,8 +18,7 @@ const meta: Meta<PropsAndArgs> = {
         visible: true,
         top: 10,
         left: 50,
-        width: 800,
-        height: 300,
+        width: 100,
         className: styles.popup,
         noContextMenu: true,
         center: false,
@@ -31,10 +31,20 @@ type Story = StoryObj<PropsAndArgs>;
 
 
 const defaultRenderer = (args: PropsAndArgs) => {
-    const props = {...args, width: undefined, height: undefined};
+    const {visible, noContextMenu, center} = args
+    const {width, left, top} = args;
     return (
-        <Overlay {...props} >
-            <div>This is a popup.  This is the base component for dropdowns and menus.</div>
+        <Overlay visible={visible} noContextMenu={noContextMenu} center={center}>
+            <div style={{
+                width,
+                height: "max-content",
+                border: "solid silver 1px",
+                position: "relative",
+                left: `${left}px`,
+                top: `${top}px`
+            }}>
+                This is a popup.  This is the base component for dropdowns and menus.
+            </div>
         </Overlay>
     );
 };

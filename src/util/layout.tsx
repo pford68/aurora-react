@@ -25,3 +25,17 @@ export function normalizePosition(
 
     return {};
 }
+
+/*
+I don't want to set either CSS position pros to "undefinedpx."
+This function constructs the positioning.
+ */
+export function getCoords(
+    left: number | undefined,
+    top: number | undefined
+): {left?: string, top?: string} {
+    const coords: {left?: string, top?: string} = {};
+    if (left != null) coords.left = `${left}px`;
+    if (top != null) coords.top = `${top}px`;
+    return coords;
+}

@@ -29,21 +29,22 @@ export default function Dialog(props: DialogProps): ReactNode {
    return (
        <Overlay
            visible={visible}
-           className={joinCss(styles.dialog, className)}
            center={true}
        >
-           <div className={styles.titlebar}>
-               <span className={styles.corner}></span>
-               <span className={joinCss(styles.title, titleClass)}>{title}</span>
-               <span
-                   className={joinCss(styles.corner, styles.control)}
-                   onClick={onClose}
-               >
-                   <FontAwesomeIcon icon="xmark" />
-               </span>
-           </div>
-           <div className={joinCss(styles.content, contentClass)}>
-                {children}
+           <div role="dialog" className={joinCss(styles.dialog, styles.popup, className)}>
+               <div className={styles.titlebar}>
+                   <span className={styles.corner}></span>
+                   <span className={joinCss(styles.title, titleClass)}>{title}</span>
+                   <span
+                       className={joinCss(styles.corner, styles.control)}
+                       onClick={onClose}
+                   >
+                       <FontAwesomeIcon icon="xmark" />
+                   </span>
+               </div>
+               <div className={joinCss(styles.content, contentClass)}>
+                    {children}
+               </div>
            </div>
        </Overlay>
    )
