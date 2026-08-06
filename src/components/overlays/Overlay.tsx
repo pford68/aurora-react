@@ -1,8 +1,23 @@
-import {type ReactNode, useCallback, useEffect, useRef} from "react";
+import {type ReactNode, useEffect, useRef} from "react";
 import {createPortal} from "react-dom";
 import styles from "./menus.module.css";
 import {joinCss} from "../../util/utils.ts";
 import type {Consumer} from "../../types/types.ts";
+import {normalizePosition} from "../../util/layout.tsx";
+
+/*
+I don't want to set either CSS position pros to "undefinedpx."
+This function constructs the positioning.
+ */
+function getCoords(
+    left: number | undefined,
+    top: number | undefined
+): {left?: string, top?: string} {
+    const coords: {left?: string, top?: string} = {};
+    if (left != null) coords.left = `${left}px`;
+    if (top != null) coords.top = `${top}px`;
+    return coords;
+}
 
 type OverlayProps = {
     /** (Boolean)  Whether to display the entire overlay */
@@ -21,7 +36,10 @@ type OverlayProps = {
     className?: string;
     onClickOutside?: Consumer<void>,
     modal?: boolean,
-    /** (Boolean) Whether to put the content in the center of the screen */
+    /**
+     * (Boolean) Whether to put the content in the center of the screen
+     * Will override top/left.
+     */
     center?: boolean,
 }
 
@@ -35,8 +53,8 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
     const {
         visible,
         children,
-        top,                    // Don't default this to zero:  breaks centering.
-        left,                   // Don't default this to zero:  breaks centering.
+        top,                    // If null, let flow take over
+        left,                   // If null, let flow take over
         className,
         offsetTop = 0,
         offsetLeft = 0,
@@ -46,28 +64,6 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
     } = props;
 
     const ref = useRef<HTMLDivElement | null>(null);
-
-    const normalizePosition = useCallback(
-        (): {left?: number, top?: number} => {
-            if (ref.current != null && left != null && top != null) {
-                const result = {left, top};
-                if (window.innerWidth - left < (ref.current.offsetWidth + offsetLeft)) {
-                    result.left = left - ref.current.offsetWidth - offsetLeft;
-                } else {
-                    result.left += offsetLeft;
-                }
-                if (window.innerHeight - top < ref.current.offsetHeight + offsetTop) {
-                    result.top = top - ref.current.offsetHeight - offsetTop;
-                } else {
-                    result.top += offsetTop;
-                }
-                return result;
-            }
-            return {};
-        },
-        [left, top, ref, offsetLeft, offsetTop],
-    );
-
 
     useEffect(() => {
         if (noContextMenu && ref.current) {
@@ -86,10 +82,16 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
 
 
     useEffect(() => {
-        if (ref.current != null) {
-            const {left: normalizedLeft, top: normalizedTop} = normalizePosition();
-            ref.current.style.top = `${normalizedTop}px`;
-            ref.current.style.left = `${normalizedLeft}px`;
+        if (!center && ref.current != null) {
+            const {left: normalizedLeft, top: normalizedTop} = left != undefined && top != undefined
+                ? normalizePosition(ref, {left, top}, {left: offsetLeft, top: offsetTop})
+                : {};
+            if (normalizedTop !== undefined) {
+                ref.current.style.top = `${normalizedTop}px`;
+            }
+            if (normalizedLeft !== undefined) {
+                ref.current.style.left = `${normalizedLeft}px`;
+            }
         }
     }, [visible]);
 
@@ -110,7 +112,7 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
                         styles.popup,
                         className,
                     )}
-                    style={{top: `${top}px`, left: `${left}px`}}
+                    style={!center ? getCoords(left, top) : {}}
                 >
                     {children}
                 </div>
