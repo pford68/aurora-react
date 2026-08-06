@@ -1,7 +1,6 @@
 import {Emitter} from "./Observable";
 import type {BiFunction, Predicate, Struct} from "./types/types";
 import {v4 as uuid} from "uuid";
-import {deepClone} from "./util/utils";
 
 
 /**
@@ -67,7 +66,7 @@ export class Record<T extends Struct> {
     }
 
     clone(): Record<T> {
-        return new Record(deepClone(this.getAll()));
+        return new Record(structuredClone(this.getAll()));
     }
 
     copy(that: Record<T>): void {

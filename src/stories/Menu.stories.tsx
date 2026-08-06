@@ -1,6 +1,6 @@
 import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
-import Menu from "../components/Menu";
+import Menu from "../components/overlays/Menu.tsx";
 import styles from "./css/Popup.stories.module.css"
 import {useRef, useState} from "react";
 import BaseCommand from "../commands/BaseCommand";
@@ -18,7 +18,7 @@ type PropsAndArgs = React.ComponentProps<typeof Menu> & {
 
 
 const meta: Meta<PropsAndArgs> = {
-    title: "core/Menu",
+    title: "overlays/Menu",
     component: Menu,
     args: {
         width: 800,

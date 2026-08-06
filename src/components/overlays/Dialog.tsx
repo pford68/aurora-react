@@ -1,8 +1,8 @@
 import type {ReactElement, ReactNode, MouseEvent} from "react";
-import type {Consumer} from "../types/types";
-import Overlay from "./Overlay";
+import type {Consumer} from "../../types/types.ts";
+import Overlay from "./Overlay.tsx";
 import styles from "./menus.module.css";
-import {joinCss} from "../util/utils";
+import {joinCss} from "../../util/utils.ts";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 type DialogProps = {

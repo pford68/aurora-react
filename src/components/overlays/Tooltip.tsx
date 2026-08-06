@@ -1,7 +1,7 @@
 import {type ReactElement, type ReactNode, type MouseEvent, useState, useCallback} from "react";
-import Overlay from "./Overlay";
+import Overlay from "./Overlay.tsx";
 import styles from "./menus.module.css";
-import {joinCss} from "../util/utils";
+import {joinCss} from "../../util/utils.ts";
 
 type TooltipProps = {
     text: ReactNode,

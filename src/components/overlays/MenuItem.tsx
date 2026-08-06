@@ -1,5 +1,5 @@
 import {type ReactElement} from "react";
-import type {Command} from "../types/types";
+import type {Command} from "../../types/types.ts";
 import styles from "./menus.module.css";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 

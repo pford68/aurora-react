@@ -1,20 +1,27 @@
 import {type ReactNode, useCallback, useEffect, useRef} from "react";
 import {createPortal} from "react-dom";
 import styles from "./menus.module.css";
-import {joinCss} from "../util/utils";
-import type {Consumer} from "../types/types";
+import {joinCss} from "../../util/utils.ts";
+import type {Consumer} from "../../types/types.ts";
 
 type OverlayProps = {
+    /** (Boolean)  Whether to display the entire overlay */
     visible: boolean,
+    /** The content of the overlay, if any */
     children: ReactNode | ReactNode[],
+    /** The amount to move the content over horizontally. */
     offsetLeft?: number,
+    /** The amount to move the content over vertically. */
     offsetTop?: number,
+    /** Content top */
     top?: number,
+    /** Content left */
     left?: number,
     noContextMenu?: boolean,
     className?: string;
     onClickOutside?: Consumer<void>,
     modal?: boolean,
+    /** (Boolean) Whether to put the content in the center of the screen */
     center?: boolean,
 }
 
@@ -28,8 +35,8 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
     const {
         visible,
         children,
-        top = 0,
-        left = 0,
+        top,                    // Don't default this to zero:  breaks centering.
+        left,                   // Don't default this to zero:  breaks centering.
         className,
         offsetTop = 0,
         offsetLeft = 0,
@@ -42,7 +49,7 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
 
     const normalizePosition = useCallback(
         (): {left?: number, top?: number} => {
-            if (ref.current != null) {
+            if (ref.current != null && left != null && top != null) {
                 const result = {left, top};
                 if (window.innerWidth - left < (ref.current.offsetWidth + offsetLeft)) {
                     result.left = left - ref.current.offsetWidth - offsetLeft;
@@ -82,7 +89,7 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
         if (ref.current != null) {
             const {left: normalizedLeft, top: normalizedTop} = normalizePosition();
             ref.current.style.top = `${normalizedTop}px`;
-            ref.current.style.left = `${normalizedLeft}px`
+            ref.current.style.left = `${normalizedLeft}px`;
         }
     }, [visible]);
 
@@ -94,12 +101,15 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
                 className={joinCss(
                     styles.layer,
                     !modal ? styles.nonModal : "",
-                    center ? styles.center : "",
+                    center === true ? styles.center : "",
                 )}
             >
                 <div
                     ref={ref}
-                    className={joinCss(styles.popup, className)}
+                    className={joinCss(
+                        styles.popup,
+                        className,
+                    )}
                     style={{top: `${top}px`, left: `${left}px`}}
                 >
                     {children}

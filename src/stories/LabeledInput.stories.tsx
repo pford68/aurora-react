@@ -1,9 +1,9 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import { useState } from 'react';
-import {LabeledInput} from '../components/Input';
+import {LabeledInput} from '../components/forms/Input.tsx';
 
 const meta = {
-  title: "Forms/LabeledInput",
+  title: "forms/LabeledInput",
   component: LabeledInput,
   // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
   tags: ['autodocs'],

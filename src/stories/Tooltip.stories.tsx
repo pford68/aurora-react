@@ -1,6 +1,6 @@
 import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
-import Tooltip from "../components/Tooltip";
+import Tooltip from "../components/overlays/Tooltip.tsx";
 import styles from "./css/Popup.stories.module.css"
 
 
@@ -13,7 +13,7 @@ type PropsAndArgs = React.ComponentProps<typeof Tooltip> & {
 
 
 const meta: Meta<PropsAndArgs> = {
-    title: "core/Tooltip",
+    title: "overlays/Tooltip",
     component: Tooltip,
     args: {
         width: 800,

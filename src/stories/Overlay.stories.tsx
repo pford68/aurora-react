@@ -1,6 +1,6 @@
 import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
-import Overlay from "../components/Overlay";
+import Overlay from "../components/overlays/Overlay.tsx";
 import styles from "./css/Popup.stories.module.css"
 
 
@@ -11,7 +11,7 @@ type PropsAndArgs = React.ComponentProps<typeof Overlay> & {
 
 
 const meta: Meta<PropsAndArgs> = {
-    title: "core/Overlay",
+    title: "overlays/Overlay",
     component: Overlay,
     args: {
         visible: true,
@@ -21,6 +21,7 @@ const meta: Meta<PropsAndArgs> = {
         height: 300,
         className: styles.popup,
         noContextMenu: true,
+        center: false,
     },
 };
 
