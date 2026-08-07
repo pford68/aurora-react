@@ -1,6 +1,6 @@
 import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
-import Dialog from "../components/Dialog";
+import Dialog from "../components/overlays/Dialog.tsx";
 import styles from "./css/Popup.stories.module.css"
 import {useState} from "react";
 
@@ -11,7 +11,7 @@ type PropsAndArgs = React.ComponentProps<typeof Dialog> & {
 };
 
 const meta: Meta<PropsAndArgs> = {
-    title: "core/Dialog",
+    title: "overlays/Dialog",
     component: Dialog,
     args: {
         width: 800,
@@ -44,6 +44,10 @@ const defaultRenderer = (args: PropsAndArgs) => {
                 </div>
             </Dialog>
             <div onClick={() => setVisible(!visible)}>Open</div>
+            <button
+                onClick={() => alert("Hi!")}
+                style={{position: "absolute", top: "300px"}}
+            >Click me</button>
         </>
     );
 };

@@ -1,6 +1,6 @@
 import {type ReactElement} from "react";
-import type {Command} from "../types/types";
-import styles from "./menus.module.css";
+import type {Command} from "../../types/types.ts";
+import styles from "./overlays.module.css";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 type MenuItemProps<T>= {

@@ -1,7 +1,7 @@
 import CopyCommand from "./CopyCommand";
-import {Struct} from "../../types/types";
+import type {Struct} from "../types/types";
 import {Record} from "../ObservableList";
-import {IconProp} from "@fortawesome/fontawesome-svg-core";
+import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 export default class CutCommand<T extends Struct> extends CopyCommand<T> {
 

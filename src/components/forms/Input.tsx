@@ -1,5 +1,5 @@
 import React, {type ReactElement, type ReactNode, useState} from "react";
-import {joinCss} from "../util/utils";
+import {joinCss} from "../../util/utils.ts";
 import styles from "./Input.module.css";
 
 export type InputType =
