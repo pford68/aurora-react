@@ -1,7 +1,7 @@
 import type {ReactElement, ReactNode, MouseEvent} from "react";
 import type {Consumer} from "../../types/types.ts";
 import Overlay from "./Overlay.tsx";
-import styles from "./menus.module.css";
+import styles from "./overlays.module.css";
 import {joinCss} from "../../util/utils.ts";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
@@ -29,7 +29,9 @@ export default function Dialog(props: DialogProps): ReactNode {
    return (
        <Overlay
            visible={visible}
-           center={true}
+           center
+           modal
+           noContextMenu
        >
            <div role="dialog" className={joinCss(styles.dialog, styles.popup, className)}>
                <div className={styles.titlebar}>

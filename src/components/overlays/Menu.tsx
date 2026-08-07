@@ -3,7 +3,7 @@ import type {Command, Consumer} from "../../types/types.ts";
 import Overlay from "./Overlay.tsx";
 import MenuItem from "./MenuItem.tsx";
 import {joinCss} from "../../util/utils.ts";
-import styles from "./menus.module.css";
+import styles from "./overlays.module.css";
 import useNormalizedPosition from "../../hooks/useNormalizedPosition.tsx";
 
 type MenuProps = {
@@ -32,7 +32,9 @@ export default function Menu(props: MenuProps): ReactElement {
     return (
         <Overlay
             visible={visible}
+            modal={true}
             noContextMenu
+            className={styles.transparent}
         >
             <div
                 role="menu"

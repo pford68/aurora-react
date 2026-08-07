@@ -44,6 +44,10 @@ const defaultRenderer = (args: PropsAndArgs) => {
                 </div>
             </Dialog>
             <div onClick={() => setVisible(!visible)}>Open</div>
+            <button
+                onClick={() => alert("Hi!")}
+                style={{position: "absolute", top: "300px"}}
+            >Click me</button>
         </>
     );
 };

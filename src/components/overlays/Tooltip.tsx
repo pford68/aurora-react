@@ -1,8 +1,8 @@
 import {type ReactElement, type ReactNode, type MouseEvent, useState, useCallback, useRef} from "react";
 import Overlay from "./Overlay.tsx";
-import styles from "./menus.module.css";
-import {joinCss} from "../../util/utils.ts";
+import styles from "./overlays.module.css";
 import useNormalizedPosition from "../../hooks/useNormalizedPosition.tsx";
+import {joinCss} from "../../util/utils.ts";
 
 type TooltipProps = {
     text: ReactNode,
@@ -60,12 +60,11 @@ export default function Tooltip(props: TooltipProps): ReactElement {
         <>
             <Overlay
                 visible={state.visible}
-                className={joinCss(styles.tooltip, className)}
                 modal={false}
             >
                 <div
                     ref={contentRef}
-                    className={styles.popup}
+                    className={joinCss(styles.popup, className)}
                 >
                     {text}
                 </div>

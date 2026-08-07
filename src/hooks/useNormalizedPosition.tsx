@@ -23,7 +23,7 @@ export default function useNormalizedPosition(
 
         if (left !== undefined && top !== undefined) {
             const {left: normalizedLeft, top: normalizedTop} = left != undefined && top != undefined
-                ? normalizePosition(ref, position, offsets)
+                ? normalizePosition(ref, {left, top}, {top: offsetTop, left: offsetLeft})
                 : {};
             if (normalizedTop !== undefined) {
                 ref.current.style.top = `${normalizedTop}px`;

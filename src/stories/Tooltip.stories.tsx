@@ -1,8 +1,6 @@
 import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
 import Tooltip from "../components/overlays/Tooltip.tsx";
-import styles from "./css/Popup.stories.module.css"
-
 
 type PropsAndArgs = React.ComponentProps<typeof Tooltip> & {
     width: number,
@@ -18,7 +16,6 @@ const meta: Meta<PropsAndArgs> = {
     args: {
         width: 800,
         height: 300,
-        className: styles.popup,
         left: 10,
         top: 10,
     },

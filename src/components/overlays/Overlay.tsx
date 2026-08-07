@@ -1,6 +1,6 @@
 import {type ReactNode, useEffect, useRef} from "react";
 import {createPortal} from "react-dom";
-import styles from "./menus.module.css";
+import styles from "./overlays.module.css";
 import {joinCss} from "../../util/utils.ts";
 
 
@@ -33,34 +33,38 @@ export default function Overlay(props: OverlayProps): ReactNode | ReactNode[] {
         noContextMenu = true,
         modal = true,
         center = false,
+        className,
     } = props;
 
     const ref = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         if (noContextMenu && ref.current) {
+            const domNode = ref.current;
             const onContextMenu = (e: MouseEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
             }
-            ref.current?.addEventListener("contextmenu", onContextMenu);
+           domNode.addEventListener("contextmenu", onContextMenu);
 
 
             return () => {
-                ref.current?.removeEventListener("contextmenu", onContextMenu);
+                domNode?.removeEventListener("contextmenu", onContextMenu);
             }
         }
-    }, []);
+    }, [visible, noContextMenu]);
 
 
 
     if (visible && document.body != null) {
         return createPortal((
             <div
+                ref={ref}
                 className={joinCss(
                     styles.layer,
                     !modal ? styles.nonModal : "",
                     center === true ? styles.center : "",
+                    className
                 )}
             >
                 {children}

@@ -22,6 +22,7 @@ const meta: Meta<PropsAndArgs> = {
         className: styles.popup,
         noContextMenu: true,
         center: false,
+        modal: false,
     },
 };
 
@@ -31,10 +32,10 @@ type Story = StoryObj<PropsAndArgs>;
 
 
 const defaultRenderer = (args: PropsAndArgs) => {
-    const {visible, noContextMenu, center} = args
+    const {visible, noContextMenu, center, modal} = args
     const {width, left, top} = args;
     return (
-        <Overlay visible={visible} noContextMenu={noContextMenu} center={center}>
+        <Overlay visible={visible} noContextMenu={noContextMenu} center={center} modal={modal}>
             <div style={{
                 width,
                 height: "max-content",
