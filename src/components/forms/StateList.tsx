@@ -1,5 +1,5 @@
-import Input, {type InputProps} from "./Input";
-import {STATE_CODES} from "../util/constants";
+import Input, {type InputProps} from "./Input.tsx";
+import {STATE_CODES} from "../../util/constants.ts";
 
 
 export default function StateList(props: InputProps) {

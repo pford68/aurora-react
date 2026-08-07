@@ -2,8 +2,6 @@ import type { Preview } from '@storybook/react-vite'
 import {library} from "@fortawesome/fontawesome-svg-core";
 import {fas} from "@fortawesome/free-solid-svg-icons";
 import {far} from "@fortawesome/free-regular-svg-icons";
-// @ts-ignore
-import styles from "./preview.css";
 library.add(fas);
 library.add(far);
 

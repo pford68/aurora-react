@@ -30,27 +30,6 @@ export function compose<T>(fn1: (a: T) => T, ...fns: Array<(a: T) => T>) {
     fns.reduce((prevFn, nextFn) => value => prevFn(nextFn(value)), fn1);
 }
 
-export function deepClone<T>(obj: T): T {
-    if (typeof obj !== 'object' || obj === null) {
-        return obj;
-    }
-
-    let clone: T;
-    if (Array.isArray(obj)) {
-        clone = [] as unknown as T;
-        obj.forEach((value, index) => {
-            (clone as unknown as any[])[index] = deepClone(value);
-        });
-    } else {
-        clone = {} as T;
-        Object.getOwnPropertyNames(obj).forEach((prop) => {
-            (clone as any)[prop] = deepClone((obj as any)[prop]);
-        });
-    }
-
-    return clone;
-}
-
 export function isTextSelected(): boolean {
     const selection = getSelection();
     return selection != null && selection.type?.toLowerCase() === "range";

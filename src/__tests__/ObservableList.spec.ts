@@ -2,7 +2,6 @@ import peopleData from "../../tests/fixtures/people.json";
 import Person, {type Measurements} from "../../tests/models/Person";
 import ObservableList, {Record} from "..//ObservableList";
 import type {Struct} from "../types/types";
-import {deepClone} from "../util/utils";
 import {fail} from "node:assert";
 
 function testAllKeys(r: Record<Struct>) {
@@ -20,7 +19,7 @@ describe("Record", () => {
     let people: Struct[];
 
     beforeEach(() => {
-        people = deepClone(peopleData);
+        people = structuredClone(peopleData);
         record = new Record(people[5]);
     });
 
@@ -117,8 +116,12 @@ describe("Record", () => {
                 // @ts-expect-error: intentionally causing an error here--assigning a value to a readonly property..
                 record.id = "gjfkghgh";
                 fail("We should not reach this point.")
-            } catch (e:any) {
-                console.warn(e.message);
+            } catch (e:unknown) {
+                if (e instanceof Error) {
+                    console.warn(e.message);
+                } else {
+                    console.warn("An unexpected error occurred.")
+                }
             }
         });
     });
@@ -131,7 +134,7 @@ describe("ObservableList", () => {
     let people: Struct[];
 
     beforeEach(() => {
-        people = deepClone(peopleData);
+        people = structuredClone(peopleData);
         list = new ObservableList((people.map(person => new Person(person))));
     });
 

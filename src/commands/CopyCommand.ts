@@ -1,9 +1,9 @@
-import {Command, Struct} from "../../types/types";
+import type {Command, Struct} from "../types/types";
 import {v4 as uuid} from "uuid";
 import BaseCommand from "./BaseCommand";
 import {Record} from "../ObservableList";
 import {isTextSelected} from "../util/utils";
-import {IconProp} from "@fortawesome/fontawesome-svg-core";
+import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 type CopyParameter<T extends Struct> = {
     /** The order of column names in the data. */

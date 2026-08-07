@@ -1,8 +1,8 @@
-import {Command, Struct} from "../../types/types";
+import type {Command, Struct} from "../types/types";
 import CopyCommand from "./CopyCommand";
 import ObservableList, {Record} from "../ObservableList";
 import BaseCommand from "./BaseCommand";
-import {IconProp} from "@fortawesome/fontawesome-svg-core";
+import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 type PasteParameter = {
     rowIndex: number,
