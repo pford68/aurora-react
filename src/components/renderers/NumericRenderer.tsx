@@ -1,10 +1,10 @@
 import React from "react";
-import {joinCss} from "../../../util/utils";
+import {joinCss} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
-import type {BaseRendererProps} from "./types";
-import {COMMON_DEFAULT_PROPS} from "../constants";
-import StatefulInput from "./StatefulInput";
-import Text from "./Text";
+import type {BaseRendererProps} from "./types.ts";
+import {COMMON_DEFAULT_PROPS} from "../datagrid/constants.ts";
+import StatefulInput from "./StatefulInput.tsx";
+import Text from "./Text.tsx";
 
 export type NumericProps = BaseRendererProps<number> & {
     precision?: number,

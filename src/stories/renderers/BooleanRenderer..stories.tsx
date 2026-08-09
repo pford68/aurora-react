@@ -1,6 +1,6 @@
 import * as React from "react";
 import type {Meta} from "@storybook/react";
-import BooleanRenderer from "../../components/datagrid/renderers/BooleanRenderer";
+import BooleanRenderer from "../../components/renderers/BooleanRenderer";
 
 type PropsAndArgs = React.ComponentProps<typeof BooleanRenderer> & {
     width: number,

@@ -1,9 +1,9 @@
 import React from "react";
-import {joinCss} from "../../../util/utils";
+import {joinCss} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
-import type {BaseRendererProps} from "./types";
-import StatefulInput from "./StatefulInput";
-import Text from "./Text";
+import type {BaseRendererProps} from "./types.ts";
+import StatefulInput from "./StatefulInput.tsx";
+import Text from "./Text.tsx";
 
 export type BooleanRendererProps = BaseRendererProps<boolean> & {
     value: boolean,

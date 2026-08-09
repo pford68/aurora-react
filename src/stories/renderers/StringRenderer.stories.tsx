@@ -1,6 +1,6 @@
 import * as React from "react";
 import type {Meta} from "@storybook/react";
-import StringRenderer from "../../components/datagrid/renderers/StringRenderer";
+import StringRenderer from "../../components/renderers/StringRenderer";
 
 type PropsAndArgs = React.ComponentProps<typeof StringRenderer> & {
     width: number,

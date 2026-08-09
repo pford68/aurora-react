@@ -1,6 +1,6 @@
 import * as React from "react";
 import type {Meta} from "@storybook/react";
-import NumericRenderer from "../../components/datagrid/renderers/NumericRenderer";
+import NumericRenderer from "../../components/renderers/NumericRenderer";
 
 type PropsAndArgs = React.ComponentProps<typeof NumericRenderer> & {width: number};
 

@@ -1,5 +1,5 @@
 import type {RefObject, ComponentPropsWithoutRef} from "react";
-import type {Predicate} from "../../../types/types";
+import type {Predicate} from "../../types/types.ts";
 
 export type BaseRendererProps<T> = ComponentPropsWithoutRef<"input"> & {
     /**

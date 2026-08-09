@@ -1,11 +1,11 @@
 import {type ReactElement} from "react";
-import type {BaseRendererProps} from "./types";
-import Text from "./Text";
-import {InputContainer as StatefulInput} from "./StatefulInput";
+import type {BaseRendererProps} from "./types.ts";
+import Text from "./Text.tsx";
+import StatefulInput from "./StatefulInput.tsx";
 import {v4 as uuid} from "uuid";
-import styles from "./Renderers.css";
-import {joinCss} from "../../../util/utils";
-import type {Role} from "../../../types/types";
+import styles from "./Renderers.module.css";
+import {joinCss} from "../../util/utils.ts";
+import type {Role} from "../../types/types.ts";
 
 type EnumRendererProps = BaseRendererProps<string> & {
     listItems: string[],

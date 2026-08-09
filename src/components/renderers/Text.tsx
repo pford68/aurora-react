@@ -1,6 +1,6 @@
 import type {ReactElement} from "react";
-import type {Predicate} from "../../../types/types";
-import {joinCss} from "../../../util/utils";
+import type {Predicate} from "../../types/types.ts";
+import {joinCss} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
 
 export type TextProps = {

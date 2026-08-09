@@ -1,6 +1,6 @@
 import * as React from "react";
 import type {Meta} from "@storybook/react";
-import EnumRenderer from "../../components/datagrid/renderers/EnumRenderer";
+import EnumRenderer from "../../components/renderers/EnumRenderer";
 
 type PropsAndArgs = React.ComponentProps<typeof EnumRenderer> & {
     width: number,

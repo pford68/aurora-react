@@ -1,6 +1,6 @@
 import {type ReactElement, type RefObject, useState, useEffect, type ComponentPropsWithoutRef} from "react";
-import type {Predicate} from "../../../types/types";
-import {joinCss} from "../../../util/utils";
+import type {Predicate} from "../../types/types.ts";
+import {joinCss} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
 
 
