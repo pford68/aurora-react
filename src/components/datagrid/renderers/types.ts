@@ -1,7 +1,7 @@
-import type {RefObject, FocusEvent, MouseEvent, KeyboardEvent} from "react";
-import type {Consumer, Predicate} from "../../../types/types";
+import type {RefObject, ComponentPropsWithoutRef} from "react";
+import type {Predicate} from "../../../types/types";
 
-export type BaseRendererProps<T> = {
+export type BaseRendererProps<T> = ComponentPropsWithoutRef<"input"> & {
     /**
      * Boolean for whether the value should be rendered in an editable node (e.g. input)
      * or within a readonly DIV.
@@ -14,24 +14,12 @@ export type BaseRendererProps<T> = {
     /** The name of a property used to supply the value. */
     name: string,
     className?: string,
-    onChange?: Consumer<string>,
-    onFocus?: Consumer<FocusEvent>,
-    onBlur?: Consumer<FocusEvent>,
-    onKeyDown?: Consumer<KeyboardEvent>,
-    onClick?: Consumer<MouseEvent>,
-    readonly?: boolean,
-    disabled?: boolean,
     /**
      * A function for validating the value. Executed during onChange events.
      * @returns {boolean} Whether the input value is valid.
      */
     validator?: Predicate<T | string | unknown>,
-    /** Whether a value is required. If true, the renderer will be marked as invalid if a value is missing. */
-    required?: boolean,
     format?: string,
-    autoFocus?: boolean,
-    /** If true, the renderer autocompletes */
-    autocomplete?: boolean,
     /** The list of options for autocompletes. If present, the renderer supports autocompletes. */
     items?: {[key: string] :T}[],
     /**
@@ -39,7 +27,6 @@ export type BaseRendererProps<T> = {
      * renderers that support using multiple values.
      */
     multiple?: boolean,
-    placeholder?: string,
-    rendererRef?: RefObject<HTMLInputElement>,
+    rendererRef?: RefObject<HTMLInputElement | null>,
 };
 

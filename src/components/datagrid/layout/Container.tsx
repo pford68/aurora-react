@@ -1,5 +1,5 @@
 import {createContext, type ReactElement, type RefObject, useRef} from "react";
-import styles from "./Container.css";
+import styles from "./Container.module.css";
 import {joinCss} from "../../../util/utils";
 
 

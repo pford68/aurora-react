@@ -1,9 +1,9 @@
 import React from "react";
 import {joinCss} from "../../../util/utils";
-import styles from "./Renderers.css";
+import styles from "./Renderers.module.css";
 import type {BaseRendererProps} from "./types";
 import {COMMON_DEFAULT_PROPS} from "../constants";
-import {InputContainer as StatefulInput} from "./StatefulInput";
+import StatefulInput from "./StatefulInput";
 import Text from "./Text";
 
 export type NumericProps = BaseRendererProps<number> & {
@@ -18,14 +18,14 @@ export default function NumericRenderer(props: NumericProps): React.ReactElement
         rendererRef,
         className,
         validator,
-        readonly,
+        readOnly,
     } = props;
     const baseClassName = joinCss(styles.renderer, styles.numeric, className);
     const numericValue = value != null ? Number(value) : null;
     const formattedValue = precision != null ? numericValue?.toFixed?.(precision) : value;
     const nextProps = {
         name,
-        readonly,
+        readOnly,
         value: String(formattedValue),
         className: joinCss(baseClassName, styles.active),
     };

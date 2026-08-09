@@ -1,14 +1,14 @@
 import React from "react";
-import {InputContainer as StatefulInput} from "./StatefulInput";
+import StatefulInput from "./StatefulInput";
 import type {BaseRendererProps} from "./types";
 import {COMMON_DEFAULT_PROPS} from "../constants";
 import Text from "./Text";
 import {joinCss} from "../../../util/utils";
-import styles from "./Renderers.css";
+import styles from "./Renderers.module.css";
 
 
 export type StringProps = BaseRendererProps<string> & {
-    autocomplete?: boolean,
+    autoComplete?: boolean,
 };
 
 export default function StringRenderer(props: StringProps): React.ReactElement {
@@ -19,7 +19,6 @@ export default function StringRenderer(props: StringProps): React.ReactElement {
         rendererRef,
         className,
         validator,
-        readonly,
     } = props;
 
     const baseClassName = joinCss(styles.renderer, styles.text, className);
@@ -27,7 +26,6 @@ export default function StringRenderer(props: StringProps): React.ReactElement {
     const nextProps = {
         ...props,
         name,
-        readonly,
         value: value != null ? String(value) : undefined,
         placeholder: String(props.placeholder),
         className: joinCss(baseClassName, styles.active),

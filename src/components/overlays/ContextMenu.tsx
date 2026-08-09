@@ -1,9 +1,9 @@
 import {type ReactElement, type RefObject, useContext, useEffect, useRef, useState} from "react";
-import type {Command, Struct} from "../../types/types";
-import {joinCss} from "./../../util/utils";
-import styles from "./core/menus.css";
-import Menu from "../overlays/Menu";
-import {GridContext} from "./GridContext";
+import type {Command, Struct} from "../../types/types.ts";
+import {joinCss} from "../../util/utils.ts";
+import styles from "./overlays.module.css";
+import Menu from "./Menu.tsx";
+import {GridContext} from "../datagrid/GridContext.ts";
 
 type ContextMenuProps = {
     commands: Command<Struct>[],

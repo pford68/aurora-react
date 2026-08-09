@@ -1,5 +1,5 @@
 import React, {type ReactElement, type ReactNode, type RefObject, useContext, useEffect, useRef, useState} from "react";
-import styles from "./DataGrid.css";
+import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext";
 import {createPortal} from "react-dom";
 

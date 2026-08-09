@@ -1,7 +1,7 @@
 import type {ReactElement} from "react";
 import type {Predicate} from "../../../types/types";
 import {joinCss} from "../../../util/utils";
-import styles from "./Renderers.css";
+import styles from "./Renderers.module.css";
 
 export type TextProps = {
     value: unknown,

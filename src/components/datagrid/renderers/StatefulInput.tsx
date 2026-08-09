@@ -1,37 +1,14 @@
-import {
-    type FocusEvent,
-    type KeyboardEvent,
-    type MouseEvent,
-    forwardRef,
-    type ReactElement,
-    type Ref,
-    useState,
-    useEffect
-} from "react";
-import type {Consumer, Predicate} from "../../../types/types";
+import {type ReactElement, type RefObject, useState, useEffect, type ComponentPropsWithoutRef} from "react";
+import type {Predicate} from "../../../types/types";
 import {joinCss} from "../../../util/utils";
-import styles from "./Renderers.css";
+import styles from "./Renderers.module.css";
 
 
-type StatefulInputProps = {
-    name: string,
-    type: "text" | "date" | "checkbox" | "radio" | "number" | "multiline" | "email" | "tel" | "range" | "url";
-    value: string | undefined,
-    onChange?: Consumer<string>,
-    onFocus?: Consumer<FocusEvent>,
-    onBlur?: Consumer<FocusEvent>,
-    onKeyDown?: Consumer<KeyboardEvent>,
-    onClick?: Consumer<MouseEvent>,
-    readonly?: boolean,
+type StatefulInputProps = ComponentPropsWithoutRef<"input"> & {
+    ref?: RefObject<HTMLInputElement | null>,
     className?: string,
-    validator?: Predicate<string | undefined>,
-    autofocus?: boolean,
-    required?: boolean,
-    placeholder?: string,
-    disabled?: boolean,
-    checked?: boolean,
+    validator?: Predicate<string | undefined | number | readonly string[]>,
     autoComplete?: boolean,
-    list?: string,
 }
 
 /**
@@ -41,46 +18,19 @@ type StatefulInputProps = {
  * invoked forwardRef directly.
  *
  * @param props
- * @param [ref]
  * @constructor
  */
-export default function StatefulInput(props: StatefulInputProps, ref?: Ref<HTMLInputElement>): ReactElement {
+export default function StatefulInput(props: StatefulInputProps): ReactElement {
     const {
-        name,
         value: initValue,
-        type,
-        onChange,
         validator,
         className,
-        required,
-        onFocus,
-        onBlur,
-        onKeyDown,
-        placeholder,
-        readonly,
-        disabled,
-        checked,
+        ref,
+        onInput,
         autoComplete,
-        list,
     } = props;
     const [value, setValue] = useState(initValue);
     const [valid, setValid] = useState(true);
-
-    const nextProps= {
-        type,
-        name,
-        value,
-        onFocus,
-        onBlur,
-        onKeyDown,
-        required,
-        className,
-        placeholder,
-        readOnly: readonly,
-        disabled,
-        checked,
-        list,
-    }
 
     useEffect(() => {
         if (!(validator?.(value) ?? true)) {
@@ -91,8 +41,7 @@ export default function StatefulInput(props: StatefulInputProps, ref?: Ref<HTMLI
 
     return (
         <input
-            {...nextProps}
-            // @ts-expect-error: refs type is not recognized.  It's a todo.
+            {...props}
             ref={ref?.current !== undefined ? ref : undefined}
             value={value ?? initValue}
             onInput={e => {
@@ -102,8 +51,8 @@ export default function StatefulInput(props: StatefulInputProps, ref?: Ref<HTMLI
                     const result = validator?.(updatedValue) ?? true;
                     setValid(result);
                     setValue(updatedValue);
-                    if (result) {
-                        onChange?.(updatedValue);
+                    if (result && onInput != null) {
+                        onInput?.(e);
                     }
                 }
             }}
@@ -112,9 +61,3 @@ export default function StatefulInput(props: StatefulInputProps, ref?: Ref<HTMLI
         />
     );
 }
-
-
-/**
- * A higher-order component for StatefulInput that exposes the underlying input field through the ref.
- */
-export const InputContainer = forwardRef<HTMLInputElement, StatefulInputProps>(StatefulInput);

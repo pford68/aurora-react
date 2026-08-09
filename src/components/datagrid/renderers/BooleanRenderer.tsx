@@ -1,13 +1,14 @@
 import React from "react";
 import {joinCss} from "../../../util/utils";
-import styles from "./Renderers.css";
+import styles from "./Renderers.module.css";
 import type {BaseRendererProps} from "./types";
-import {InputContainer as StatefulInput} from "./StatefulInput";
+import StatefulInput from "./StatefulInput";
 import Text from "./Text";
 
-export type BooleanRendererProps = {
+export type BooleanRendererProps = BaseRendererProps<boolean> & {
+    value: boolean,
     format: "checkbox" | "switch" | "text",
-} & BaseRendererProps<boolean>;
+};
 
 export default function BooleanRenderer(props: BooleanRendererProps): React.ReactElement {
     const {
@@ -18,15 +19,13 @@ export default function BooleanRenderer(props: BooleanRendererProps): React.Reac
         active,
         format,
         validator,
-        readonly,
     } = props;
 
     const baseClassName = joinCss(styles.renderer, styles.boolean, className);
 
-    const inputProps = {
+    const overrides = {
         name,
         value: (value === true ? "true" : "false"),
-        readonly,
         className: joinCss(baseClassName, styles.active),
         // "switch" is weeded out, but format == switch is handled later on.
         type: format,
@@ -40,7 +39,7 @@ export default function BooleanRenderer(props: BooleanRendererProps): React.Reac
     if (format === "switch") {
         return (
             <label className={styles.switch}>
-                <StatefulInput {...inputProps} ref={rendererRef} type="checkbox" />
+                <StatefulInput {...overrides} ref={rendererRef} type="checkbox" />
                 <span className={joinCss(styles.slider, styles.round)}></span>
             </label>
         )
@@ -49,7 +48,7 @@ export default function BooleanRenderer(props: BooleanRendererProps): React.Reac
     const finalFormat = format === "text" || format === "checkbox" ? format : "checkbox";
 
     return (
-        <StatefulInput {...inputProps} ref={rendererRef} type={finalFormat}/>
+        <StatefulInput {...overrides} ref={rendererRef} type={finalFormat}/>
     );
 }
 

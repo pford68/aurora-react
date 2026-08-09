@@ -1,6 +1,6 @@
 import type {ReactElement, MouseEvent} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import styles from "./Pin.css";
+import styles from "./Pin.module.css";
 import {joinCss} from "../../../util/utils";
 import type {Consumer} from "../../../types/types";
 
