@@ -7,7 +7,7 @@ import {
     useState,
     type RefObject,
 } from "react";
-import styles from "../DataGrid.css";
+import styles from "../DataGrid.module.css";
 import {joinCss} from "../../../util/utils";
 import {GridContext} from "../GridContext";
 import {createPortal} from "react-dom";

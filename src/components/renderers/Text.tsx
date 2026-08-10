@@ -3,16 +3,16 @@ import type {Predicate} from "../../types/types.ts";
 import {joinCss} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
 
-export type TextProps = {
-    value: unknown,
+export type TextProps<T> = {
+    value: T,
     className?: string,
-    validator?: Predicate<string>,
+    validator?: Predicate<T>,
 }
 
-export default function Text(props: TextProps): ReactElement {
+export default function Text<T>(props: TextProps<T>): ReactElement {
     const {value, className, validator} = props;
     const finalClass = joinCss(
-        !(validator?.(String(value)) ?? true) ? styles.invalid :  "",
+        !(validator?.(value) ?? true) ? styles.invalid :  "",
         className,
     )
 

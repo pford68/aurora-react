@@ -5,14 +5,14 @@ import TableColumn from "../components/datagrid/TableColumn";
 import ObservableList, {Record} from "../ObservableList";
 import {useRef} from "react";
 import Person, {type Measurements} from "../../tests/models/Person";
-import NumericRenderer from "../components/datagrid/renderers/NumericRenderer";
+import NumericRenderer from "../components/renderers/NumericRenderer";
 import people from "../../tests/fixtures/people.json";
 import airlineSafety from "../../tests/fixtures/airline_safety.json";
 import Container from "../components/datagrid/layout/Container";
 import BaseCommand from "../commands/BaseCommand";
 import type {ContextMenuParameter, Struct} from "../types/types";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
-import styles from "../components/datagrid/DataGrid.css";
+import styles from "../components/datagrid/DataGrid.module.css";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {

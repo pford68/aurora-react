@@ -2,35 +2,35 @@ import {
     type ReactElement,
     type MouseEvent,
     type KeyboardEvent,
-    type FocusEvent,
     useContext,
     useEffect,
     useRef,
     useState,
     useCallback,
 } from "react";
-import type {Command, Consumer, Coordinates, Predicate, Role, Struct} from "../../../types/types";
+import type {Command, Coordinates, Predicate, Struct} from "../../../types/types";
 import {GridContext} from "../GridContext";
 import {joinCss} from "../../../util/utils";
-import styles from "../DataGrid.css";
-import StringRenderer from "../renderers/StringRenderer";
-import Text from "../renderers/Text";
+import styles from "../DataGrid.module.css";
+import Text from "../../renderers/Text";
 import {type DataTypes} from "../../../types/types";
 import {type Record} from "../../../ObservableList";
-import type {BaseRendererProps} from "../renderers/types";
+import type {RendererProps} from "../../renderers/types";
 import {EditMode, FocusMode} from "./modes";
-import useRegistry from "./useRegistry";
 import useCellFactoryReducer from "./useCellFactoryReducer";
 import usePreviousState from "./usePreviousState";
 import {PageContext} from "../PageContext";
-import ContextMenu from "../ContextMenu";
+import ContextMenu from "../../overlays/ContextMenu.tsx";
+import {type ComponentPropsWithoutRef} from 'react';
+import defaultRegistry, {type Registry} from "../../renderers/Registry.ts";
+
 
 /**
  * Cell renderer props that can be configured from a TableColumn.
  *
  * @param T The data type of the data contained in the Record that supplies row data.
  */
-export type ColumnConfigurableProps<T extends Struct> = {
+export type CellProps<T extends Struct, V> = ComponentPropsWithoutRef<"input"> & {
     /**
      * The column of data to render in the table column.
      * Where the data is an array of objects, the name corresponds to a key
@@ -43,28 +43,14 @@ export type ColumnConfigurableProps<T extends Struct> = {
     /**
      * Whether the value can be edited.
      * @default false
-     * @deprecated
      */
     editable: boolean,
-    disabled?: boolean,
-    onChange?: Consumer<string>,
-    onFocus?: Consumer<FocusEvent>,
-    onBlur?: Consumer<FocusEvent>,
-    onKeyDown?: Consumer<KeyboardEvent>,
-    onClick?: Consumer<MouseEvent>,
-    validator?: Predicate<T | string | unknown>,
-    required?: boolean,
-    /**
-     * Whether the column can be made editable.
-     * @default false
-     */
-    readonly?: boolean,
-    renderer?: (props: CustomRendererProps<T, unknown>) => ReactElement,
+    validator?: Predicate<V>,
+    renderer?: (props: RendererProps<V, T>) => ReactElement,
     /** The initial width of the column. */
     width?: number,
     className?: string,
     format?: string,
-    placeholder?: string,
     /** Used by numeric renderers */
     precision?: number,
     /** Whether text should wrap. */
@@ -76,7 +62,7 @@ export type ColumnConfigurableProps<T extends Struct> = {
      * Turns the cells in the column into autocomplete fields.
      */
     listItems?: string[],
-    role?: Role,
+    valueChanged?: (value: V) => void,
 }
 
 /**
@@ -87,13 +73,12 @@ export type ColumnConfigurableProps<T extends Struct> = {
  *
  * @param T the type of data contained in a Record
  */
-export type CellFactoryProps<T extends Struct> = {
+export type CellFactoryProps<T extends Struct, V> = {
     rowIndex: number,
     colIndex: number,
     row: Record<T>,
-} & ColumnConfigurableProps<T>;
-
-export type CustomRendererProps<T extends Struct, V> = BaseRendererProps<V> & CellFactoryProps<T>;
+    registry?: Registry,
+} & CellProps<T, V>;
 
 
 /**
@@ -102,7 +87,7 @@ export type CustomRendererProps<T extends Struct, V> = BaseRendererProps<V> & Ce
  * @param props
  * @constructor
  */
-export default function CellFactory<T extends Struct>(props: CellFactoryProps<T>): ReactElement {
+export default function CellFactory<T extends Struct, V>(props: CellFactoryProps<T, V>): ReactElement {
     // ================================= Declarations
     const {
         name,
@@ -110,22 +95,22 @@ export default function CellFactory<T extends Struct>(props: CellFactoryProps<T>
         rowIndex,
         colIndex,
         className,
-        renderer,
+        renderer: CustomRenderer,
         editable,
-        type,
+        type = "string",
         format,
         placeholder,
-        onChange,
         onBlur,
         onFocus,
         onKeyDown: onKyDownProp,
         onClick: onClickProp,
         validator,
         required,
-        wrap,
+        wrap = false,
         width,
-        readonly,
         contextMenuItems,
+        registry = defaultRegistry,
+        valueChanged,
     } = props;
     const gridContext = useContext(GridContext);
     const {
@@ -136,7 +121,7 @@ export default function CellFactory<T extends Struct>(props: CellFactoryProps<T>
     const selectionModel = gridContext.selectionModel?.current;
     const focusModel = gridContext.focusModel?.current;
     const focusMode = new FocusMode(gridContext);
-    const editMode = new EditMode(gridContext);
+    const editMode = new EditMode();
     const pageContext = useContext(PageContext);
     const ref = useRef<HTMLDivElement>(null);
     const rendererRef = useRef<HTMLInputElement>(null);
@@ -150,7 +135,7 @@ export default function CellFactory<T extends Struct>(props: CellFactoryProps<T>
     });
     const previousActiveState = usePreviousState({watch: state.active});
     const [selected, setSelected] = useState(false);
-    const value = row.get(name);
+    const value = (row.get(name) as V);
 
 
     //==================================================== Effects
@@ -186,7 +171,7 @@ export default function CellFactory<T extends Struct>(props: CellFactoryProps<T>
 
     /*
     Setting the focusChanged and selectionChanged listeners. Currently, the focus/selection models are allowed
-    to change during re-renderers, so we reset the listeners when changes are detected..
+    to change during re-renderers, so we reset the listeners when changes are detected.
      */
     useEffect(() => {
         const onFocusChanged = (coords: Coordinates | undefined) => {
@@ -301,7 +286,7 @@ export default function CellFactory<T extends Struct>(props: CellFactoryProps<T>
     const {top, right, bottom, left} = selectionModel?.edges ?? {};
     const finalClass = joinCss(
         styles.cell,
-        readonly ? styles.readonly : "",
+        props.readOnly ? styles.readonly : "",
         selected ? styles.selected : "",
         rowIndex === top ? styles.top : "",
         rowIndex === bottom ? styles.bottom : "",
@@ -321,21 +306,19 @@ export default function CellFactory<T extends Struct>(props: CellFactoryProps<T>
     A custom renderer is like any other renderer, except that it needs the model row.
     So I separate the two Renderer types.
      */
-    const CustomRenderer = renderer;
-    const getRendererByType = useRegistry();
-    let Renderer;
-    if (CustomRenderer == null) {
-        Renderer = getRendererByType(value, type);
-    }
+    const Renderer =
+        CustomRenderer != null
+            ? CustomRenderer
+            : registry.getRenderer(type);
 
-    const finalOnChange =  (value: unknown) => {
-        const validate = (value:string): boolean => {
+    const finalOnChange =  () => {
+        const validate = (value:V): boolean => {
             if (required && value == null) return false;
             const result = validator?.(value) ?? true;
-            if (result) onChange?.(value);
+            if (result) valueChanged?.(value);
             return result;
         }
-        if (!validate(String(value))) {
+        if (!validate(value)) {
            dispatch({type: "invalidate", payload: false});
         } else {
             dispatch({type: "validated", payload: true});
@@ -348,8 +331,9 @@ export default function CellFactory<T extends Struct>(props: CellFactoryProps<T>
         name,
         editable,
         rendererRef,
-        readonly,
+        readOnly: props.readOnly,
         value,
+        row: CustomRenderer != null ? row : undefined,  // Custom renderers need access to the row bc they handle compound values.
         format,
         rowIndex,
         colIndex,
@@ -363,6 +347,7 @@ export default function CellFactory<T extends Struct>(props: CellFactoryProps<T>
         active: state.active,
         precision: typeof value === "number" ? props.precision : undefined,
     }
+
 
     return (
         <div
@@ -382,14 +367,9 @@ export default function CellFactory<T extends Struct>(props: CellFactoryProps<T>
                 onDoubleClick={onClick}
                 onKeyDown={onKeyDown}
             >
-                {value == null && !state.active ?
-                    <Text value={placeholder} className={styles.null} validator={validator} /> :
-                    (
-                        CustomRenderer != null
-                            ? <CustomRenderer {...rendererProps} row={row} active={state.active} />
-                            : Renderer != null ? <Renderer {...rendererProps} /> :
-                                <StringRenderer {...rendererProps} />
-                    )
+                {value == null && !state.active
+                    ? <Text value={placeholder} className={styles.null} validator={validator} />
+                    : <Renderer {...rendererProps} />
                 }
             </div>
             {contextMenuItems != null ? (
@@ -400,10 +380,6 @@ export default function CellFactory<T extends Struct>(props: CellFactoryProps<T>
             ) : ""}
         </div>
     )
-}
-CellFactory.defaultProps = {
-    type: "string",
-    wrap: false,
 }
 
 

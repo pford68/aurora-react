@@ -1,6 +1,6 @@
 import type {ReactElement} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import styles from "../DataGrid.css";
+import styles from "../DataGrid.module.css";
 import {SORT_DIRECTION_ASC} from "../constants";
 
 type SortButtonProps = {

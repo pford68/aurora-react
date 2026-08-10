@@ -13,7 +13,7 @@ const meta: Meta<PropsAndArgs> = {
         name: "Message",
         value: "Hello, world!",
         placeholder: "NULL",
-        readonly: false,
+        readOnly: false,
         disabled: false,
     },
 };

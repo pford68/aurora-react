@@ -1,10 +1,9 @@
 import {type ReactElement, type RefObject, useEffect, useRef, useState, useContext} from "react";
 import {Record} from "./../../ObservableList";
 import type {Coordinates, Struct} from "../../types/types";
-import styles from "./DataGrid.css";
+import styles from "./DataGrid.module.css";
 import {Emitter, type Observable} from "./../../Observable";
 import {PageContext} from "./PageContext";
-import RowFactory from "./RowFactory";
 import {GridContext} from "./GridContext";
 import type {SelectionChange} from "./SelectionModel";
 
@@ -19,6 +18,7 @@ type PageFactoryProps<T extends Struct> = {
     root?: HTMLElement | undefined | null,
     offset?: number,
     threshold?: number | number[],
+    rowFactory: (row: T, rowIndex: number) => ReactElement,
 };
 
 /**
@@ -35,8 +35,9 @@ export default function PageFactory<T extends Struct>(props: PageFactoryProps<T>
         rowHeight,
         pageSize,
         root,
-        offset,
+        offset = 0,
         threshold,
+        rowFactory,
     } = props;
 
     const visiblePages = useRef<Set<number>>(new Set([]));
@@ -64,6 +65,7 @@ export default function PageFactory<T extends Struct>(props: PageFactoryProps<T>
             observer={observer.current}
             emitter={emitter}
             pageIndex={index}
+            rowFactory={rowFactory}
         />
     ));
 }
@@ -81,6 +83,7 @@ type PageProps<T extends Struct> = {
     observer: IntersectionObserver,
     emitter: RefObject<Observable<IntersectionResult>>,
     pageIndex: number,
+    rowFactory: (row: T, rowIndex: number) => ReactElement,
 };
 
 /**
@@ -97,6 +100,7 @@ function Page<T extends Struct>(props: PageProps<T>): ReactElement {
         observer,
         pageIndex,
         emitter,
+        rowFactory,
     } = props;
     const gridContext = useContext(GridContext);
     const selectionModel = gridContext.selectionModel?.current;
@@ -177,13 +181,7 @@ function Page<T extends Struct>(props: PageProps<T>): ReactElement {
                             style={{height: `${height}px`}}
                             data-page-index={pageIndex}
                         >
-                            {rows.map((row, rowIndex) => (
-                                <RowFactory
-                                    key={rowIndex}
-                                    rowIndex={start + rowIndex}
-                                    row={row}
-                                />
-                            ))}
+                            {rows.map((row, rowIndex) => rowFactory(row, start + rowIndex))}
                         </div>
                     )
                     : (

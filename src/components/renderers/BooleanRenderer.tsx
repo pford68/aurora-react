@@ -1,11 +1,11 @@
 import React from "react";
 import {joinCss} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
-import type {BaseRendererProps} from "./types.ts";
+import type {RendererProps} from "./types.ts";
 import StatefulInput from "./StatefulInput.tsx";
 import Text from "./Text.tsx";
 
-export type BooleanRendererProps = BaseRendererProps<boolean> & {
+export type BooleanRendererProps = RendererProps<boolean> & {
     value: boolean,
     format: "checkbox" | "switch" | "text",
 };

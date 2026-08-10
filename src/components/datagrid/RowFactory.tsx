@@ -1,22 +1,22 @@
 import {type ReactElement, useContext} from "react";
-import {Record} from "./../../ObservableList";
+import {Record as DataRow} from "./../../ObservableList";
 import type {Struct} from "../../types/types";
-import CellFactory from "./cells/CellFactory";
 import {joinCss} from "./../../util/utils";
-import styles from "./DataGrid.css";
+import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext";
+import type {CellProps} from "./cells/CellFactory.tsx";
 
-type RowFactoryProps = {
-    row: Record<Struct>,
+type RowFactoryProps<T extends Struct, V> = {
+    row: DataRow<Struct>,
     rowIndex: number,
     className?: string,
+    cellFactory: (columnConfig: CellProps<T, V>, index: number, rowIndex: number) => ReactElement,
 }
 
-export default function RowFactory(props: RowFactoryProps): ReactElement {
+export default function RowFactory<T extends Struct, V>(props: RowFactoryProps<T, V>): ReactElement {
     const {
-        row,
         rowIndex,
-        className,
+        cellFactory
     } = props;
 
     const gridContext = useContext(GridContext);
@@ -24,21 +24,9 @@ export default function RowFactory(props: RowFactoryProps): ReactElement {
 
     return (
         <div className={joinCss(styles.row, alternateRows && rowIndex % 2 !== 0 ? styles.alternate : "")}>
-            {columns.map((col, index) => (
-                <CellFactory
-                    {...col.props}
-                    key={`${rowIndex}:${index}`}
-                    row={row}
-                    name={col.props.name}
-                    rowIndex={rowIndex}
-                    colIndex={index}
-                    className={className}
-                />
-            ))}
+            {columns.map((col, index) => {
+                return cellFactory(col.props, index, rowIndex);
+            })}
         </div>
     )
-}
-
-RowFactory.defaultProps = {
-    alternateRows: false,
 }
