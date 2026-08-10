@@ -1,5 +1,5 @@
 import {useEffect} from "react";
-import CopyCommand from "../../../commands/CopyCommand";
+import CopyCommand from "../commands/CopyCommand.ts";
 
 
 export function useStorageClipboard(): void {
