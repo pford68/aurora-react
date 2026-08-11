@@ -1,11 +1,11 @@
 import React from "react";
 import {joinCss, toISODateString} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
-import type {BaseRendererProps} from "./types.ts";
+import type {RendererProps} from "./types.ts";
 import Text from "./Text.tsx";
 import StatefulInput from "./StatefulInput.tsx";
 
-export type DateRendererProps = BaseRendererProps<number> & Record<string, never> & {
+export type DateRendererProps = RendererProps<number> & Record<string, never> & {
     addTime: boolean,
 };
 

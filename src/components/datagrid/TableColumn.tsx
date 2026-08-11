@@ -7,10 +7,10 @@ import {
     useCallback,
 } from "react";
 import type {BiFunction, Struct} from "../../types/types";
-import styles from "./DataGrid.css";
+import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext";
 import type {DataTypes} from "../../types/types";
-import {type ColumnConfigurableProps} from "./cells/CellFactory";
+import {type CellRenderProps} from "./cells/GridCell.tsx";
 import SortButton from "./headers/SortButton";
 import {MIN_COLUMN_WIDTH, SORT_DIRECTION_ASC, SORT_DIRECTION_DESC} from "./constants";
 import ColumnResizer from "./headers/ColumnResizer";
@@ -20,8 +20,8 @@ import Pin from "./headers/Pin";
 
 
 /**
- * Extends ColumnConfigurableProps so that the CellFactory can be configured from the TableColumn.
- * @augments ColumnConfigurableProps
+ * Extends ColumnConfigurableProps so that the GridCell can be configured from the TableColumn.
+ * @augments CellRenderProps
  *
  * @param T The data type of the data contained in the Record that supplies row data.
  */
@@ -76,7 +76,7 @@ export type TableColumnProps<T extends Struct> = {
     onResize?: (colName: string, delta: number) => void,
     /** The HTML title attribute */
     title: boolean,
-} & ColumnConfigurableProps<T>;
+} & CellRenderProps<T>;
 
 
 /**
@@ -90,11 +90,11 @@ export default function TableColumn<T extends Struct>(props: TableColumnProps<T>
     const {
         text,
         name,
-        sortable,
-        resizable,
-        wrap,
-        title,
-        sticky,
+        sortable = true,
+        resizable = true,
+        wrap = false,
+        title = true,
+        sticky = false,
         type,
     } = props;
 
@@ -251,37 +251,10 @@ export default function TableColumn<T extends Struct>(props: TableColumnProps<T>
         </div>
     );
 }
-TableColumn.defaultProps = {
-    editable: false,
-    readonly: false,
-    value: undefined,
-    visible: true,
-    sortable: true,
-    secondary: false,
-    active: false,
-    sticky: false,
-    sortDirection: SORT_DIRECTION_ASC,
-    altText: undefined,
-    comparator: defaultComparator,
-    precision: undefined,
-    row: undefined,
-    index: undefined,
-    onResize: undefined,
-    resizable: true,
-    placeholder: "NULL",
-    wrap: false,
-    title: true,
-};
+
 
 
 /* ============================================ Private */
-function defaultComparator(a: unknown, b: unknown) {
-   if (typeof a === "number" && typeof b === "number") {
-       return a -b;
-   }
-   return String(a).localeCompare(String(b));
-}
-
 function onDragOver(e: DragEvent): void {
     e.preventDefault();
 }

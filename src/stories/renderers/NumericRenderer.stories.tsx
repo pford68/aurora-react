@@ -1,5 +1,5 @@
 import * as React from "react";
-import type {Meta} from "@storybook/react";
+import type {Meta} from "@storybook/react-vite";
 import NumericRenderer from "../../components/renderers/NumericRenderer";
 
 type PropsAndArgs = React.ComponentProps<typeof NumericRenderer> & {width: number};

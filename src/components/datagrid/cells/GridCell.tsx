@@ -30,7 +30,7 @@ import defaultRegistry, {type Registry} from "../../renderers/Registry.ts";
  *
  * @param T The data type of the data contained in the Record that supplies row data.
  */
-export type CellProps<T extends Struct, V> = ComponentPropsWithoutRef<"input"> & {
+export type CellRenderProps<T extends Struct, V> = ComponentPropsWithoutRef<"input"> & {
     /**
      * The column of data to render in the table column.
      * Where the data is an array of objects, the name corresponds to a key
@@ -67,18 +67,18 @@ export type CellProps<T extends Struct, V> = ComponentPropsWithoutRef<"input"> &
 
 /**
  * CellFactoryProps does <strong>not</strong> extend BaseRendererProps. While
- * the CellFactory uses information passed down from the TableColumn to configure
- * its renderer, the CellFactory does not allow the props to trickle down. Its
+ * the GridCell uses information passed down from the TableColumn to configure
+ * its renderer, the GridCell does not allow the props to trickle down. Its
  * props can be quite different from the props it ultimately sets on its renderer.
  *
  * @param T the type of data contained in a Record
  */
-export type CellFactoryProps<T extends Struct, V> = {
+export type GridCellProps<T extends Struct, V> = {
     rowIndex: number,
     colIndex: number,
     row: Record<T>,
     registry?: Registry,
-} & CellProps<T, V>;
+} & CellRenderProps<T, V>;
 
 
 /**
@@ -87,7 +87,7 @@ export type CellFactoryProps<T extends Struct, V> = {
  * @param props
  * @constructor
  */
-export default function CellFactory<T extends Struct, V>(props: CellFactoryProps<T, V>): ReactElement {
+export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>): ReactElement {
     // ================================= Declarations
     const {
         name,
@@ -96,10 +96,11 @@ export default function CellFactory<T extends Struct, V>(props: CellFactoryProps
         colIndex,
         className,
         renderer: CustomRenderer,
-        editable,
+        editable = true,
+        readOnly = false,
         type = "string",
         format,
-        placeholder,
+        placeholder = "NULL",
         onBlur,
         onFocus,
         onKeyDown: onKyDownProp,
@@ -134,7 +135,9 @@ export default function CellFactory<T extends Struct, V>(props: CellFactoryProps
         name,
     });
     const previousActiveState = usePreviousState({watch: state.active});
-    const [selected, setSelected] = useState(false);
+    const [selected, setSelected] = useState(() => {
+        return  selectionModel?.isContained(rowIndex, colIndex) ?? false;
+    });
     const value = (row.get(name) as V);
 
 
@@ -195,12 +198,6 @@ export default function CellFactory<T extends Struct, V>(props: CellFactoryProps
             selectionModel?.off("selectionChanged", onSelectionChanged);
         };
     }, []);
-
-
-    useEffect(() => {
-        const result = selectionModel?.isContained(rowIndex, colIndex) ?? false;
-        setSelected(result);
-    }, [pageContext.page])
 
 
     /*
@@ -331,7 +328,7 @@ export default function CellFactory<T extends Struct, V>(props: CellFactoryProps
         name,
         editable,
         rendererRef,
-        readOnly: props.readOnly,
+        readOnly,
         value,
         row: CustomRenderer != null ? row : undefined,  // Custom renderers need access to the row bc they handle compound values.
         format,

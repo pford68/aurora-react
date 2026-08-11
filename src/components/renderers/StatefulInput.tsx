@@ -1,4 +1,4 @@
-import {type ReactElement, type RefObject, useState, useEffect, type ComponentPropsWithoutRef} from "react";
+import {type ReactElement, type RefObject, useState, type ComponentPropsWithoutRef} from "react";
 import type {Predicate} from "../../types/types.ts";
 import {joinCss} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
@@ -30,19 +30,14 @@ export default function StatefulInput(props: StatefulInputProps): ReactElement {
         autoComplete,
     } = props;
     const [value, setValue] = useState(initValue);
-    const [valid, setValid] = useState(true);
-
-    useEffect(() => {
-        if (!(validator?.(value) ?? true)) {
-            setValid(false);
-        }
-    }, []);
-
+    const [valid, setValid] = useState(() => {
+        return validator?.(value) ?? true;
+    });
 
     return (
         <input
             {...props}
-            ref={ref?.current !== undefined ? ref : undefined}
+            ref={ref}
             value={value ?? initValue}
             onInput={e => {
                 const {target} = e;

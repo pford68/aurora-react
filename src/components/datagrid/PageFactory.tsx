@@ -69,11 +69,6 @@ export default function PageFactory<T extends Struct>(props: PageFactoryProps<T>
         />
     ));
 }
-PageFactory.defaultProps = {
-    threshold: 0,
-}
-
-
 
 
 type PageProps<T extends Struct> = {

@@ -2,7 +2,6 @@ import {type Dispatch, type RefObject, useContext, useReducer} from "react";
 import type {CellFactoryAction, CellFactoryState} from "./types";
 import SaveCommand from "../../../commands/SaveCommand";
 import {GridContext} from "../GridContext";
-import {useParserRegistry} from "./useRegistry";
 
 type useReducerProps = {
     /** The reducer uses the value from this element. */
@@ -15,14 +14,13 @@ type useReducerProps = {
 
 export default function useCellFactoryReducer(props: useReducerProps): [CellFactoryState, Dispatch<CellFactoryAction>] {
 
-    const {ref, name, rowIndex} = props;
+    const {ref, rowIndex} = props;
     const gridContext = useContext(GridContext);
     const {
         items,
         undoStack,
         redoStack,
     } = gridContext;
-    const getParserByType = useParserRegistry();
 
     const reducer = (state: CellFactoryState, action: CellFactoryAction) => {
         switch (action.type) {
@@ -30,12 +28,10 @@ export default function useCellFactoryReducer(props: useReducerProps): [CellFact
             case "clear":
                 return {...state, active: true, task: action.type};
             case "deactivate": { // Sends to focused mode and flushes changes.
-                const type = ref.current?.type ?? "string";
                 const value = ref.current?.value;
                 if (items != null && value != null && !(value.trim().length === 0 && !gridContext.nullable)) {
-                    const parsedValue = getParserByType(value, type);
                     const cmd = new SaveCommand(items);
-                    cmd.setParameter({index: rowIndex, value: {[name]: parsedValue}})
+                    cmd.setParameter({index: rowIndex, value})
                     cmd.execute();
                     redoStack?.clear();
                     undoStack?.push(cmd);

@@ -1,11 +1,12 @@
-import {createContext, type ReactElement, type RefObject, useRef} from "react";
+import {type ReactElement, useRef} from "react";
 import styles from "./Container.module.css";
 import {joinCss} from "../../../util/utils";
+import {ContainerContext as ContainerContext1, containerContext} from "./ContainerContext.tsx";
 
 
 type ContainerProps = {
-    height: number,
     resizable: boolean,
+    height?: number,
     children: ReactElement,
     border?: boolean,
     width?: number,
@@ -20,7 +21,7 @@ type ContainerProps = {
 export default function Container(props: ContainerProps) {
     const {
         height,
-        resizable,
+        resizable = false,
         width,
         children,
         className,
@@ -40,27 +41,14 @@ export default function Container(props: ContainerProps) {
             )}
             style={{height: `${height}px`, width: `${width != null ? `${width}px` : "auto"}`}}
         >
-            <ContainerContext.Provider value={{
-                ...initialContext,
+            <ContainerContext1 value={{
+                ...containerContext,
                 containerRef: ref,
             }}>
                 {children}
-            </ContainerContext.Provider>
+            </ContainerContext1>
         </div>
     );
 }
-Container.defaultProps = {
-    resizable: false,
-}
 
 
-type ContainerContextType = {
-    resizable: boolean,
-    containerRef?: RefObject<HTMLElement | null>,
-    height?: number,
-    width?: number,
-}
-const initialContext: ContainerContextType = {
-    resizable: false,
-}
-export const ContainerContext = createContext<ContainerContextType>(initialContext)

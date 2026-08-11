@@ -1,5 +1,5 @@
 import * as React from "react";
-import type {Meta, StoryObj} from "@storybook/react";
+import type {Meta, StoryObj} from "@storybook/react-vite";
 import DataGrid from "../components/datagrid/DataGrid";
 import TableColumn from "../components/datagrid/TableColumn";
 import ObservableList, {Record} from "../ObservableList";
@@ -105,11 +105,21 @@ const defaultRenderer = (args: PropsAndArgs) => {
                         />
                     )
                 }}
+                comparator={(a:Measurements, b:Measurements) => {
+                    return a.height - b.height;
+                }}
             />
         </DataGrid>
     );
 };
 
+const containerRenderer= (args: PropsAndArgs) => {
+    return (
+        <div style={{overflow: "auto", display: "flex", height: `${args.height}px`, border: "1px solid silver"}}>
+            {defaultRenderer(args)}
+        </div>
+    )
+}
 
 const airlineSafetyRenderer = (args: PropsAndArgs) => {
     const props = {...args, width: undefined};
@@ -147,6 +157,14 @@ export const Primary: Story = {
     },
     render: defaultRenderer,
 };
+
+export const Portal: Story = {
+    args: {
+        data: new ObservableList(people.map((item => new Person(item)))),
+        sortColumn: "lastName",
+    },
+    render: containerRenderer,
+}
 
 export const AirlineSafety: Story = {
     args: {

@@ -1,13 +1,13 @@
 import React from "react";
 import StatefulInput from "./StatefulInput.tsx";
-import type {BaseRendererProps} from "./types.ts";
+import type {RendererProps} from "./types.ts";
 import {COMMON_DEFAULT_PROPS} from "../datagrid/constants.ts";
 import Text from "./Text.tsx";
 import {joinCss} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
 
 
-export type StringProps = BaseRendererProps<string> & {
+export type StringProps = RendererProps<string> & {
     autoComplete?: boolean,
 };
 
@@ -26,7 +26,7 @@ export default function StringRenderer(props: StringProps): React.ReactElement {
     const nextProps = {
         ...props,
         name,
-        value: value != null ? String(value) : undefined,
+        value,
         placeholder: String(props.placeholder),
         className: joinCss(baseClassName, styles.active),
     }

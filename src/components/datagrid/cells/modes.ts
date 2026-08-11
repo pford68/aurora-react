@@ -165,10 +165,8 @@ export class FocusMode implements CellState {
  * of various key commands when a cell is in "edit mode."
  */
 export class EditMode implements CellState {
-    readonly #context: GridContextType;
 
-    constructor(ctx: GridContextType) {
-        this.#context = ctx;
+    constructor() {
     }
 
     onKeyDown = (e: KeyboardEvent, dispatch: Dispatch<CellFactoryAction>) => {

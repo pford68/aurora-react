@@ -1,5 +1,5 @@
 import {type ReactElement, useContext} from "react";
-import styles from "../DataGrid.css";
+import styles from "../DataGrid.module.css";
 import {GridContext} from "../GridContext";
 
 type ColumnStyleProps = {

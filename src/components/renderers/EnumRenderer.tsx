@@ -1,5 +1,5 @@
 import {type ReactElement} from "react";
-import type {BaseRendererProps} from "./types.ts";
+import type {RendererProps} from "./types.ts";
 import Text from "./Text.tsx";
 import StatefulInput from "./StatefulInput.tsx";
 import {v4 as uuid} from "uuid";
@@ -7,7 +7,7 @@ import styles from "./Renderers.module.css";
 import {joinCss} from "../../util/utils.ts";
 import type {Role} from "../../types/types.ts";
 
-type EnumRendererProps = BaseRendererProps<string> & {
+type EnumRendererProps = RendererProps<string> & {
     listItems: string[],
     role: Role,
 }

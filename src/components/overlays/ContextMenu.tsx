@@ -19,7 +19,6 @@ export default function ContextMenu(props: ContextMenuProps): ReactElement {
         className,
     } = props;
     const [state, setState] = useState({visible: false, top: 0, left:0 });
-    const popupRef: RefObject<HTMLDivElement | null> = useRef(null);
     const eventTarget = useRef<HTMLElement | null>(null);
     const gridContext = useContext(GridContext);
 
@@ -63,7 +62,7 @@ export default function ContextMenu(props: ContextMenuProps): ReactElement {
                 targetRef.current.removeEventListener("contextmenu", onContextMenu)
             }
         }
-    }, [targetRef.current, popupRef]);
+    }, []);
 
     if (state.visible) {
         commands.forEach((c => {

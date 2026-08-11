@@ -1,7 +1,7 @@
 import * as React from "react";
 import StatefulInput from "../../components/renderers/StatefulInput";
 import styles from "./Renderers.stories.module.css";
-import type {Meta} from "@storybook/react";
+import type {Meta} from "@storybook/react-vite";
 
 type PropsAndArgs = React.ComponentProps<typeof StatefulInput> & {width: number, name: string};
 

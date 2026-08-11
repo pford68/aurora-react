@@ -3,15 +3,15 @@ import {
     type KeyboardEvent,
     useReducer,
     useRef,
-    useCallback,
     useEffect,
-    useContext,
-    type RefObject
+    type RefObject,
+    useState,
+    useContext
 } from "react";
 import PageFactory from "./PageFactory";
 import ObservableList, {Record} from "./../../ObservableList";
 import type {Command, Struct} from "../../types/types";
-import styles from "./DataGrid.css";
+import styles from "./DataGrid.module.css";
 import {joinCss} from "./../../util/utils";
 import {GridContext} from "./GridContext";
 import FocusModel from "./FocusModel";
@@ -19,10 +19,111 @@ import SelectionModel from "./SelectionModel";
 import {SORT_DIRECTION_ASC} from "./constants";
 import ColumnStyle from "./layout/ColumnStyle";
 import {CommandStack} from "../../util/CommandStack";
-import {useStorageClipboard} from "./clipboard/useStorageClipboard";
+import {useStorageClipboard} from "../../hooks/useStorageClipboard.tsx";
 import TableColumn from "./TableColumn";
-import ContextMenu from "./ContextMenu";
-import {ContainerContext} from "./layout/Container";
+import ContextMenu from "../overlays/ContextMenu.tsx";
+import GridRow from "./GridRow.tsx";
+import GridCell, {type CellRenderProps} from "./cells/GridCell.tsx";
+import {useVirtualizedGrid} from "../../hooks/useVirtualizedGrid.tsx";
+import useContainerNode from "../../hooks/useContainerNode.tsx";
+import {ContainerContext} from "./layout/ContainerContext.tsx";
+
+
+// ==================================== Private
+function reducer(state: GridState, action: GridAction): GridState {
+    const {type, payload} = action;
+    const err = "Payload missing.This shouldn't happen.";
+    switch (type) {
+        case 'sort': {
+            if (payload == null) {
+                console.warn(`sort action: ${err}`);
+                return state;
+            }
+            const sortColumns = [...state.sortColumns];
+            sortColumns.pop();
+            sortColumns.unshift(payload.name);
+            return {...state, sortColumns};
+        }
+        case 'reverseSort':
+            if (payload == null) {
+                console.warn(`reverse sort action: ${err}`);
+                return state;
+            }
+            return {...state, sortDirection: String(payload.value)};
+        case 'undo': {
+            const undoStack = state.undoStack.clone();
+            const redoStack = state.redoStack.clone();
+            const cmd = undoStack?.pop();
+            cmd?.undo();
+            if (cmd != null) redoStack.push(cmd);
+            return {...state, undoStack, redoStack};
+        }
+        case 'redo': {
+            const undoStack = state.undoStack.clone();
+            const redoStack = state.redoStack.clone();
+            const cmd = redoStack?.pop();
+            cmd?.redo();
+            if (cmd != null) undoStack.push(cmd);
+            return {...state, undoStack, redoStack};
+        }
+        case "pin": {
+            const {payload} = action;
+            if (payload != null) {
+                const {pinned} = state;
+                pinned.add(payload.name);
+                return {...state, pinned: new Set(pinned)};
+            }
+            return state;
+        }
+        case "unpin": {
+            const {payload} = action;
+            if (payload != null) {
+                const {pinned} = state;
+                pinned.delete(payload.name);
+                return {...state, pinned: new Set(pinned)};
+            }
+            return state;
+        }
+        case "update": {
+            return {...state, lastUpdated: new Date().getTime()}
+        }
+        case "fitContainer": {
+            return {...state, fitContainer: true};
+        }
+        default:
+            throw new Error();
+    }
+}
+
+
+function defaultRRowFactory<T extends Struct, V>(row: T, rowIndex: number) {
+    return  (
+        <GridRow
+            key={rowIndex}
+            rowIndex={rowIndex}
+            row={row}
+            cellFactory={(columnConfig: CellRenderProps<T, V>, index, rowIndex) => {
+                // TODO:  may want to do more here.
+                return (
+                    <GridCell
+                        {...columnConfig}
+                        key={`${rowIndex}:${index}`}
+                        row={row}
+                        rowIndex={rowIndex}
+                        colIndex={index}
+                    />
+                )
+            }}
+        />
+    );
+}
+
+function defaultComparator(a: unknown, b: unknown) {
+    if (typeof a === "number" && typeof b === "number") {
+        return a -b;
+    }
+    return String(a).localeCompare(String(b));
+}
 
 
 export type DataGridProps = {
@@ -87,8 +188,9 @@ export type DataGridProps = {
      * A list of Commands that will be used to crete a contextmenu.
      * This is both necessary and sufficient
      */
-    contextMenuItems?: Command<Struct>[],
+    contextMenuItems?: Command<Struct>[]
     containerRef?: RefObject<HTMLElement>,
+    rowFactory?: (row: Struct, rowIndex:number) => ReactElement,
 };
 
 
@@ -132,12 +234,12 @@ export default function DataGrid(props: DataGridProps): ReactElement {
     const {
         data,
         className,
-        stickyHeaders,
-        nullable,
-        alternateRows,
+        stickyHeaders = true,
+        nullable = false,
+        alternateRows = false,
         columnSizing,
-        rowHeight,
-        pageSize,
+        rowHeight = 48, // TODO: Sync with grid-template rows,
+        pageSize = 15,
         children,
         contextMenuItems,
         containerRef,
@@ -147,27 +249,15 @@ export default function DataGrid(props: DataGridProps): ReactElement {
     const gridRef = useRef<HTMLDivElement>(null);
 
     //================================== Get visible columns once per render.
-    const getChildArray = useCallback(
-        () => {
-            return Array.isArray(children) ? children : [children]
-        },
-        [children],
-    );
-
-    const getVisibleColumns = useCallback(
-        () => {
-            return getChildArray()
-                .filter(child => child.type === TableColumn);
-        },
-        [children],
-    );
+    const getVisibleColumns =  (children:ReactElement | ReactElement[]) => {
+        const childArray = Array.isArray(children) ? children : [children];
+        return childArray
+            .filter(child => child.type === TableColumn);
+    }
 
 
-    const visibleColumns = getVisibleColumns();
-    const getMaxColumnWidth = useCallback(
-        () => ((containerWidth ?? 0) / visibleColumns.length),
-        [containerHeight, containerWidth, visibleColumns]
-    );
+    const visibleColumns = getVisibleColumns(children);
+    const getMaxColumnWidth = () => ((containerWidth ?? 0) / visibleColumns.length)
 
     //=================================== State
     const rowCount = data.length;
@@ -198,7 +288,8 @@ export default function DataGrid(props: DataGridProps): ReactElement {
         }
     }, [
         data.length,
-        visibleColumns
+        visibleColumns,
+        rowCount
     ]);
 
 
@@ -227,7 +318,8 @@ export default function DataGrid(props: DataGridProps): ReactElement {
     const wrappedComparator = (a: Record<Struct>, b: Record<Struct>): number => {
         const sortColumn = visibleColumns
             .find(col => col.props.name === state.sortColumns[0]);
-        const {comparator, name} = sortColumn?.props ?? {};
+        if (sortColumn == null) return 0;
+        const {comparator = defaultComparator, name} = sortColumn.props;
         return state.sortDirection === SORT_DIRECTION_ASC
             ? comparator?.(a.get(name), b.get(name))
             : comparator?.(b.get(name), a.get(name));
@@ -304,6 +396,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
                     offset={pageSize * rowHeight}
                     pageSize={8}
                     rowHeight={rowHeight}
+                    rowFactory={defaultRRowFactory}
                 />
             </div>
             {
@@ -319,82 +412,3 @@ export default function DataGrid(props: DataGridProps): ReactElement {
         </GridContext.Provider>
     )
 }
-DataGrid.defaultProps = {
-    alternateRows: false,
-    stickyHeaders: true,
-    scrollable: false,
-    nullable: false,
-    pageSize: 15,
-    rowHeight: 48, // TODO: Sync with grid-template rows,
-}
-
-
-// ==================================== Private
-
-function reducer(state: GridState, action: GridAction): GridState {
-    const {type, payload} = action;
-    const err = "Payload missing.This shouldn't happen.";
-    switch (type) {
-        case 'sort': {
-            if (payload == null) {
-                console.warn(`sort action: ${err}`);
-                return state;
-            }
-            const sortColumns = [...state.sortColumns];
-            sortColumns.pop();
-            sortColumns.unshift(payload.name);
-            return {...state, sortColumns};
-        }
-        case 'reverseSort':
-            if (payload == null) {
-                console.warn(`reverse sort action: ${err}`);
-                return state;
-            }
-            return {...state, sortDirection: String(payload.value)};
-        case 'undo': {
-            const undoStack = state.undoStack.clone();
-            const redoStack = state.redoStack.clone();
-            const cmd = undoStack?.pop();
-            cmd?.undo();
-            if (cmd != null) redoStack.push(cmd);
-            return {...state, undoStack, redoStack};
-        }
-        case 'redo': {
-            const undoStack = state.undoStack.clone();
-            const redoStack = state.redoStack.clone();
-            const cmd = redoStack?.pop();
-            cmd?.redo();
-            if (cmd != null) undoStack.push(cmd);
-            return {...state, undoStack, redoStack};
-        }
-        case "pin": {
-            const {payload} = action;
-            if (payload != null) {
-                const {pinned} = state;
-                pinned.add(payload.name);
-                return {...state, pinned: new Set(pinned)};
-            }
-            return state;
-        }
-        case "unpin": {
-            const {payload} = action;
-            if (payload != null) {
-                const {pinned} = state;
-                pinned.delete(payload.name);
-                return {...state, pinned: new Set(pinned)};
-            }
-            return state;
-        }
-        case "update": {
-            return {...state, lastUpdated: new Date().getTime()}
-        }
-        case "fitContainer": {
-            return {...state, fitContainer: true};
-        }
-        default:
-            throw new Error();
-    }
-}
-
-
-

@@ -4,16 +4,16 @@ import type {Struct} from "../../types/types";
 import {joinCss} from "./../../util/utils";
 import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext";
-import type {CellProps} from "./cells/CellFactory.tsx";
+import type {CellRenderProps} from "./cells/GridCell.tsx";
 
-type RowFactoryProps<T extends Struct, V> = {
+type GridRowProps<T extends Struct, V> = {
     row: DataRow<Struct>,
     rowIndex: number,
     className?: string,
-    cellFactory: (columnConfig: CellProps<T, V>, index: number, rowIndex: number) => ReactElement,
+    cellFactory: (columnConfig: CellRenderProps<T, V>, index: number, rowIndex: number) => ReactElement,
 }
 
-export default function RowFactory<T extends Struct, V>(props: RowFactoryProps<T, V>): ReactElement {
+export default function GridRow<T extends Struct, V>(props: GridRowProps<T, V>): ReactElement {
     const {
         rowIndex,
         cellFactory
