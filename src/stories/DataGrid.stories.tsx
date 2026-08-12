@@ -30,6 +30,9 @@ const meta: Meta<PropsAndArgs> = {
         nullable: false,
         stickyHeaders: true,
         columnSizing: "auto",
+        contained: false,
+        resizable: true,
+        border: true,
     }
 };
 
@@ -113,13 +116,6 @@ const defaultRenderer = (args: PropsAndArgs) => {
     );
 };
 
-const containerRenderer= (args: PropsAndArgs) => {
-    return (
-        <div style={{overflow: "auto", display: "flex", height: `${args.height}px`, border: "1px solid silver"}}>
-            {defaultRenderer(args)}
-        </div>
-    )
-}
 
 const airlineSafetyRenderer = (args: PropsAndArgs) => {
     const props = {...args, width: undefined};
@@ -127,24 +123,16 @@ const airlineSafetyRenderer = (args: PropsAndArgs) => {
 
     return (
         <section ref={containerRef} style={{height: `${args.height}px`}}>
-            <Container height={500} resizable border>
-                <DataGrid {...props}>
-                    <TableColumn type="string" name="airline" text="Airline" sticky />
-                    <TableColumn type="number" name="avail_seat_km_per_week" text="Available Seats"   />
-                    <TableColumn type="number" name="incidents_85_99" text="Incidents 1999" />
-                    <TableColumn type="number" name="fatal_accidents_85_99" text="Fatal Accidents 1999" />
-                    <TableColumn type="number" name="fatalities_85_99" text="Fatalities 1999"/>
-                    <TableColumn type="number" name="incidents_00_14" text="Incidents 2014" />
-                    <TableColumn type="number" name="fatal_accidents_00_14" text="Fatal Accidents 2014" />
-                    <TableColumn type="number" name="fatalities_00_14" text="Fatalities 2014"/>
-                </DataGrid>
-            </Container>
-            <div className={styles.footer}>
-                <div>Row count: {args.data.length}</div>
-                <cite>
-                    Source: <a href="https://github.com/fivethirtyeight/data/tree/master/airline-safety">538</a>
-                </cite>
-            </div>
+            <DataGrid {...props} height={500}>
+                <TableColumn type="string" name="airline" text="Airline" sticky />
+                <TableColumn type="number" name="avail_seat_km_per_week" text="Available Seats"   />
+                <TableColumn type="number" name="incidents_85_99" text="Incidents 1999" />
+                <TableColumn type="number" name="fatal_accidents_85_99" text="Fatal Accidents 1999" />
+                <TableColumn type="number" name="fatalities_85_99" text="Fatalities 1999"/>
+                <TableColumn type="number" name="incidents_00_14" text="Incidents 2014" />
+                <TableColumn type="number" name="fatal_accidents_00_14" text="Fatal Accidents 2014" />
+                <TableColumn type="number" name="fatalities_00_14" text="Fatalities 2014"/>
+            </DataGrid>
         </section>
     );
 };
@@ -158,13 +146,6 @@ export const Primary: Story = {
     render: defaultRenderer,
 };
 
-export const Portal: Story = {
-    args: {
-        data: new ObservableList(people.map((item => new Person(item)))),
-        sortColumn: "lastName",
-    },
-    render: containerRenderer,
-}
 
 export const AirlineSafety: Story = {
     args: {

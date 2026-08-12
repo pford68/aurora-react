@@ -6,7 +6,7 @@ import {
     useEffect,
     type RefObject,
     useState,
-    useContext
+    useContext, useCallback
 } from "react";
 import PageFactory from "./PageFactory";
 import ObservableList, {Record} from "./../../ObservableList";
@@ -24,9 +24,7 @@ import TableColumn from "./TableColumn";
 import ContextMenu from "../overlays/ContextMenu.tsx";
 import GridRow from "./GridRow.tsx";
 import GridCell, {type CellRenderProps} from "./cells/GridCell.tsx";
-import {useVirtualizedGrid} from "../../hooks/useVirtualizedGrid.tsx";
 import useContainerNode from "../../hooks/useContainerNode.tsx";
-import {ContainerContext} from "./layout/ContainerContext.tsx";
 
 
 // ==================================== Private
@@ -97,7 +95,7 @@ function reducer(state: GridState, action: GridAction): GridState {
 
 
 function defaultRRowFactory<T extends Struct, V>(row: T, rowIndex: number) {
-    return  (
+    return (
         <GridRow
             key={rowIndex}
             rowIndex={rowIndex}
@@ -120,7 +118,7 @@ function defaultRRowFactory<T extends Struct, V>(row: T, rowIndex: number) {
 
 function defaultComparator(a: unknown, b: unknown) {
     if (typeof a === "number" && typeof b === "number") {
-        return a -b;
+        return a - b;
     }
     return String(a).localeCompare(String(b));
 }
@@ -188,9 +186,13 @@ export type DataGridProps = {
      * A list of Commands that will be used to crete a contextmenu.
      * This is both necessary and sufficient
      */
-    contextMenuItems?: Command<Struct>[]
-    containerRef?: RefObject<HTMLElement>,
-    rowFactory?: (row: Struct, rowIndex:number) => ReactElement,
+    contextMenuItems?: Command<Struct>[],
+    height?: number,
+    width?: number,
+    resizable?: boolean,
+    border?: boolean,
+    contained?: boolean,
+    rowFactory?: (row: Struct, rowIndex: number) => ReactElement,
 };
 
 
@@ -242,14 +244,27 @@ export default function DataGrid(props: DataGridProps): ReactElement {
         pageSize = 15,
         children,
         contextMenuItems,
-        containerRef,
+        height,
+        width,
+        resizable = false,
+        border = true,
+        contained = true,
     } = props;
 
+    //const [containerNode, setContainerNode] = useState<HTMLElement | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    /*
+    const containerRefCallback = useCallback((node: HTMLElement | null) => {
+        if (node !== null) {
+            setContainerNode(node); // Save the actual DOM node to state
+        }
+    }, []);*/
     const containerWidth: number = 0, containerHeight: number = 0;
     const gridRef = useRef<HTMLDivElement>(null);
 
     //================================== Get visible columns once per render.
-    const getVisibleColumns =  (children:ReactElement | ReactElement[]) => {
+    const getVisibleColumns = (children: ReactElement | ReactElement[]) => {
         const childArray = Array.isArray(children) ? children : [children];
         return childArray
             .filter(child => child.type === TableColumn);
@@ -341,11 +356,6 @@ export default function DataGrid(props: DataGridProps): ReactElement {
 
     const columnWidths = useRef(new Map(visibleColumns.map(col => [col.props.name, col.props.width])))
     const finalColumnSizing = columnSizing && !state.fitContainer ? columnSizing : "equal";
-    const containerContext = useContext(ContainerContext);
-    const container = containerRef != null
-        ? containerRef.current :
-        (containerContext.containerRef?.current ?? undefined);
-
 
     return (
         <GridContext.Provider value={{
@@ -370,45 +380,58 @@ export default function DataGrid(props: DataGridProps): ReactElement {
                 maxWidth={getMaxColumnWidth()}
             />
             <div
-                ref={gridRef}
+                ref={containerRef}
                 className={joinCss(
-                    styles.grid,
-                    finalColumnSizing === "max-content" ? styles.columnSizing : "",
+                    styles.container,
+                    resizable ? styles.resizable : "",
+                    border === true && contained ? styles.border : styles.borderless,
+                    !contained ? styles.containerless : "",
                     className
                 )}
-                onKeyDown={onKeyDown}
+                style={{height: `${height}px`, width: `${width != null ? `${width}px` : "auto"}`}}
             >
                 <div
+                    ref={gridRef}
                     className={joinCss(
-                        styles.row,
-                        stickyHeaders ? styles.stickyHeaders : ""
+                        styles.grid,
+                        finalColumnSizing === "max-content" ? styles.columnSizing : "",
+                        resizable && !contained? styles.resizable : "",
+                        className
                     )}
-                    onContextMenuCapture={e => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }}
+                    onKeyDown={onKeyDown}
                 >
-                    {visibleColumns}
+                    <div
+                        className={joinCss(
+                            styles.row,
+                            stickyHeaders ? styles.stickyHeaders : ""
+                        )}
+                        onContextMenuCapture={e => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }}
+                    >
+                        {visibleColumns}
+                    </div>
+                    <PageFactory
+                        data={data.getAll()}
+                        root={containerRef.current}
+                        offset={pageSize * rowHeight}
+                        pageSize={8}
+                        rowHeight={rowHeight}
+                        rowFactory={defaultRRowFactory}
+                    />
                 </div>
-                <PageFactory
-                    data={data.getAll()}
-                    root={container}
-                    offset={pageSize * rowHeight}
-                    pageSize={8}
-                    rowHeight={rowHeight}
-                    rowFactory={defaultRRowFactory}
-                />
+                {
+                    contextMenuItems
+                        ? (
+                            <ContextMenu
+                                commands={contextMenuItems}
+                                targetRef={gridRef}
+                            />
+                        )
+                        : ""
+                }
             </div>
-            {
-                contextMenuItems
-                    ? (
-                        <ContextMenu
-                            commands={contextMenuItems}
-                            targetRef={gridRef}
-                        />
-                    )
-                    : ""
-            }
         </GridContext.Provider>
     )
 }

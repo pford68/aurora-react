@@ -1,3 +1,24 @@
+.container {
+    overflow: auto;
+    box-sizing: border-box;
+    position: relative;
+}
+.container.resizable, .datagrid.resizable {
+    resize: vertical;
+}
+.container.border {
+    --datagrid-border: none;
+    border: 1px solid var(--datagrid-border-color, silver);
+}
+.container.borderless {
+    border: none;
+}
+.container.containerless {
+    display:contents;
+    --datagrid-border: unset;
+}
+
+
 .grid {
     --local-row-height: var(--datagrid-row-height, 48px);
     --local-font-size: var(--datagrid-font-size, 10pt);
