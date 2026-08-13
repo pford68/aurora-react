@@ -38,3 +38,11 @@ export function isTextSelected(): boolean {
 export function toISODateString(timestamp: number): string {
     return new Date(timestamp).toISOString().split("T")[0];
 }
+
+export function isDateString(value:string): boolean {
+    if (!value || typeof value !== "string" || value.trim().length === 0) return false;
+
+    const timestamp = Date.parse(value);
+    return !isNaN(timestamp);
+}
+
