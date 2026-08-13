@@ -1,0 +1,100 @@
+/*------------------------------- Structure -----------*/
+.container {
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+
+
+/*-------------------------------- Types ------------*/
+.enum datalist {
+    background-color: #c6c1c1;
+    border: 1px solid blue;
+    border-radius: 0 0 5px 5px;
+    border-top: none;
+    font-family: sans-serif;
+    width: 350px;
+    padding: 5px;
+}
+
+.enum option {
+    background-color: white;
+    padding: 4px;
+    color: blue;
+    margin-bottom: 1px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+
+/*-------------------------------- States -----*/
+.invalid,
+.input:invalid {
+    border: 1px solid red;
+}
+
+.invalid:focus-visible {
+    outline: red;
+}
+
+/* -------------------------------- Formats --------*/
+.switch {
+    position: relative;
+    display: inline-block;
+    width: var(--switch-width, 60px);
+    height: var(--switch-height, 34px);
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.switch .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.switch input:checked + .slider {
+    background-color: #2196F3;
+}
+
+.switch input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+.switch input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.switch .slider.round {
+    border-radius: var(--switch-border-radius, 34px);
+}
+
+.switch .slider.round:before {
+    border-radius: 50%;
+}
