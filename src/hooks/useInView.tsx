@@ -5,27 +5,21 @@ const useInView = <T extends Element>(
     options: IntersectionObserverInit = {}
 ) => {
     const [isIntersecting, setIsIntersecting] = useState(false);
-    const [observer, setObserver] = useState<IntersectionObserver | null>(null);
 
     useEffect(() => {
         const handleIntersect = (entries: IntersectionObserverEntry[]) => {
             setIsIntersecting(entries[0].isIntersecting);
         };
 
-        observer?.disconnect();
-
+        let observer:IntersectionObserver | null;
         if (target.current) {
-            const _observer = new IntersectionObserver(handleIntersect, options);
-            _observer.observe(target.current);
-            setObserver(_observer);
+            observer = new IntersectionObserver(handleIntersect, options);
+            observer.observe(target.current);
         }
+
+        return () => observer?.disconnect();
     }, [target.current, options.root, options.rootMargin, options.threshold]);
 
-    useEffect(() => {
-        return () => {
-            observer?.disconnect();
-        };
-    }, []);
 
     return isIntersecting;
 };

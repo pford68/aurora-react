@@ -1,0 +1,261 @@
+.container {
+    overflow: auto;
+    box-sizing: border-box;
+    position: relative;
+}
+.container.resizable, .datagrid.resizable {
+    resize: vertical;
+}
+.container.border {
+    --datagrid-border: none;
+    border: 1px solid var(--datagrid-border-color, silver);
+}
+.container.borderless {
+    border: none;
+}
+.container.containerless {
+    display:contents;
+    --datagrid-border: unset;
+}
+
+
+.grid {
+    --local-row-height: var(--datagrid-row-height, 48px);
+    --local-font-size: var(--datagrid-font-size, 10pt);
+    --local-header-layer-zIndex: var(--datagrid-header-layer-zIndex, 50);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, auto);
+    grid-template-rows: repeat(auto-fit, var(--local-row-height));
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: var(--local-font-size);
+    border: var(--datagrid-border, 1px solid silver);
+    box-sizing: border-box;
+    overscroll-behavior: contain;
+    width: max-content;
+    user-select: none;
+}
+
+.grid .page,
+.grid .row {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-template-rows: repeat(auto-fit, var(--local-row-height));
+}
+
+.grid .page .row {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+}
+
+.grid .row .cell {
+    background-color: var(--datagrid-row-bgcolor, white);
+}
+.grid .row.alternate .cell {
+    background-color: var(--datagrid-row-bgcolor-alternate, #f2f1f1);
+}
+
+
+.grid.columnSizing {
+    width: min-content;
+}
+
+.grid.scrollable {
+    overflow: auto;
+}
+
+
+/*------------------------------------ Headers -------------------*/
+.header {
+    background-color: #d9d9d9;
+    font-weight: bold;
+    display: grid;
+    grid-template-areas:
+            "left center top gutter"
+            "left center right gutter"
+            "left center bottom gutter";
+    grid-template-columns: 8px auto 12px 5px;
+    grid-template-rows: repeat(3, 33%);
+    align-items: center;
+    border: 1px solid silver;
+    min-width: 30px;
+    box-sizing: border-box;
+}
+
+.header.resizable {
+    grid-template-columns: 8px minmax(5px, auto) 12px 5px;
+}
+
+.header .title {
+    display: flex;
+    justify-content: space-between;
+    grid-area: center;
+    align-self: center;
+    cursor: pointer;
+}
+.header.nowrap .title *:first-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header .title .sortButton {
+    align-self: center;
+    margin: 0 5px;
+    visibility: hidden;
+}
+.header .title:hover .sortButton {
+    visibility: visible;
+}
+
+/*------------------------------------ Body cells -------------------*/
+.cell {
+    border: 1px solid silver;
+    border-top: none;
+    border-left: none;
+    height: var(--local-row-height);
+    box-sizing: border-box;
+    cursor: text;
+}
+.cell:focus, .cell:focus-within {
+    user-select: text;
+}
+.cell > [tabindex="-1"] {
+    width: 100%;
+    height: 100%;
+    padding: 8px 8px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+}
+.cell > [tabindex="-1"]:focus {
+    outline: none;
+    box-shadow: var(--cell-box-shadow-focus, 0 0 4px 0 #676666 inset) !important;
+}
+
+.cell.active > [tabindex="-1"] {
+    outline: none;
+    padding: 0;
+}
+
+/*
+ Passes to elements beneath the cell.
+ */
+.cell.active .active {
+    outline: none;
+    border: none;
+    width: 100%;
+    height: 100%;
+    padding: 8px 8px;
+    box-sizing: border-box;
+    font-size: var(--local-font-size);
+}
+
+
+.cell .invalid {
+    border: 1px solid red;
+}
+
+.cell.readonly {
+    cursor: default !important;
+}
+
+
+.grid .page:last-child .row:last-child .cell {
+    border-bottom: none;
+}
+.grid .row .cell:last-child {
+    border-right: none;
+}
+
+.cell.nowrap  > [tabindex="-1"] .inactive {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* -------------------------- Selected cells ---------*/
+.cell.selected {
+    user-select: none;
+    background-color: rgba(0, 255, 0, 0.33) !important;
+}
+.cell.selected.left {
+    border-left: 1px solid green
+}
+.cell.selected.right {
+    border-right: 1px solid green;
+}
+.cell.selected.top {
+    border-top: 1px solid green;
+}
+.cell.selected.bottom {
+    border-bottom: 1px solid green;
+}
+
+
+/* -------------- Sticky headers/cells ----------------------------------------- */
+.row.sticky-headers {
+    position: sticky;
+    top: 0 !important;
+    z-index: var(--local-header-layer-zIndex);
+}
+
+.sticky-column {
+    position: sticky;
+    z-index: calc(var(--local-header-layer-zIndex) - 10);
+}
+
+.header.sticky-headers.sticky-column {
+    z-index: calc(var(--local-header-layer-zIndex) + 10);
+}
+
+
+
+.footer {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: var(--local-font-size);
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0;
+}
+
+
+.null {
+    color: #cccccc;
+}
+
+.columnResizer {
+    grid-area: gutter;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+}
+
+.columnResizer.tooSmall {
+    cursor: e-resize;
+}
+.columnResizer.tooLarge {
+    cursor: w-resize;
+}
+
+.divider {
+    border-right: 3px solid silver;
+}
+
+/* ---------------------------------- Data Types ---------- */
+.cell.number > [tabindex="-1"],
+.header.number .title {
+    justify-content: end;
+}
+
+
+.edge {
+    width: 0;
+    height: 100%;
+    border: 3px solid gray;
+    position: absolute;
+    z-index: 100;
+    box-sizing: border-box;
+    visibility: hidden;
+}
