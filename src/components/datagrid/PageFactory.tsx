@@ -15,7 +15,7 @@ type PageFactoryProps<T extends Struct> = {
     data: Record<T>[],
     pageSize: number,
     rowHeight: number,
-    root?: HTMLElement | undefined | null,
+    root?: RefObject<HTMLElement | undefined | null>,
     offset?: number,
     threshold?: number | number[],
     rowFactory: (row: T, rowIndex: number) => ReactElement,
@@ -45,7 +45,7 @@ export default function PageFactory<T extends Struct>(props: PageFactoryProps<T>
 
     // IntersectionObserver: one for all pages
     const observer = useRef(new IntersectionObserver(intersectionCallback.bind(null, emitter, visiblePages), {
-        root,
+        root: root?.current,
         rootMargin: `${offset}px 0px`,
         threshold,
     }));

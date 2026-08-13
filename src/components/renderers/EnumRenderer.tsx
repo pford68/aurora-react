@@ -1,6 +1,5 @@
 import {type ReactElement} from "react";
 import type {RendererProps} from "./types.ts";
-import Text from "./Text.tsx";
 import StatefulInput from "./StatefulInput.tsx";
 import {v4 as uuid} from "uuid";
 import styles from "./Renderers.module.css";
@@ -15,20 +14,14 @@ type EnumRendererProps = RendererProps<string> & {
 export default function EnumRenderer(props: EnumRendererProps): ReactElement {
     const {
         name,
-        active,
         value,
         rendererRef,
-        className,
         listItems,
     } = props;
 
     const nextProps = {
         name,
         value: String(value),
-    }
-
-    if (!active) {
-        return <Text value={value} className={className} />;
     }
 
     const listId = uuid();

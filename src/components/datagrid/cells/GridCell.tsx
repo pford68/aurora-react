@@ -304,7 +304,7 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
     So I separate the two Renderer types.
      */
     const Renderer =
-        CustomRenderer != null
+        CustomRenderer
             ? CustomRenderer
             : registry.getRenderer(type);
 

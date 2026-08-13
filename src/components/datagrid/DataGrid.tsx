@@ -3,10 +3,7 @@ import {
     type KeyboardEvent,
     useReducer,
     useRef,
-    useEffect,
-    type RefObject,
-    useState,
-    useContext, useCallback
+    useEffect
 } from "react";
 import PageFactory from "./PageFactory";
 import ObservableList, {Record} from "./../../ObservableList";
@@ -24,7 +21,6 @@ import TableColumn from "./TableColumn";
 import ContextMenu from "../overlays/ContextMenu.tsx";
 import GridRow from "./GridRow.tsx";
 import GridCell, {type CellRenderProps} from "./cells/GridCell.tsx";
-import useContainerNode from "../../hooks/useContainerNode.tsx";
 
 
 // ==================================== Private
@@ -260,7 +256,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
             setContainerNode(node); // Save the actual DOM node to state
         }
     }, []);*/
-    const containerWidth: number = 0, containerHeight: number = 0;
+    const containerWidth: number = 0;
     const gridRef = useRef<HTMLDivElement>(null);
 
     //================================== Get visible columns once per render.
@@ -414,7 +410,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
                     </div>
                     <PageFactory
                         data={data.getAll()}
-                        root={containerRef.current}
+                        root={containerRef}
                         offset={pageSize * rowHeight}
                         pageSize={8}
                         rowHeight={rowHeight}

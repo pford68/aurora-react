@@ -1,18 +1,17 @@
 import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
 import DataGrid from "../components/datagrid/DataGrid";
-import TableColumn from "../components/datagrid/TableColumn";
+import TableColumn, {type TableColumnProps} from "../components/datagrid/TableColumn";
 import ObservableList, {Record} from "../ObservableList";
 import {useRef} from "react";
 import Person, {type Measurements} from "../../tests/models/Person";
 import NumericRenderer from "../components/renderers/NumericRenderer";
 import people from "../../tests/fixtures/people.json";
 import airlineSafety from "../../tests/fixtures/airline_safety.json";
-import Container from "../components/datagrid/layout/Container";
 import BaseCommand from "../commands/BaseCommand";
 import type {ContextMenuParameter, Struct} from "../types/types";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
-import styles from "../components/datagrid/DataGrid.module.css";
+import Text from "../components/renderers/Text";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {
@@ -82,7 +81,7 @@ const defaultRenderer = (args: PropsAndArgs) => {
             <TableColumn
                 name="firstName"
                 text="First Name"
-                validator={v => v != "Bob"}
+                validator={(v:string) => v != "Bob"}
                 contextMenuItems={[
                     new HighlightCommand()
                 ]}
@@ -95,9 +94,12 @@ const defaultRenderer = (args: PropsAndArgs) => {
             <TableColumn
                 name="measurements"
                 text="Height"
-                renderer={props => {
+                renderer={(props: TableColumnProps<Measurements>) => {
                     const measurements = props.row.get(props.name);
-                    const {height} = (measurements as Measurements) ?? {};
+                    const {height} = measurements ?? {};
+                    if (!props.active) {
+                        return <Text value={height} />
+                    }
                     return (
                         <NumericRenderer
                             active={props.active}

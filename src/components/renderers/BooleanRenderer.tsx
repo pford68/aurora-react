@@ -3,7 +3,6 @@ import {joinCss} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
 import type {RendererProps} from "./types.ts";
 import StatefulInput from "./StatefulInput.tsx";
-import Text from "./Text.tsx";
 
 export type BooleanRendererProps = RendererProps<boolean> & {
     value: boolean,
@@ -16,25 +15,17 @@ export default function BooleanRenderer(props: BooleanRendererProps): React.Reac
         rendererRef,
         className,
         value,
-        active,
         format,
-        validator,
     } = props;
-
-    const baseClassName = joinCss(styles.renderer, styles.boolean, className);
 
     const overrides = {
         name,
         value: (value === true ? "true" : "false"),
-        className: joinCss(baseClassName, styles.active),
+        className: joinCss(styles.renderer, styles.boolean, styles.active, className),
         // "switch" is weeded out, but format == switch is handled later on.
         type: format,
         checked: value === true,
     };
-
-    if (!active) {
-        return <Text value={value} className={baseClassName} validator={validator} />;
-    }
 
     if (format === "switch") {
         return (

@@ -17,10 +17,10 @@ type ColumnStyleProps = {
 export default function ColumnStyle(props: ColumnStyleProps) {
     const gridContext = useContext(GridContext);
     const {
-        type,
+        type = "auto",
         columns,
         maxWidth,
-        minWidth
+        minWidth = 32,
     } = props;
     const widths = columns.map(col => {
         const {width, name} = col.props;
@@ -45,7 +45,4 @@ export default function ColumnStyle(props: ColumnStyleProps) {
         </style>
     )
 }
-ColumnStyle.defaultProps = {
-    type: "auto",
-    minWidth: 32,
-}
+

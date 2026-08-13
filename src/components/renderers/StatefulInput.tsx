@@ -27,7 +27,7 @@ export default function StatefulInput(props: StatefulInputProps): ReactElement {
         className,
         ref,
         onInput,
-        autoComplete,
+        autoComplete = false,
     } = props;
     const [value, setValue] = useState(initValue);
     const [valid, setValid] = useState(() => {
@@ -52,7 +52,7 @@ export default function StatefulInput(props: StatefulInputProps): ReactElement {
                 }
             }}
             className={joinCss(styles.input, !valid ? styles.invalid : "", className)}
-            autoComplete={autoComplete === true ? "on" : "off"}
+            autoComplete={autoComplete ? "on" : "off"}
         />
     );
 }

@@ -16,7 +16,7 @@ export default function DateRenderer(props: DateRendererProps): React.ReactEleme
         active,
         className,
         validator,
-        addTime,
+        addTime = false,
         rendererRef,
         readonly
     } = props;
@@ -38,9 +38,6 @@ export default function DateRenderer(props: DateRendererProps): React.ReactEleme
     return (
         <StatefulInput {...nextProps} type="date" ref={rendererRef} value={formattedValue} />
     );
-}
-DateRenderer.defaultProps = {
-    addTime: false,
 }
 
 

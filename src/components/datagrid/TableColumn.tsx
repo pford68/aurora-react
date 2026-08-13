@@ -91,6 +91,7 @@ export default function TableColumn<T extends Struct>(props: TableColumnProps<T>
         text,
         name,
         sortable = true,
+        visible = true,
         resizable = true,
         wrap = false,
         title = true,
