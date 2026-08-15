@@ -46,3 +46,7 @@ export function isDateString(value:string): boolean {
     return !isNaN(timestamp);
 }
 
+export function isValidTimestamp(value: number) {
+    return !Number.isNaN(new Date(value).getTime());
+}
+
