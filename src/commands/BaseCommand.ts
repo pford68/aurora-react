@@ -2,7 +2,7 @@ import type {Command} from "../types/types";
 
 /**
  * Base class for Commands
- * @param T The parameter type used by the Command
+ * @typeParam T The parameter type used by the Command
  */
 export default class BaseCommand<T>  implements Command<T>{
     readonly #params: T[];

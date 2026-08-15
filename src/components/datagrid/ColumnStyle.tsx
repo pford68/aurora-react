@@ -1,6 +1,6 @@
 import {type ReactElement, useContext} from "react";
-import styles from "../DataGrid.module.css";
-import {GridContext} from "../GridContext";
+import styles from "./DataGrid.module.css";
+import {GridContext} from "./GridContext.ts";
 
 type ColumnStyleProps = {
     type: "auto" | "equal",
