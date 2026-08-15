@@ -6,7 +6,7 @@ import {v4 as uuid} from "uuid";
 /**
  * The base class for data rows in the table model.
  *
- * @param T The type of data contained in the Record
+ * @typeParam T The type of data contained in the Record
  */
 export class Record<T extends Struct> {
     #data: T;
@@ -96,7 +96,7 @@ export type PartialUpdate<T extends Struct> = {
 /**
  * An array-like list that notifies listeners when its underlying data has changed.
  *
- * @param T The data of data contained in each Record in the list
+ * @typeParam T The type of data contained in each Record in the list
  */
 export default class ObservableList<T extends Struct> extends Emitter<ListChange<Struct>[]> {
     #data: Record<T>[];
