@@ -46,7 +46,7 @@ export default function StatefulInput(props: StatefulInputProps): ReactElement {
                     const result = validator?.(updatedValue) ?? true;
                     setValid(result);
                     setValue(updatedValue);
-                    if (result && onInput != null) {
+                    if (result) {
                         onInput?.(e);
                     }
                 }

@@ -5,47 +5,46 @@ import {
     useRef,
     type DragEvent,
     useCallback,
+    type ComponentPropsWithoutRef,
 } from "react";
-import type {BiFunction, Struct} from "../../types/types";
+import type {BiFunction, Command, Struct} from "../../types/types";
 import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext";
 import type {DataTypes} from "../../types/types";
-import {type CellRenderProps} from "./cells/GridCell.tsx";
 import SortButton from "./headers/SortButton";
 import {MIN_COLUMN_WIDTH, SORT_DIRECTION_ASC, SORT_DIRECTION_DESC} from "./constants";
 import ColumnResizer from "./headers/ColumnResizer";
 import {joinCss} from "./../../util/utils";
 import Pin from "./headers/Pin";
-
+import type {Renderer, RendererProps} from "../renderers/types.ts";
 
 
 /**
  * Extends ColumnConfigurableProps so that the GridCell can be configured from the TableColumn.
- * @augments CellRenderProps
- *
- * @param T The data type of the data contained in the Record that supplies row data.
+ * @augmentsRendererProps
  */
-export type TableColumnProps<T extends Struct> = {
+export type TableColumnProps<V> = ComponentPropsWithoutRef<"div"> & {
+    name: string,
     /**
      * Whether the column is sortable.
      * @default false
      */
-    sortable: boolean,
+    sortable?: boolean,
     /**
      * Whether to render the column initially.
      * @default true
      */
-    visible: boolean,
+    visible?: boolean,
     /**
      * Whether the column is initially pinned.
      * @default false
      */
-    sticky: boolean,
+    sticky?: boolean,
     /**
      * A custom sort function.
      * Use cases include values that are complex objects and sorting by multiple columns
      */
-    comparator: BiFunction<unknown, unknown, number>,
+    comparator?: BiFunction<V, V, number>,
     /**
      * The data type of the values in the column.
      * Must be one of the registered types or will revert to string.
@@ -53,6 +52,8 @@ export type TableColumnProps<T extends Struct> = {
     type?: DataTypes,
     /** The header text. Defaults to the value of the name prop. */
     text?: string,
+    renderer?: (props: RendererProps<any>) => ReactElement,
+    decorator?: (value: V) => Renderer<Struct, unknown>,
     /**
      * Used to customize the header
      * @todo
@@ -75,8 +76,14 @@ export type TableColumnProps<T extends Struct> = {
      */
     onResize?: (colName: string, delta: number) => void,
     /** The HTML title attribute */
-    title: boolean,
-} & CellRenderProps<T>;
+    title?: boolean,
+    wrap?: boolean,
+    width?: number,
+    cellFactory?: (props: TableColumnProps<V>, index: number, rowIndex: number, row: any) => ReactElement,
+    validator?: (value: V) => boolean,
+    required?: boolean,
+    contextMenuItems?: Command<V>[],
+};
 
 
 /**
@@ -91,7 +98,6 @@ export default function TableColumn<T extends Struct>(props: TableColumnProps<T>
         text,
         name,
         sortable = true,
-        visible = true,
         resizable = true,
         wrap = false,
         title = true,

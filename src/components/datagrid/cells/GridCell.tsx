@@ -12,9 +12,7 @@ import type {Command, Coordinates, Predicate, Struct} from "../../../types/types
 import {GridContext} from "../GridContext";
 import {joinCss} from "../../../util/utils";
 import styles from "../DataGrid.module.css";
-import Text from "../../renderers/Text";
 import {type DataTypes} from "../../../types/types";
-import {type Record} from "../../../ObservableList";
 import type {RendererProps} from "../../renderers/types";
 import {EditMode, FocusMode} from "./modes";
 import useCellFactoryReducer from "./useCellFactoryReducer";
@@ -23,12 +21,14 @@ import {PageContext} from "../PageContext";
 import ContextMenu from "../../overlays/ContextMenu.tsx";
 import {type ComponentPropsWithoutRef} from 'react';
 import defaultRegistry, {type Registry} from "../../renderers/Registry.ts";
+import withPlaceholder from "../../renderers/withPlaceholder.tsx";
+import withReadonlyMode from "../../renderers/withReadonlyMode.tsx";
 
 
 /**
  * Cell renderer props that can be configured from a TableColumn.
  *
- * @param T The data type of the data contained in the Record that supplies row data.
+ * @typeParam T The data type of the data contained in the Record that supplies row data.
  */
 export type CellRenderProps<T extends Struct, V> = ComponentPropsWithoutRef<"input"> & {
     /**
@@ -62,7 +62,6 @@ export type CellRenderProps<T extends Struct, V> = ComponentPropsWithoutRef<"inp
      * Turns the cells in the column into autocomplete fields.
      */
     listItems?: string[],
-    valueChanged?: (value: V) => void,
 }
 
 /**
@@ -76,7 +75,7 @@ export type CellRenderProps<T extends Struct, V> = ComponentPropsWithoutRef<"inp
 export type GridCellProps<T extends Struct, V> = {
     rowIndex: number,
     colIndex: number,
-    row: Record<T>,
+    row: T,
     registry?: Registry,
 } & CellRenderProps<T, V>;
 
@@ -91,7 +90,8 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
     // ================================= Declarations
     const {
         name,
-        row,
+        //value,
+        row,  // Temporary
         rowIndex,
         colIndex,
         className,
@@ -100,18 +100,14 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
         readOnly = false,
         type = "string",
         format,
-        placeholder = "NULL",
         onBlur,
         onFocus,
         onKeyDown: onKyDownProp,
         onClick: onClickProp,
-        validator,
-        required,
         wrap = false,
         width,
         contextMenuItems,
         registry = defaultRegistry,
-        valueChanged,
     } = props;
     const gridContext = useContext(GridContext);
     const {
@@ -126,7 +122,6 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
     const pageContext = useContext(PageContext);
     const ref = useRef<HTMLDivElement>(null);
     const rendererRef = useRef<HTMLInputElement>(null);
-
 
     // ================================================= State
     const [state, dispatch] = useCellFactoryReducer({
@@ -303,24 +298,11 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
     A custom renderer is like any other renderer, except that it needs the model row.
     So I separate the two Renderer types.
      */
-    const Renderer =
+    let Renderer =
         CustomRenderer
             ? CustomRenderer
             : registry.getRenderer(type);
-
-    const finalOnChange =  () => {
-        const validate = (value:V): boolean => {
-            if (required && value == null) return false;
-            const result = validator?.(value) ?? true;
-            if (result) valueChanged?.(value);
-            return result;
-        }
-        if (!validate(value)) {
-           dispatch({type: "invalidate", payload: false});
-        } else {
-            dispatch({type: "validated", payload: true});
-        }
-    };
+    Renderer = withPlaceholder(withReadonlyMode(Renderer));
 
 
     // Weeding out unwanted props from higher up, sending only true renderer props.
@@ -335,7 +317,6 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
         rowIndex,
         colIndex,
         type,
-        onChange: finalOnChange,
         onBlur,
         onFocus,
         onClick: onClickProp,
@@ -344,7 +325,6 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
         active: state.active,
         precision: typeof value === "number" ? props.precision : undefined,
     }
-
 
     return (
         <div
@@ -364,10 +344,7 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
                 onDoubleClick={onClick}
                 onKeyDown={onKeyDown}
             >
-                {value == null && !state.active
-                    ? <Text value={placeholder} className={styles.null} validator={validator} />
-                    : <Renderer {...rendererProps} />
-                }
+               <Renderer {...rendererProps} />
             </div>
             {contextMenuItems != null ? (
                 <ContextMenu

@@ -28,10 +28,10 @@ export default function useCellFactoryReducer(props: useReducerProps): [CellFact
             case "clear":
                 return {...state, active: true, task: action.type};
             case "deactivate": { // Sends to focused mode and flushes changes.
-                const value = ref.current?.value;
+                const {value, name} = ref.current ?? {};
                 if (items != null && value != null && !(value.trim().length === 0 && !gridContext.nullable)) {
                     const cmd = new SaveCommand(items);
-                    cmd.setParameter({index: rowIndex, value})
+                    cmd.setParameter({index: rowIndex, value: {[name]: value}})
                     cmd.execute();
                     redoStack?.clear();
                     undoStack?.push(cmd);

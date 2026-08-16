@@ -7,7 +7,7 @@ import StatefulInput from "./StatefulInput.tsx";
 export type NumericProps = RendererProps<number> & {
     precision?: number,
 };
-export default function NumericRenderer(props: NumericProps): React.ReactElement {
+export default function NumberRenderer(props: NumericProps): React.ReactElement {
     const {
         name,
         precision,

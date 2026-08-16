@@ -1,14 +1,14 @@
 import * as React from "react";
 import type {Meta} from "@storybook/react-vite";
-import NumericRenderer from "../../components/renderers/NumericRenderer";
+import NumberRenderer from "../../components/renderers/NumberRenderer.tsx";
 import withReadonlyMode from "../../components/renderers/withReadonlyMode.tsx";
 import type {ComponentType} from "react";
 
-type PropsAndArgs = React.ComponentProps<typeof NumericRenderer> & {width: number};
+type PropsAndArgs = React.ComponentProps<typeof NumberRenderer> & {width: number};
 
 const meta: Meta<PropsAndArgs> = {
     title: "renderers/NumericValue",
-    component: NumericRenderer,
+    component: NumberRenderer,
     args: {
         width: 800,
         name: "Number",
@@ -26,14 +26,14 @@ const renderDefault = (args: PropsAndArgs) => {
             <form style={{width: "50%"}}>
                 <label>
                     {props.name}
-                    <NumericRenderer {...props} />
+                    <NumberRenderer {...props} />
                 </label>
             </form>
         </div>
     );
 };
 
-const Renderer = withReadonlyMode(NumericRenderer as ComponentType<any>);
+const Renderer = withReadonlyMode(NumberRenderer as ComponentType<any>);
 const hocRenderer = (args: PropsAndArgs) => {
     const props = {...args, width: undefined};
     return (

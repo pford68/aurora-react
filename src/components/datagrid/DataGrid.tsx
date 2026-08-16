@@ -14,13 +14,13 @@ import {GridContext} from "./GridContext";
 import FocusModel from "./FocusModel";
 import SelectionModel from "./SelectionModel";
 import {SORT_DIRECTION_ASC} from "./constants";
-import ColumnStyle from "./layout/ColumnStyle";
+import ColumnStyle from "./ColumnStyle";
 import {CommandStack} from "../../util/CommandStack";
 import {useStorageClipboard} from "../../hooks/useStorageClipboard.tsx";
-import TableColumn from "./TableColumn";
+import TableColumn, {type TableColumnProps} from "./TableColumn";
 import ContextMenu from "../overlays/ContextMenu.tsx";
 import GridRow from "./GridRow.tsx";
-import GridCell, {type CellRenderProps} from "./cells/GridCell.tsx";
+import GridCell from "./cells/GridCell.tsx";
 
 
 // ==================================== Private
@@ -90,24 +90,27 @@ function reducer(state: GridState, action: GridAction): GridState {
 }
 
 
-function defaultRRowFactory<T extends Struct, V>(row: T, rowIndex: number) {
+function defaultCellFactory<T extends Struct, V>(columnConfig: TableColumnProps<V>, index: number, rowIndex: number, row: T){
+    // TODO:  may want to do more here.
+    return (
+        <GridCell
+            {...columnConfig}
+            key={`${rowIndex}:${index}`}
+            row={row}
+            rowIndex={rowIndex}
+            colIndex={index}
+        />
+    )
+}
+
+
+function defaultRowFactory<T extends Struct>(row: T, rowIndex: number) {
     return (
         <GridRow
             key={rowIndex}
             rowIndex={rowIndex}
             row={row}
-            cellFactory={(columnConfig: CellRenderProps<T, V>, index, rowIndex) => {
-                // TODO:  may want to do more here.
-                return (
-                    <GridCell
-                        {...columnConfig}
-                        key={`${rowIndex}:${index}`}
-                        row={row}
-                        rowIndex={rowIndex}
-                        colIndex={index}
-                    />
-                )
-            }}
+            cellFactory={defaultCellFactory}
         />
     );
 }
@@ -169,11 +172,6 @@ export type DataGridProps = {
      * The initial sort column.
      */
     sortColumn?: string,
-    /**
-     * Registers new type renderers for the current instance.
-     * @todo
-     */
-    register?: Struct[],
     /**
      * @todo
      */
@@ -414,7 +412,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
                         offset={pageSize * rowHeight}
                         pageSize={8}
                         rowHeight={rowHeight}
-                        rowFactory={defaultRRowFactory}
+                        rowFactory={defaultRowFactory}
                     />
                 </div>
                 {

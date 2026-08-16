@@ -5,7 +5,7 @@ import TableColumn from "./TableColumn.tsx";
 import ObservableList, {Record} from "../../ObservableList.ts";
 import {useRef} from "react";
 import Person, {type Measurements} from "../../../tests/models/Person.ts";
-import NumericRenderer from "../renderers/NumericRenderer.tsx";
+import NumberRenderer from "../renderers/NumberRenderer.tsx";
 import people from "../../../tests/fixtures/people.json";
 import airlineSafety from "../../../tests/fixtures/airline_safety.json";
 import BaseCommand from "../../commands/BaseCommand.ts";
@@ -102,7 +102,7 @@ const defaultRenderer = (args: PropsAndArgs) => {
                         return <Text value={height} />
                     }
                     return (
-                        <NumericRenderer
+                        <NumberRenderer
                             active={props.active}
                             rendererRef={props.rendererRef}
                             name={props.name}

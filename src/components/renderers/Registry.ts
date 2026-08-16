@@ -1,5 +1,5 @@
 import StringRenderer from "./StringRenderer.tsx";
-import NumericRenderer from "./NumericRenderer.tsx";
+import NumberRenderer from "./NumberRenderer.tsx";
 import DateRenderer from "./DateRenderer.tsx";
 import BooleanRenderer from "./BooleanRenderer.tsx";
 import type {ComponentType, ElementType} from "react";
@@ -7,7 +7,7 @@ import type {RendererProps} from "./types.ts";
 
 const defaultRegistry:Record<string, ElementType> = {
     "string": StringRenderer,
-    "number": NumericRenderer,
+    "number": NumberRenderer,
     "date": DateRenderer,
     "boolean": BooleanRenderer,
 }
