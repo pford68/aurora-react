@@ -4,11 +4,13 @@ import {joinCss} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
 
 
-type StatefulInputProps = ComponentPropsWithoutRef<"input"> & {
+export type StatefulInputProps<T> = ComponentPropsWithoutRef<"input"> & {
+    value?: T,
     ref?: RefObject<HTMLInputElement | null>,
     className?: string,
     validator?: Predicate<string | undefined | number | readonly string[]>,
     autoComplete?: boolean,
+    format?: string,
 }
 
 /**
@@ -20,7 +22,7 @@ type StatefulInputProps = ComponentPropsWithoutRef<"input"> & {
  * @param props
  * @constructor
  */
-export default function StatefulInput(props: StatefulInputProps): ReactElement {
+export default function StatefulInput<T>(props: StatefulInputProps<T>): ReactElement {
     const {
         value: initValue,
         validator,
@@ -29,8 +31,8 @@ export default function StatefulInput(props: StatefulInputProps): ReactElement {
         onInput,
         autoComplete = false,
     } = props;
-    const [value, setValue] = useState(initValue);
-    const [valid, setValid] = useState(() => {
+    const [value, setValue] = useState<string>(String(initValue));
+    const [valid, setValid] = useState<boolean>(() => {
         return validator?.(value) ?? true;
     });
 

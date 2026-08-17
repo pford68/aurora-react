@@ -1,6 +1,4 @@
-import type {
-    RefObject, ComponentPropsWithoutRef, ReactElement
-} from "react";
+import type {RefObject, ComponentPropsWithoutRef} from "react";
 import type {Command, Predicate, Struct} from "../../types/types.ts";
 
 /**
@@ -8,7 +6,7 @@ import type {Command, Predicate, Struct} from "../../types/types.ts";
  * @typeParam T - the type of the field value passed to the render
  * @typeParam U - the type of the data row, the object contained in a row of data
  */
-export type RendererProps<T, U extends Struct = Struct> = ComponentPropsWithoutRef<"input"> & {
+export type RendererProps<T, U extends Struct> = ComponentPropsWithoutRef<"input"> & {
     /**
      * Boolean for whether the value should be rendered in an editable node (e.g. input)
      * or within a readonly DIV.
@@ -26,7 +24,7 @@ export type RendererProps<T, U extends Struct = Struct> = ComponentPropsWithoutR
      * @returns {boolean} Whether the input value is valid.
      */
     validator?: Predicate<T>,
-    format?: string,
+    format?: string | Intl.DateTimeFormatOptions,
     /** The list of options for autocompletes. If present, the renderer supports autocompletes. */
     items?: {[key: string] :T}[],
     /**
@@ -34,13 +32,14 @@ export type RendererProps<T, U extends Struct = Struct> = ComponentPropsWithoutR
      * renderers that support using multiple values.
      */
     multiple?: boolean,
-    rendererRef?: RefObject<HTMLInputElement | null>,
+    ref?: RefObject<HTMLInputElement | null>,
     /**
      * The entire data row, needed for things like compound field values.
      */
     row?: U,
     /** Used by numeric renderers */
-    precision?: number,
+    scale?: number,
+    locale?: Intl.LocalesArgument,
     /** Whether text should wrap. */
     wrap?: boolean,
     /** Commands for the column's context menu. */
@@ -61,22 +60,13 @@ export type RendererProps<T, U extends Struct = Struct> = ComponentPropsWithoutR
 };
 
 /**
- * @typeParam T - the type for the data row, the object contained in a row of data, required by RendererProps
- * @typeParam V - the type for the value to be rendered
+ * @typeParam T - the data type of the value contained in the DTO
  */
-export interface Renderer<T extends Struct, V>{
+export interface DTO<T>{
     /** The string to represent the value when it renders */
     toString(): string;
-    /**
-     * The value contained in the renderer.  In the case of a Date,
-     * this would be the timestamp as a number.
-     */
-    value(): V;
-    /**
-     * The component to render in edit mode.  The DOM should be
-     * so simple in read mode that the cell factory handles that
-     * internally using toString().
-     */
-    render(props: RendererProps<V, T>): ReactElement;
-    validate(): boolean,
+    valueOf(): T;
+    toJSON(): {[key:string]: T};
+    update(value: T): void
+    readonly renderType: string;
 }

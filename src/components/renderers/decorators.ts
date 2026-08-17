@@ -1,17 +1,26 @@
-import type {DataTransferObject} from "./types.ts";
+import type {DTO} from "./types.ts";
 import {toISODateString} from "../../util/utils.ts";
 
+type DTOprops = {
+    format?: string | Intl.DateTimeFormatOptions,
+    locale?: Intl.LocalesArgument,
+    renderType?: "text" | "number" | "date" | "phone" | "email" | "checkbox" | "switch" | "radio",
+    scale?: number,
+}
 
-export abstract class AbstractDecorator<T> implements DataTransferObject<T> {
+/**
+ * @typeParam T - the data type of the value contained in the DTO
+ */
+export abstract class AbstractDTO<T> implements DTO<T> {
     protected get format(): string | undefined {
         return undefined;
     };
 
     protected constructor(){};
-
     abstract toString(): string;
-
     abstract valueOf(): T;
+    abstract update(value: T): void
+    abstract readonly renderType: string;
 
     toJSON(): {[key:string]: T} {
         return {value: this.valueOf()};
@@ -19,46 +28,53 @@ export abstract class AbstractDecorator<T> implements DataTransferObject<T> {
 }
 
 
-export class DateDecorator extends AbstractDecorator<number> {
+export class DateDTO extends AbstractDTO<number> {
     #value: number;
     #locale: Intl.LocalesArgument;
-    #options: Intl.DateTimeFormatOptions = {
+    #format: Intl.DateTimeFormatOptions = {
         year: 'numeric',   // Forces full 4-digit year (e.g., 2026)
         month: '2-digit',
         day: '2-digit',
     };
+    #renderType = "date";
 
-    constructor(value: number, locale?: Intl.LocalesArgument, options?: Intl.DateTimeFormatOptions) {
+    constructor(value: number, options?: DTOprops) {
         super();
         this.#value = value;
-        this.#locale = locale ?? this.#locale;
-        this.#options = options ?? this.#options;
+        if (options != null) {
+            const {locale} = options;
+            this.#locale = locale ?? this.#locale;
+        }
     }
 
     toString(): string {
         const v = this.valueOf();
         return this.#locale === undefined
             ? toISODateString(v)
-            : new Date(v).toLocaleString(this.#locale, this.#options);
+            : new Date(v).toLocaleString(this.#locale, this.#format);
     }
 
     valueOf(): number {
         return this.#value;
     }
 
+    update(value: number): void {
+        this.#value = Number(value);
+    }
+
     get value(): number {
         return this.#value;
     }
 
-    get locale(): Intl.LocalesArgument {
-        return this.#locale;
+    get renderType(): string {
+        return this.#renderType;
     }
 }
 
 
-export class DateTimeDecorator extends DateDecorator {
+export class DateTimeDTO extends DateDTO {
 
-    #options: Intl.DateTimeFormatOptions = {
+    #format: Intl.DateTimeFormatOptions = {
         year: 'numeric',   // Forces full 4-digit year (e.g., 2026)
         month: '2-digit',
         day: '2-digit',
@@ -66,53 +82,58 @@ export class DateTimeDecorator extends DateDecorator {
         minute: '2-digit'
     };
 
-    constructor(value: number, locale?: Intl.LocalesArgument, options?: Intl.DateTimeFormatOptions) {
-        super(value, locale);
-        this.#options = options  ?? this.#options;
+    constructor(value: number, options?: DTOprops) {
+        super(value, options);
+        if (options != null) {
+            const {format} = options;
+            if (typeof format !== "string") {
+                this.#format = format ?? this.#format;
+            }
+        }
     }
 
     toString(): string {
-        const dt = new Date(this.valueOf());
-        return this.locale !== undefined
-            ? dt.toLocaleString(this.locale, this.#options)
-            : dt.toISOString()
+        return new Date(this.valueOf()).toISOString();
     }
 }
 
-export class NumberDecorator extends AbstractDecorator<number> {
+export class NumberDTO extends AbstractDTO<number> {
     #value: number;
-    #locale: Intl.LocalesArgument;
     #scale: number = 2;
+    #renderType: string = "number";
 
-    constructor(value: number, scale?: number, locale?: Intl.LocalesArgument) {
+    constructor(value: number, options?: DTOprops) {
         super();
         this.#value = value;
-        this.#locale = locale ?? this.#locale;
-        this.#scale = scale ?? this.#scale;
+        if (options != null) {
+            const {scale} = options
+            this.#scale = scale ?? this.#scale;
+        }
     }
 
     toString(): string {
         const v =  this.valueOf().toFixed(this.#scale);
-        return this.#locale ? v.toLocaleString() : String(v);
+        return v.toLocaleString();
     }
 
     valueOf(): number {
-        return this.#value;
+        return Number(this.#value);
+    }
+
+    update(value: number): void {
+        this.#value = Number(value);
+    }
+
+    get renderType(): string {
+        return this.#renderType;
     }
 }
 
 
-export class CurrencyDecorator extends NumberDecorator{
+export class CurrencyDTO extends NumberDTO{
     #scale: number = 2;
     #format: string = "USD";
-    #locale: Intl.LocalesArgument = "en-US`"
-
-    constructor(value: number, locale: Intl.LocalesArgument = "en-US", format?: string, scale?: number) {
-        super(value, scale);
-        this.#scale = scale ?? this.#scale;
-        this.#locale = locale ?? this.#locale;
-        this.#format = format ?? this.#format;
-    }
+    #locale: Intl.LocalesArgument = "en-US";
 
     toString(): string {
         return `${this.valueOf().toLocaleString(this.#locale, {
@@ -122,14 +143,24 @@ export class CurrencyDecorator extends NumberDecorator{
             minimumFractionDigits: this.#scale,
         })}`;
     }
+
+    valueOf(): number {
+        const value = super.valueOf();
+        return !isNaN(value) ? value : 0;
+    }
 }
 
-export class StringDecorator extends AbstractDecorator<string> {
+export class StringDTO extends AbstractDTO<string> {
     #value: string;
+    #renderType: string = "text";
 
-    constructor(value: string) {
+    constructor(value: string, options?: DTOprops) {
         super();
         this.#value = value;
+        if (options != null) {
+            const {renderType} = options
+            this.#renderType = renderType ?? this.renderType;
+        }
     }
 
     toString(): string {
@@ -139,14 +170,27 @@ export class StringDecorator extends AbstractDecorator<string> {
     valueOf(): string {
         return this.#value;
     }
+
+    update(value: string): void {
+        this.#value = value;
+    }
+
+    get renderType(): string {
+        return this.#renderType;
+    }
 }
 
-export class BooleanDecorator extends AbstractDecorator<boolean> {
+export class BooleanDTO extends AbstractDTO<boolean> {
     #value: boolean;
+    #renderType: string = "text";
 
-    constructor(value: boolean) {
+    constructor(value: boolean, options?: DTOprops) {
         super();
         this.#value = value;
+        if (options != null) {
+            const {renderType} = options;
+            this.#renderType = renderType ?? this.renderType;
+        }
     }
 
     toString(): string {
@@ -155,5 +199,13 @@ export class BooleanDecorator extends AbstractDecorator<boolean> {
 
     valueOf(): boolean {
         return Boolean(this.#value);
+    }
+
+    update(value: boolean): void {
+        this.#value = value;
+    }
+
+    get renderType(): string {
+        return this.#renderType;
     }
 }

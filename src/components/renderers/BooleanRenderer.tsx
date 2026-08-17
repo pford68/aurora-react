@@ -3,19 +3,20 @@ import {joinCss} from "../../util/utils.ts";
 import styles from "./Renderers.module.css";
 import type {RendererProps} from "./types.ts";
 import StatefulInput from "./StatefulInput.tsx";
+import type {Struct} from "../../types/types.ts";
 
-export type BooleanRendererProps = RendererProps<boolean> & {
+export type BooleanRendererProps<T extends Struct> = RendererProps<boolean, T> & {
     value: boolean,
-    format: "checkbox" | "switch" | "text",
+    type: "checkbox" | "switch" | "text",
 };
 
-export default function BooleanRenderer(props: BooleanRendererProps): React.ReactElement {
+export default function BooleanRenderer<T extends Struct>(props: BooleanRendererProps<T>): React.ReactElement {
     const {
         name,
-        rendererRef,
+        ref,
         className,
         value,
-        format,
+        type,
     } = props;
 
     const overrides = {
@@ -23,26 +24,19 @@ export default function BooleanRenderer(props: BooleanRendererProps): React.Reac
         value: (value === true ? "true" : "false"),
         className: joinCss(styles.renderer, styles.boolean, styles.active, className),
         // "switch" is weeded out, but format == switch is handled later on.
-        type: format,
         checked: value === true,
     };
 
-    if (format === "switch") {
+    if (type === "switch") {
         return (
             <label className={styles.switch}>
-                <StatefulInput {...overrides} ref={rendererRef} type="checkbox" />
+                <StatefulInput {...overrides} ref={ref} type="checkbox" />
                 <span className={joinCss(styles.slider, styles.round)}></span>
             </label>
         )
     }
 
-    const finalFormat = format === "text" || format === "checkbox" ? format : "checkbox";
-
     return (
-        <StatefulInput {...overrides} ref={rendererRef} type={finalFormat}/>
+        <StatefulInput {...overrides} ref={ref} type={type}/>
     );
-}
-
-BooleanRenderer.defaultProps = {
-    value: false,
 }

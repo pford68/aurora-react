@@ -5,14 +5,14 @@ import TableColumn from "./TableColumn.tsx";
 import ObservableList, {Record} from "../../ObservableList.ts";
 import {useRef} from "react";
 import Person, {type Measurements} from "../../../tests/models/Person.ts";
-import NumberRenderer from "../renderers/NumberRenderer.tsx";
 import people from "../../../tests/fixtures/people.json";
 import airlineSafety from "../../../tests/fixtures/airline_safety.json";
 import BaseCommand from "../../commands/BaseCommand.ts";
-import type {ContextMenuParameter} from "../../types/types.ts";
+import type {ContextMenuParameter, Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
-import Text from "../renderers/Text.tsx";
 import type {RendererProps} from "../renderers/types.ts";
+import StatefulInput from "../renderers/StatefulInput.tsx";
+import {AbstractDTO} from "../renderers/decorators.ts";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {
@@ -39,6 +39,29 @@ const meta: Meta<PropsAndArgs> = {
 export default meta;
 
 type Story = StoryObj<PropsAndArgs>;
+
+class MeasurementDecorator extends AbstractDTO<number>{
+    #height: number;
+    #weight: number;
+
+    constructor({height, weight}: Measurements) {
+        super()
+        this.#height = height;
+        this.#weight = weight;
+    }
+
+    toString(): string {
+        return String(this.valueOf());
+    }
+
+    valueOf(): number {
+        return this.#height;
+    }
+
+    toJSON(): { [p: string]: number } {
+        return super.toJSON();
+    }
+}
 
 
 class LogCommand extends BaseCommand<ContextMenuParameter>{
@@ -90,23 +113,20 @@ const defaultRenderer = (args: PropsAndArgs) => {
             <TableColumn name="lastName" text="Last Name" required />
             <TableColumn type="currency" name="amount" text="Amount" />
             <TableColumn type="number" name="age" text="Age" />
-            <TableColumn name="active" text="Active" />
+            <TableColumn type="boolean" name="active" text="Active" />
             <TableColumn type="date" name="lastUpdated" text="Last Updated" width={100} />
             <TableColumn
                 name="measurements"
                 text="Height"
-                renderer={(props: RendererProps<unknown>) => {
+                decorator={MeasurementDecorator}
+                renderer={(props: RendererProps<Measurements, Struct>) => {
                     const measurements = props.value;
-                    const {height} = measurements ?? {};
-                    if (!props.active) {
-                        return <Text value={height} />
-                    }
                     return (
-                        <NumberRenderer
-                            active={props.active}
-                            rendererRef={props.rendererRef}
+                        <StatefulInput
+                            type="number"
+                            ref={props.ref}
                             name={props.name}
-                            value={height}
+                            value={measurements.valueOf()}
                             className={props.className}
                         />
                     )

@@ -16,12 +16,12 @@ import {MIN_COLUMN_WIDTH, SORT_DIRECTION_ASC, SORT_DIRECTION_DESC} from "./const
 import ColumnResizer from "./headers/ColumnResizer";
 import {joinCss} from "./../../util/utils";
 import Pin from "./headers/Pin";
-import type {Renderer, RendererProps} from "../renderers/types.ts";
-
+import type {DTO, RendererProps} from "../renderers/types.ts";
 
 /**
  * Extends ColumnConfigurableProps so that the GridCell can be configured from the TableColumn.
  * @augmentsRendererProps
+ * @typeParam V - the data type of the values contained in the column.
  */
 export type TableColumnProps<V> = ComponentPropsWithoutRef<"div"> & {
     name: string,
@@ -52,8 +52,8 @@ export type TableColumnProps<V> = ComponentPropsWithoutRef<"div"> & {
     type?: DataTypes,
     /** The header text. Defaults to the value of the name prop. */
     text?: string,
-    renderer?: (props: RendererProps<any>) => ReactElement,
-    decorator?: (value: V) => Renderer<Struct, unknown>,
+    renderer?: (props: RendererProps<any, any>) => ReactElement,
+    decorator?: (value: V) => DTO<V>,
     /**
      * Used to customize the header
      * @todo
@@ -83,6 +83,8 @@ export type TableColumnProps<V> = ComponentPropsWithoutRef<"div"> & {
     validator?: (value: V) => boolean,
     required?: boolean,
     contextMenuItems?: Command<V>[],
+    locale?: Intl.LocalesArgument,
+    format?: string,
 };
 
 
@@ -197,7 +199,7 @@ export default function TableColumn<T extends Struct>(props: TableColumnProps<T>
     }
 
     const colIndex = gridContext.columns
-        .findIndex(col => col.props.name === name);
+        .findIndex(col => (col.props as TableColumnProps<T>).name === name);
 
     const handleResize = (delta: number) => {
         if (ref.current != null) {

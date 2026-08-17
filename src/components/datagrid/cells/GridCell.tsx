@@ -6,63 +6,20 @@ import {
     useEffect,
     useRef,
     useState,
-    useCallback,
+    useCallback, type ComponentPropsWithoutRef,
 } from "react";
-import type {Command, Coordinates, Predicate, Struct} from "../../../types/types";
+import type {Coordinates, Struct} from "../../../types/types";
 import {GridContext} from "../GridContext";
 import {joinCss} from "../../../util/utils";
 import styles from "../DataGrid.module.css";
-import {type DataTypes} from "../../../types/types";
-import type {RendererProps} from "../../renderers/types";
+import type {DTO, RendererProps} from "../../renderers/types";
 import {EditMode, FocusMode} from "./modes";
 import useCellFactoryReducer from "./useCellFactoryReducer";
 import usePreviousState from "./usePreviousState";
 import {PageContext} from "../PageContext";
 import ContextMenu from "../../overlays/ContextMenu.tsx";
-import {type ComponentPropsWithoutRef} from 'react';
-import defaultRegistry, {type Registry} from "../../renderers/Registry.ts";
-import withPlaceholder from "../../renderers/withPlaceholder.tsx";
-import withReadonlyMode from "../../renderers/withReadonlyMode.tsx";
+import {getDecoratorByType} from "../../renderers/typeInference.ts";
 
-
-/**
- * Cell renderer props that can be configured from a TableColumn.
- *
- * @typeParam T The data type of the data contained in the Record that supplies row data.
- */
-export type CellRenderProps<T extends Struct, V> = ComponentPropsWithoutRef<"input"> & {
-    /**
-     * The column of data to render in the table column.
-     * Where the data is an array of objects, the name corresponds to a key
-     * in each object.
-     *
-     * @override
-     */
-    name: string,
-    type?: DataTypes,
-    /**
-     * Whether the value can be edited.
-     * @default false
-     */
-    editable: boolean,
-    validator?: Predicate<V>,
-    renderer?: (props: RendererProps<V, T>) => ReactElement,
-    /** The initial width of the column. */
-    width?: number,
-    className?: string,
-    format?: string,
-    /** Used by numeric renderers */
-    precision?: number,
-    /** Whether text should wrap. */
-    wrap?: boolean,
-    /** Commands for the column's context menu. */
-    contextMenuItems?: Command<Struct>[],
-    /**
-     * Items for the column's DataLists.
-     * Turns the cells in the column into autocomplete fields.
-     */
-    listItems?: string[],
-}
 
 /**
  * CellFactoryProps does <strong>not</strong> extend BaseRendererProps. While
@@ -72,12 +29,15 @@ export type CellRenderProps<T extends Struct, V> = ComponentPropsWithoutRef<"inp
  *
  * @param T the type of data contained in a Record
  */
-export type GridCellProps<T extends Struct, V> = {
+export type GridCellProps<T extends Struct, V> =
+    RendererProps<V, T> &
+    ComponentPropsWithoutRef<"div"> & {
     rowIndex: number,
     colIndex: number,
     row: T,
-    registry?: Registry,
-} & CellRenderProps<T, V>;
+    renderer: (props: RendererProps<V, T>) => ReactElement,
+    decorator: DTO<V>,
+};
 
 
 /**
@@ -90,12 +50,11 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
     // ================================= Declarations
     const {
         name,
-        //value,
-        row,  // Temporary
+        row,
         rowIndex,
         colIndex,
         className,
-        renderer: CustomRenderer,
+        renderer,
         editable = true,
         readOnly = false,
         type = "string",
@@ -107,7 +66,7 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
         wrap = false,
         width,
         contextMenuItems,
-        registry = defaultRegistry,
+        decorator: decoratorProp,
     } = props;
     const gridContext = useContext(GridContext);
     const {
@@ -134,7 +93,11 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
         return  selectionModel?.isContained(rowIndex, colIndex) ?? false;
     });
     const value = (row.get(name) as V);
+    const Decorator = decoratorProp ?? getDecoratorByType(value, type);
 
+    if (Decorator === undefined) {
+        throw new Error(`Decorator not found: props = ${name}, ${value}`);
+    }
 
     //==================================================== Effects
     /*
@@ -294,36 +257,27 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
     const rendererClass = joinCss(
         state.active ? styles.active : styles.inactive,
     );
-    /*
-    A custom renderer is like any other renderer, except that it needs the model row.
-    So I separate the two Renderer types.
-     */
-    let Renderer =
-        CustomRenderer
-            ? CustomRenderer
-            : registry.getRenderer(type);
-    Renderer = withPlaceholder(withReadonlyMode(Renderer));
 
 
     // Weeding out unwanted props from higher up, sending only true renderer props.
+    const decoratorInstance = new Decorator(value);
     const rendererProps = {
         name,
         editable,
-        rendererRef,
+        ref:rendererRef,
         readOnly,
-        value,
-        row: CustomRenderer != null ? row : undefined,  // Custom renderers need access to the row bc they handle compound values.
-        format,
+        value: decoratorInstance,
         rowIndex,
         colIndex,
-        type,
+        type: decoratorInstance.renderType,
+        format,
         onBlur,
         onFocus,
         onClick: onClickProp,
         onKeyDown: onKyDownProp,
         className: rendererClass,
         active: state.active,
-        precision: typeof value === "number" ? props.precision : undefined,
+        scale: typeof value === "number" ? props.scale : undefined,
     }
 
     return (
@@ -344,7 +298,7 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
                 onDoubleClick={onClick}
                 onKeyDown={onKeyDown}
             >
-               <Renderer {...rendererProps} />
+                {renderer(rendererProps)}
             </div>
             {contextMenuItems != null ? (
                 <ContextMenu

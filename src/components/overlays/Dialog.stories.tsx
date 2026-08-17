@@ -1,7 +1,7 @@
 import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
-import Dialog from "../components/overlays/Dialog.tsx";
-import styles from "./css/Popup.stories.module.css"
+import Dialog from "./Dialog.tsx";
+import styles from "../../stories/css/Popup.stories.module.css"
 import {useState} from "react";
 
 

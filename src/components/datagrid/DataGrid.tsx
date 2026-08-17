@@ -21,6 +21,10 @@ import TableColumn, {type TableColumnProps} from "./TableColumn";
 import ContextMenu from "../overlays/ContextMenu.tsx";
 import GridRow from "./GridRow.tsx";
 import GridCell from "./cells/GridCell.tsx";
+import StatefulInput, {type StatefulInputProps} from "../renderers/StatefulInput.tsx";
+import withPlaceholder from "../renderers/withPlaceholder.tsx";
+import withReadonlyMode from "../renderers/withReadonlyMode.tsx";
+import BooleanRenderer from "../renderers/BooleanRenderer.tsx";
 
 
 // ==================================== Private
@@ -89,12 +93,25 @@ function reducer(state: GridState, action: GridAction): GridState {
     }
 }
 
+function defaultCellRenderer<T>(): (props: StatefulInputProps<T>) => ReactElement {
+    return (props: StatefulInputProps<T>) => {
+        const {value} = props;
+
+        if (typeof value?.valueOf() === "boolean") {
+            return <BooleanRenderer {...props} value={value.valueOf()} />
+        }
+        return <StatefulInput {...props} value={value?.valueOf()} ref={props.ref} />
+    }
+}
+
 
 function defaultCellFactory<T extends Struct, V>(columnConfig: TableColumnProps<V>, index: number, rowIndex: number, row: T){
-    // TODO:  may want to do more here.
+    const renderer = columnConfig.renderer ?? defaultCellRenderer();
+
     return (
         <GridCell
             {...columnConfig}
+            renderer={withPlaceholder(withReadonlyMode(renderer))}
             key={`${rowIndex}:${index}`}
             row={row}
             rowIndex={rowIndex}

@@ -1,6 +1,6 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import { useState } from 'react';
-import {LabeledInput} from '../components/forms/Input.tsx';
+import {LabeledInput} from '../forms/Input.tsx';
 
 const meta = {
   title: "forms/LabeledInput",

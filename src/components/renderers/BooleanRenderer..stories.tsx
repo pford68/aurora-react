@@ -1,7 +1,7 @@
 import * as React from "react";
 import type {Meta} from "@storybook/react-vite";
-import BooleanRenderer from "../../components/renderers/BooleanRenderer";
-import withReadonlyMode from "../../components/renderers/withReadonlyMode.tsx";
+import BooleanRenderer from "./BooleanRenderer.tsx";
+import withReadonlyMode from "./withReadonlyMode.tsx";
 import type {ComponentType} from "react";
 
 
@@ -14,7 +14,7 @@ const meta: Meta<PropsAndArgs> = {
     component: BooleanRenderer,
     args: {
         width: 800,
-        format: "text",
+        type: "text",
     },
     argTypes: {
         value: {
