@@ -15,6 +15,13 @@ const meta: Meta<PropsAndArgs> = {
         placeholder: "NULL",
         readOnly: false,
         disabled: false,
+        type: "text",
+    },
+    argTypes: {
+        type: {
+            options: ['text', 'tel', 'url', 'date', "datetime-local", "email", "search", "range", "number"],
+            control: {type: "radio"}
+        }
     },
 };
 export default meta;
@@ -34,7 +41,11 @@ const renderDefault = (args: PropsAndArgs) => {
 };
 
 export const Primary = {
-    render: renderDefault,
+    args: {
+        type: "tel"
+    },
+
+    render: renderDefault
 }
 
 export const Required  = {

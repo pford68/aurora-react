@@ -5,8 +5,8 @@ import Text from "./Text.tsx";
 import {type ComponentType} from "react";
 
 
-export default function withReadonlyMode<T, U extends RendererProps<T>>(WrappedComponent:ComponentType<U>): ComponentType<U> {
-    return function(props: RendererProps<T> ) {
+export default function withReadonlyMode<T, U extends RendererProps<T, U>>(WrappedComponent:ComponentType<U>): ComponentType<U> {
+    return function(props: RendererProps<T, U> ) {
         const {className, active = false, value, validator} = props;
         const baseClassName = joinCss(styles.renderer, styles.text, className);
 

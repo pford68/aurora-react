@@ -1,10 +1,13 @@
 import type {DTO} from "./types.ts";
 import {toISODateString} from "../../util/utils.ts";
 
-type DTOprops = {
+export type DTOprops = {
     format?: string | Intl.DateTimeFormatOptions,
     locale?: Intl.LocalesArgument,
-    renderType?: "text" | "number" | "date" | "phone" | "email" | "checkbox" | "switch" | "radio",
+    /** The type value to send to HTML input elements. */
+    renderType?: "text" | "number" | "date" | "password"
+        | "tel" | "email" | "checkbox" | "switch" | "radio"
+        | "color" | "file" | "range" | "search",
     scale?: number,
 }
 
@@ -59,7 +62,11 @@ export class DateDTO extends AbstractDTO<number> {
     }
 
     update(value: number): void {
-        this.#value = Number(value);
+        let v = value;
+        if (isNaN(Number(value))) {
+            v = Date.parse(String(value));
+        }
+        this.#value = Number(v);
     }
 
     get value(): number {
@@ -74,6 +81,8 @@ export class DateDTO extends AbstractDTO<number> {
 
 export class DateTimeDTO extends DateDTO {
 
+    #renderType: string = "datetime-local";
+
     #format: Intl.DateTimeFormatOptions = {
         year: 'numeric',   // Forces full 4-digit year (e.g., 2026)
         month: '2-digit',
@@ -85,15 +94,20 @@ export class DateTimeDTO extends DateDTO {
     constructor(value: number, options?: DTOprops) {
         super(value, options);
         if (options != null) {
-            const {format} = options;
+            const {format, renderType} = options;
             if (typeof format !== "string") {
                 this.#format = format ?? this.#format;
             }
+            this.#renderType = renderType ?? this.#renderType;
         }
     }
 
     toString(): string {
         return new Date(this.valueOf()).toISOString();
+    }
+
+    get renderType(): string {
+        return this.#renderType;
     }
 }
 

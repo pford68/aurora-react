@@ -40,14 +40,14 @@ export default meta;
 
 type Story = StoryObj<PropsAndArgs>;
 
-class MeasurementDecorator extends AbstractDTO<number>{
+class MeasurementsDTO extends AbstractDTO<number>{
     #height: number;
     #weight: number;
 
-    constructor({height, weight}: Measurements) {
+    constructor(value:Measurements) {
         super()
-        this.#height = height;
-        this.#weight = weight;
+        this.#height = value.height;
+        this.#weight = value.weight;
     }
 
     toString(): string {
@@ -60,6 +60,14 @@ class MeasurementDecorator extends AbstractDTO<number>{
 
     toJSON(): { [p: string]: number } {
         return super.toJSON();
+    }
+
+    update(value: number): void {
+        this.#height = Number(value);
+    }
+
+    get renderType(): string {
+        return "number";
     }
 }
 
@@ -118,15 +126,15 @@ const defaultRenderer = (args: PropsAndArgs) => {
             <TableColumn
                 name="measurements"
                 text="Height"
-                decorator={MeasurementDecorator}
-                renderer={(props: RendererProps<Measurements, Struct>) => {
+                decorator={MeasurementsDTO}
+                renderer={(props: RendererProps<number, Struct>) => {
                     const measurements = props.value;
                     return (
                         <StatefulInput
                             type="number"
                             ref={props.ref}
                             name={props.name}
-                            value={measurements.valueOf()}
+                            value={measurements?.valueOf() ?? 0}
                             className={props.className}
                         />
                     )

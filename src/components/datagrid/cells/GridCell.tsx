@@ -18,8 +18,15 @@ import useCellFactoryReducer from "./useCellFactoryReducer";
 import usePreviousState from "./usePreviousState";
 import {PageContext} from "../PageContext";
 import ContextMenu from "../../overlays/ContextMenu.tsx";
-import {getDecoratorByType} from "../../renderers/typeInference.ts";
+import {getDecoratorByType, type Newable} from "../../renderers/typeInference.ts";
+import type {AbstractDTO} from "../../renderers/decorators.ts";
+import type {Record} from "../../../ObservableList.ts";
 
+
+function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type: string, prop?: Newable<T, V>): DTO<T> {
+    const decorator = prop ?? getDecoratorByType(value, type);
+    return new decorator(value);
+}
 
 /**
  * CellFactoryProps does <strong>not</strong> extend BaseRendererProps. While
@@ -30,11 +37,11 @@ import {getDecoratorByType} from "../../renderers/typeInference.ts";
  * @param T the type of data contained in a Record
  */
 export type GridCellProps<T extends Struct, V> =
-    RendererProps<V, T> &
-    ComponentPropsWithoutRef<"div"> & {
+    ComponentPropsWithoutRef<"div"> &
+    RendererProps<V, T> &{
     rowIndex: number,
     colIndex: number,
-    row: T,
+    row: Record<T>,
     renderer: (props: RendererProps<V, T>) => ReactElement,
     decorator: DTO<V>,
 };
@@ -76,8 +83,6 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
     } = gridContext;
     const selectionModel = gridContext.selectionModel?.current;
     const focusModel = gridContext.focusModel?.current;
-    const focusMode = new FocusMode(gridContext);
-    const editMode = new EditMode();
     const pageContext = useContext(PageContext);
     const ref = useRef<HTMLDivElement>(null);
     const rendererRef = useRef<HTMLInputElement>(null);
@@ -93,11 +98,17 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
         return  selectionModel?.isContained(rowIndex, colIndex) ?? false;
     });
     const value = (row.get(name) as V);
-    const Decorator = decoratorProp ?? getDecoratorByType(value, type);
+    // I want to allow mere objects (instead of only constructors), but I have not tested this (2026/08/17)
+    const dto = typeof decoratorProp === "object"
+        ? decoratorProp
+        : getDecoratorInstance(value, type, decoratorProp);
 
-    if (Decorator === undefined) {
+    if (dto === undefined) {
         throw new Error(`Decorator not found: props = ${name}, ${value}`);
     }
+
+    const focusMode = new FocusMode(gridContext);
+    const editMode = new EditMode(dto);
 
     //==================================================== Effects
     /*
@@ -140,7 +151,7 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
                 ref.current?.focus();
             } else if (previousActiveState.current === true) {
                 // When we click on another cell, the currently active cell should deactivate.
-                dispatch({type: "deactivate"});
+                dispatch({type: "deactivate", payload: dto});
             }
         }
         const onSelectionChanged = () => {
@@ -260,16 +271,15 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
 
 
     // Weeding out unwanted props from higher up, sending only true renderer props.
-    const decoratorInstance = new Decorator(value);
-    const rendererProps = {
+    const rendererProps:RendererProps<V, T> = {
         name,
         editable,
         ref:rendererRef,
         readOnly,
-        value: decoratorInstance,
+        value: dto,
         rowIndex,
         colIndex,
-        type: decoratorInstance.renderType,
+        type: dto.renderType,
         format,
         onBlur,
         onFocus,

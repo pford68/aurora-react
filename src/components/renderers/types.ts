@@ -1,12 +1,15 @@
 import type {RefObject, ComponentPropsWithoutRef} from "react";
 import type {Command, Predicate, Struct} from "../../types/types.ts";
 
+type EnhancedInputProps<T> = Omit<ComponentPropsWithoutRef<'input'>, keyof T> & T;
+
+
 /**
  * Type for Renderer props.
  * @typeParam T - the type of the field value passed to the render
  * @typeParam U - the type of the data row, the object contained in a row of data
  */
-export type RendererProps<T, U extends Struct> = ComponentPropsWithoutRef<"input"> & {
+export type RendererProps<T, U extends Struct> = EnhancedInputProps<{
     /**
      * Boolean for whether the value should be rendered in an editable node (e.g. input)
      * or within a readonly DIV.
@@ -15,7 +18,7 @@ export type RendererProps<T, U extends Struct> = ComponentPropsWithoutRef<"input
     /**
      * The unformatted value to be displayed by the renderer.
      */
-    value?: T,
+    value?: DTO<T>,
     /** The name of a property used to supply the value. */
     name: string,
     className?: string,
@@ -57,7 +60,9 @@ export type RendererProps<T, U extends Struct> = ComponentPropsWithoutRef<"input
     editable: boolean,
     /** The initial width of the column. */
     width?: number,
-};
+    rowIndex: number,
+    colIndex: number,
+}>;
 
 /**
  * @typeParam T - the data type of the value contained in the DTO

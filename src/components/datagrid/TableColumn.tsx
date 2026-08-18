@@ -16,7 +16,8 @@ import {MIN_COLUMN_WIDTH, SORT_DIRECTION_ASC, SORT_DIRECTION_DESC} from "./const
 import ColumnResizer from "./headers/ColumnResizer";
 import {joinCss} from "./../../util/utils";
 import Pin from "./headers/Pin";
-import type {DTO, RendererProps} from "../renderers/types.ts";
+import type {RendererProps} from "../renderers/types.ts";
+import type {Newable} from "../renderers/typeInference.ts";
 
 /**
  * Extends ColumnConfigurableProps so that the GridCell can be configured from the TableColumn.
@@ -53,7 +54,7 @@ export type TableColumnProps<V> = ComponentPropsWithoutRef<"div"> & {
     /** The header text. Defaults to the value of the name prop. */
     text?: string,
     renderer?: (props: RendererProps<any, any>) => ReactElement,
-    decorator?: (value: V) => DTO<V>,
+    decorator?: Newable<any, any>,
     /**
      * Used to customize the header
      * @todo
@@ -80,7 +81,7 @@ export type TableColumnProps<V> = ComponentPropsWithoutRef<"div"> & {
     wrap?: boolean,
     width?: number,
     cellFactory?: (props: TableColumnProps<V>, index: number, rowIndex: number, row: any) => ReactElement,
-    validator?: (value: V) => boolean,
+    validator?: (value: string) => boolean,
     required?: boolean,
     contextMenuItems?: Command<V>[],
     locale?: Intl.LocalesArgument,

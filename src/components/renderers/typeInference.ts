@@ -8,7 +8,7 @@ import {
 } from "./decorators.ts";
 
 
-type Newable<T, V extends AbstractDTO<T>> = new (value: T) => V;
+export type Newable<T, V extends AbstractDTO<T>> = new (value: T) => V;
 
 export function getDecoratorByType<T, V extends AbstractDTO<T>>(value: T, type?: string): Newable<T, V> {
     const key = type ?? (value?.constructor.name != null ? String(value.constructor.name) : null) ?? typeof value;
