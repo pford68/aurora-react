@@ -1,9 +1,9 @@
-import type {RendererProps} from "./types.ts";
-import {joinCss} from "../../util/utils.ts";
+import type {RendererProps} from "./renderers.types.ts";
+import {joinCss} from "../../../util/utils.ts";
 import styles from "./Renderers.module.css";
 import Text from "./Text.tsx";
 import {type ComponentType} from "react";
-import type {Struct} from "../../types/types.ts";
+import type {Struct} from "../../../types/types.ts";
 
 
 export default function withPlaceholder<P extends RendererProps<unknown, Struct>>(WrappedComponent:ComponentType<P>): ComponentType<P> {

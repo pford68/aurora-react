@@ -4,7 +4,7 @@ import CopyCommand from "../../../commands/CopyCommand";
 import PasteCommand from "../../../commands/PasteCommand";
 import CutCommand from "../../../commands/CutCommand";
 import type {CellFactoryAction} from "./useCellFactoryReducer.tsx";
-import type { DTO } from "../../renderers/types.ts";
+import type { DTO } from "../renderers/renderers.types.ts";
 
 interface CellState {
     onKeyDown: (e: KeyboardEvent, dispatch: Dispatch<CellFactoryAction>) => void;
@@ -26,12 +26,7 @@ export class FocusMode implements CellState {
         const pattern = /^\w$/;
         const {key} = e;
         const ctrlKey = e.ctrlKey || e.metaKey;
-        const {
-            items,
-            columns,
-            gridDispatch,
-            undoStack,
-        } = this.#context;
+        const {items, columns, gridDispatch,undoStack,} = this.#context;
         const selectionModel = this.#context.selectionModel?.current;
         const focusModel = this.#context.focusModel?.current;
         const focusedCell = focusModel?.focused;

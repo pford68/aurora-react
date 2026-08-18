@@ -8,7 +8,7 @@ import {v4 as uuid} from "uuid";
  *
  * @typeParam T The type of data contained in the Record
  */
-export class Record<T extends Struct> {
+export class Record<T extends Struct = Struct> {
     #data: T;
     /** Whether the record has been marked for deletion */
     #deleted: boolean = false;

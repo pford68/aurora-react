@@ -1,7 +1,7 @@
 import {type Dispatch, type RefObject, useContext, useReducer} from "react";
 import SaveCommand from "../../../commands/SaveCommand";
 import {GridContext} from "../GridContext";
-import type {DTO} from "../../renderers/types.ts";
+import type {DTO} from "../renderers/renderers.types.ts";
 
 
 export type CellFactoryState = {

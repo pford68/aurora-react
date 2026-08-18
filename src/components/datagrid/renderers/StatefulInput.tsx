@@ -1,17 +1,8 @@
-import {type ReactElement, type RefObject, useState, type ComponentPropsWithoutRef} from "react";
-import type {Predicate} from "../../types/types.ts";
-import {joinCss} from "../../util/utils.ts";
+import {type ReactElement, useState} from "react";
+import {joinCss} from "../../../util/utils.ts";
 import styles from "./Renderers.module.css";
+import type {ValidatedInputProps} from "./renderers.types.ts";
 
-
-export type StatefulInputProps<T> = ComponentPropsWithoutRef<"input"> & {
-    value?: T,
-    ref?: RefObject<HTMLInputElement | null>,
-    className?: string,
-    validator?: Predicate<string | undefined | number | readonly string[]>,
-    autoComplete?: boolean,
-    format?: string,
-}
 
 /**
  * Input elements with a local state, allow them to retain uncommitted changes.
@@ -22,7 +13,7 @@ export type StatefulInputProps<T> = ComponentPropsWithoutRef<"input"> & {
  * @param props
  * @constructor
  */
-export default function StatefulInput<T>(props: StatefulInputProps<T>): ReactElement {
+export default function StatefulInput(props: ValidatedInputProps): ReactElement {
     const {
         value: initValue,
         validator,

@@ -5,15 +5,16 @@ import ObservableList from "./../../ObservableList";
 import type {Command, Struct} from "../../types/types";
 import type {GridAction} from "./DataGrid";
 import {CommandStack} from "./../../util/CommandStack";
+import type {TableColumnProps} from "./TableColumn.tsx";
 
 export type GridContextType = {
     items: ObservableList<Struct> | undefined,
-    columns: ReactElement[],
+    columns: ReactElement<TableColumnProps>[],
     sortColumns: string[],
     sortDirection: string,
     alternateRows: boolean,
     pinned: Set<string>,
-    columnWidths: Map<string, number>,
+    columnWidths: Map<string, number | undefined>,
     columnSizing: "auto" | "equal" | "max-content",
     offsets: Map<string, number>,
     gridDispatch?: Dispatch<GridAction>,

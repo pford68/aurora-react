@@ -1,10 +1,11 @@
 import {type ReactElement, useContext} from "react";
 import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext.ts";
+import type {TableColumnProps} from "./TableColumn.tsx";
 
 type ColumnStyleProps = {
     type: "auto" | "equal",
-    columns: ReactElement[],
+    columns: ReactElement<TableColumnProps>[],
     maxWidth?: number,
     minWidth?: number,
 }

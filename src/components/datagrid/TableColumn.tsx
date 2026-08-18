@@ -5,7 +5,6 @@ import {
     useRef,
     type DragEvent,
     useCallback,
-    type ComponentPropsWithoutRef,
 } from "react";
 import type {BiFunction, Command, Struct} from "../../types/types";
 import styles from "./DataGrid.module.css";
@@ -16,15 +15,16 @@ import {MIN_COLUMN_WIDTH, SORT_DIRECTION_ASC, SORT_DIRECTION_DESC} from "./const
 import ColumnResizer from "./headers/ColumnResizer";
 import {joinCss} from "./../../util/utils";
 import Pin from "./headers/Pin";
-import type {RendererProps} from "../renderers/types.ts";
-import type {Newable} from "../renderers/typeInference.ts";
+import type {EnhancedPanelProps, ValidatedInputProps} from "./renderers/renderers.types.ts";
+import type {Newable} from "./renderers/typeInference.ts";
+import type {Record} from "../../ObservableList.ts";
 
 /**
  * Extends ColumnConfigurableProps so that the GridCell can be configured from the TableColumn.
  * @augmentsRendererProps
  * @typeParam V - the data type of the values contained in the column.
  */
-export type TableColumnProps<V> = ComponentPropsWithoutRef<"div"> & {
+export type TableColumnProps<V = unknown> = EnhancedPanelProps<{
     name: string,
     /**
      * Whether the column is sortable.
@@ -53,7 +53,7 @@ export type TableColumnProps<V> = ComponentPropsWithoutRef<"div"> & {
     type?: DataTypes,
     /** The header text. Defaults to the value of the name prop. */
     text?: string,
-    renderer?: (props: RendererProps<any, any>) => ReactElement,
+    renderer?: (props: ValidatedInputProps) => ReactElement,
     decorator?: Newable<any, any>,
     /**
      * Used to customize the header
@@ -77,16 +77,16 @@ export type TableColumnProps<V> = ComponentPropsWithoutRef<"div"> & {
      */
     onResize?: (colName: string, delta: number) => void,
     /** The HTML title attribute */
-    title?: boolean,
+    title?: string,
     wrap?: boolean,
     width?: number,
-    cellFactory?: (props: TableColumnProps<V>, index: number, rowIndex: number, row: any) => ReactElement,
+    cellFactory?: (props: TableColumnProps<V>, index: number, rowIndex: number, row: Record) => ReactElement,
     validator?: (value: string) => boolean,
     required?: boolean,
-    contextMenuItems?: Command<V>[],
+    contextMenuItems?: Command[],
     locale?: Intl.LocalesArgument,
     format?: string,
-};
+}>;
 
 
 /**

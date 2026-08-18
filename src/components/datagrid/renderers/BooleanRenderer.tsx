@@ -1,22 +1,26 @@
-import React from "react";
-import {joinCss} from "../../util/utils.ts";
+import React, {type RefObject} from "react";
+import {joinCss} from "../../../util/utils.ts";
 import styles from "./Renderers.module.css";
-import type {RendererProps} from "./types.ts";
+import type {ValidatedInputProps} from "./renderers.types.ts";
 import StatefulInput from "./StatefulInput.tsx";
-import type {Struct} from "../../types/types.ts";
+import type {Predicate} from "../../../types/types.ts";
 
-export type BooleanRendererProps<T extends Struct> = RendererProps<boolean, T> & {
+type LocalProps<T> = Omit<ValidatedInputProps, keyof T> & T;
+export type BooleanRendererProps = LocalProps<{
     value: boolean,
-    type: "checkbox" | "switch" | "text",
-};
+    ref?: RefObject<HTMLInputElement | null>,
+    className?: string,
+    validator?: Predicate<string>,
+    autoComplete?: boolean,
+}>;
 
-export default function BooleanRenderer<T extends Struct>(props: BooleanRendererProps<T>): React.ReactElement {
+export default function BooleanRenderer(props: BooleanRendererProps): React.ReactElement {
     const {
         name,
         ref,
         className,
         value,
-        type,
+        type = "text",
     } = props;
 
     const overrides = {
@@ -25,6 +29,7 @@ export default function BooleanRenderer<T extends Struct>(props: BooleanRenderer
         className: joinCss(styles.renderer, styles.boolean, styles.active, className),
         // "switch" is weeded out, but format == switch is handled later on.
         checked: value === true,
+        type: ["text", "switch", "checkbox"].includes(type) ? type : "text",
     };
 
     if (type === "switch") {

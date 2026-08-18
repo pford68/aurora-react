@@ -1,5 +1,5 @@
-import type {DTO} from "./types.ts";
-import {toISODateString} from "../../util/utils.ts";
+import type {DTO} from "./renderers.types.ts";
+import {toISODateString} from "../../../util/utils.ts";
 
 export type DTOprops = {
     format?: string | Intl.DateTimeFormatOptions,
