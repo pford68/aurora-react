@@ -3,11 +3,11 @@ import type {Command} from "../../types/types.ts";
 import styles from "./overlays.module.css";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
-type MenuItemProps<T>= {
-    command: Command<T>,
+type MenuItemProps= {
+    command: Command,
 }
 
-export default function MenuItem<T>({command}: MenuItemProps<T>): ReactElement {
+export default function MenuItem({command}: MenuItemProps): ReactElement {
 
     return (
         <div

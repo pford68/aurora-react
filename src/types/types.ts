@@ -23,7 +23,7 @@ export type DataTypes =
     | "map"
     | "enum";
 
-export interface Command<T> {
+export interface Command<T extends Struct = Struct> {
     execute(): boolean;
     undo(): boolean,
     redo(): boolean,

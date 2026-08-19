@@ -1,7 +1,27 @@
 import {type Dispatch, type RefObject, useContext, useReducer} from "react";
-import type {CellFactoryAction, CellFactoryState} from "./types";
 import SaveCommand from "../../../commands/SaveCommand";
 import {GridContext} from "../GridContext";
+import type {DTO} from "../renderers/renderers.types.ts";
+
+
+export type CellFactoryState = {
+    active: boolean,
+    valid: boolean,
+    task?: string,
+};
+
+export type CellFactoryAction = {
+    type: "activate"
+        | "deactivate"
+        | "discard"
+        | "invalidate"
+        | "validated"
+        | "clear"
+        | "undo"
+        | "redo",
+    payload?: DTO<any>,
+}
+
 
 type useReducerProps = {
     /** The reducer uses the value from this element. */
@@ -28,10 +48,13 @@ export default function useCellFactoryReducer(props: useReducerProps): [CellFact
             case "clear":
                 return {...state, active: true, task: action.type};
             case "deactivate": { // Sends to focused mode and flushes changes.
-                const value = ref.current?.value;
-                if (items != null && value != null && !(value.trim().length === 0 && !gridContext.nullable)) {
+                const {name} = ref.current ?? {};
+                const dto = action.payload;
+                const value = ref.current ? ref.current.value : null;
+                dto?.update(value);
+                if (dto != null && items != null && value != null && !(String(value).trim().length === 0 && !gridContext.nullable)) {
                     const cmd = new SaveCommand(items);
-                    cmd.setParameter({index: rowIndex, value})
+                    cmd.setParameter({index: rowIndex, value: {[String(name)]: dto.valueOf()}})
                     cmd.execute();
                     redoStack?.clear();
                     undoStack?.push(cmd);

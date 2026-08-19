@@ -1,17 +1,18 @@
 import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
-import DataGrid from "../components/datagrid/DataGrid";
-import TableColumn, {type TableColumnProps} from "../components/datagrid/TableColumn";
-import ObservableList, {Record} from "../ObservableList";
+import DataGrid from "./DataGrid.tsx";
+import TableColumn from "./TableColumn.tsx";
+import ObservableList, {Record} from "../../ObservableList.ts";
 import {useRef} from "react";
-import Person, {type Measurements} from "../../tests/models/Person";
-import NumericRenderer from "../components/renderers/NumericRenderer";
-import people from "../../tests/fixtures/people.json";
-import airlineSafety from "../../tests/fixtures/airline_safety.json";
-import BaseCommand from "../commands/BaseCommand";
-import type {ContextMenuParameter, Struct} from "../types/types";
+import Person, {type Measurements} from "../../../tests/models/Person.ts";
+import people from "../../../tests/fixtures/people.json";
+import airlineSafety from "../../../tests/fixtures/airline_safety.json";
+import BaseCommand from "../../commands/BaseCommand.ts";
+import type {ContextMenuParameter, Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
-import Text from "../components/renderers/Text";
+import type {RendererProps} from "./renderers/renderers.types.ts";
+import StatefulInput from "./renderers/StatefulInput.tsx";
+import {AbstractDTO} from "./renderers/decorators.ts";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {
@@ -38,6 +39,38 @@ const meta: Meta<PropsAndArgs> = {
 export default meta;
 
 type Story = StoryObj<PropsAndArgs>;
+
+class MeasurementsDTO extends AbstractDTO<number>{
+    #height: number;
+    // @ts-expect-error: this is unimportant for the test, for now.
+    #weight: number;
+
+    constructor(value:Measurements) {
+        super()
+        this.#height = value.height;
+        this.#weight = value.weight;
+    }
+
+    toString(): string {
+        return String(this.valueOf());
+    }
+
+    valueOf(): number {
+        return this.#height;
+    }
+
+    toJSON(): { [p: string]: number } {
+        return super.toJSON();
+    }
+
+    update(value: number): void {
+        this.#height = Number(value);
+    }
+
+    get renderType(): string {
+        return "number";
+    }
+}
 
 
 class LogCommand extends BaseCommand<ContextMenuParameter>{
@@ -89,23 +122,20 @@ const defaultRenderer = (args: PropsAndArgs) => {
             <TableColumn name="lastName" text="Last Name" required />
             <TableColumn type="currency" name="amount" text="Amount" />
             <TableColumn type="number" name="age" text="Age" />
-            <TableColumn name="active" text="Active" />
+            <TableColumn type="boolean" name="active" text="Active" />
             <TableColumn type="date" name="lastUpdated" text="Last Updated" width={100} />
             <TableColumn
                 name="measurements"
                 text="Height"
-                renderer={(props: TableColumnProps<Measurements>) => {
-                    const measurements = props.row.get(props.name);
-                    const {height} = measurements ?? {};
-                    if (!props.active) {
-                        return <Text value={height} />
-                    }
+                decorator={MeasurementsDTO}
+                renderer={(props: RendererProps) => {
+                    const measurements = props.value;
                     return (
-                        <NumericRenderer
-                            active={props.active}
-                            rendererRef={props.rendererRef}
+                        <StatefulInput
+                            type="number"
+                            ref={props.ref}
                             name={props.name}
-                            value={height}
+                            value={measurements?.valueOf() ?? 0}
                             className={props.className}
                         />
                     )

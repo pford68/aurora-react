@@ -1,16 +1,16 @@
-import {type ReactElement, type RefObject, useState, type ComponentPropsWithoutRef} from "react";
-import type {Predicate} from "../../types/types.ts";
-import {joinCss} from "../../util/utils.ts";
+import {type ReactElement, type RefObject, useState} from "react";
+import {joinCss} from "../../../util/utils.ts";
 import styles from "./Renderers.module.css";
+import type {RendererProps} from "./renderers.types.ts";
+import type {Predicate} from "../../../types/types.ts";
 
-
-type StatefulInputProps = ComponentPropsWithoutRef<"input"> & {
+type LocalOverrides = {
+    value?: string | number | boolean,
+    validator?: Predicate<string>,
     ref?: RefObject<HTMLInputElement | null>,
-    className?: string,
-    validator?: Predicate<string | undefined | number | readonly string[]>,
     autoComplete?: boolean,
 }
-
+type StatefulInputProps = Omit<RendererProps, keyof LocalOverrides> & LocalOverrides;
 /**
  * Input elements with a local state, allow them to retain uncommitted changes.
  * StatefulInput can be passed as-is to forwardRef() to expose the input element to
@@ -29,8 +29,8 @@ export default function StatefulInput(props: StatefulInputProps): ReactElement {
         onInput,
         autoComplete = false,
     } = props;
-    const [value, setValue] = useState(initValue);
-    const [valid, setValid] = useState(() => {
+    const [value, setValue] = useState<string>(String(initValue));
+    const [valid, setValid] = useState<boolean>(() => {
         return validator?.(value) ?? true;
     });
 
@@ -46,7 +46,7 @@ export default function StatefulInput(props: StatefulInputProps): ReactElement {
                     const result = validator?.(updatedValue) ?? true;
                     setValid(result);
                     setValue(updatedValue);
-                    if (result && onInput != null) {
+                    if (result) {
                         onInput?.(e);
                     }
                 }
