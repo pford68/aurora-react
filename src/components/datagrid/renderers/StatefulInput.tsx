@@ -1,9 +1,16 @@
-import {type ReactElement, useState} from "react";
+import {type ReactElement, type RefObject, useState} from "react";
 import {joinCss} from "../../../util/utils.ts";
 import styles from "./Renderers.module.css";
-import type {ValidatedInputProps} from "./renderers.types.ts";
+import type {RendererProps} from "./renderers.types.ts";
+import type {Predicate} from "../../../types/types.ts";
 
-
+type LocalOverrides = {
+    value?: string | number | boolean,
+    validator?: Predicate<string>,
+    ref?: RefObject<HTMLInputElement | null>,
+    autoComplete?: boolean,
+}
+type StatefulInputProps = Omit<RendererProps, keyof LocalOverrides> & LocalOverrides;
 /**
  * Input elements with a local state, allow them to retain uncommitted changes.
  * StatefulInput can be passed as-is to forwardRef() to expose the input element to
@@ -13,7 +20,7 @@ import type {ValidatedInputProps} from "./renderers.types.ts";
  * @param props
  * @constructor
  */
-export default function StatefulInput(props: ValidatedInputProps): ReactElement {
+export default function StatefulInput(props: StatefulInputProps): ReactElement {
     const {
         value: initValue,
         validator,

@@ -15,7 +15,7 @@ import {MIN_COLUMN_WIDTH, SORT_DIRECTION_ASC, SORT_DIRECTION_DESC} from "./const
 import ColumnResizer from "./headers/ColumnResizer";
 import {joinCss} from "./../../util/utils";
 import Pin from "./headers/Pin";
-import type {EnhancedPanelProps, ValidatedInputProps} from "./renderers/renderers.types.ts";
+import type {Configuration, RendererProps} from "./renderers/renderers.types.ts";
 import type {Newable} from "./renderers/typeInference.ts";
 import type {Record} from "../../ObservableList.ts";
 
@@ -24,7 +24,7 @@ import type {Record} from "../../ObservableList.ts";
  * @augmentsRendererProps
  * @typeParam V - the data type of the values contained in the column.
  */
-export type TableColumnProps<V = unknown> = EnhancedPanelProps<{
+export type TableColumnProps<V = unknown> = Configuration<{
     name: string,
     /**
      * Whether the column is sortable.
@@ -53,7 +53,7 @@ export type TableColumnProps<V = unknown> = EnhancedPanelProps<{
     type?: DataTypes,
     /** The header text. Defaults to the value of the name prop. */
     text?: string,
-    renderer?: (props: ValidatedInputProps) => ReactElement,
+    renderer?: (props: RendererProps) => ReactElement,
     decorator?: Newable<any, any>,
     /**
      * Used to customize the header
@@ -86,6 +86,7 @@ export type TableColumnProps<V = unknown> = EnhancedPanelProps<{
     contextMenuItems?: Command[],
     locale?: Intl.LocalesArgument,
     format?: string,
+    editable?: boolean,
 }>;
 
 

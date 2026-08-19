@@ -3,11 +3,10 @@ import {joinCss} from "../../../util/utils.ts";
 import styles from "./Renderers.module.css";
 import Text from "./Text.tsx";
 import {type ComponentType} from "react";
-import type {Struct} from "../../../types/types.ts";
 
 
-export default function withPlaceholder<P extends RendererProps<unknown, Struct>>(WrappedComponent:ComponentType<P>): ComponentType<P> {
-    return function(props: P) {
+export default function withPlaceholder(WrappedComponent:ComponentType<RendererProps>): ComponentType<RendererProps> {
+    return function(props: RendererProps) {
         const {className, active = false, placeholder = "NULL", value, validator} = props;
         const baseClassName = joinCss(styles.renderer, styles.text, className);
 
@@ -21,6 +20,6 @@ export default function withPlaceholder<P extends RendererProps<unknown, Struct>
             );
         }
 
-        return <WrappedComponent {...props as P} />
+        return <WrappedComponent {...props} />
     }
 }

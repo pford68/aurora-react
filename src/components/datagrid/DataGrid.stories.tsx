@@ -10,9 +10,9 @@ import airlineSafety from "../../../tests/fixtures/airline_safety.json";
 import BaseCommand from "../../commands/BaseCommand.ts";
 import type {ContextMenuParameter, Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
-import type {RendererProps} from "../renderers/types.ts";
-import StatefulInput from "../renderers/StatefulInput.tsx";
-import {AbstractDTO} from "../renderers/decorators.ts";
+import type {RendererProps} from "./renderers/renderers.types.ts";
+import StatefulInput from "./renderers/StatefulInput.tsx";
+import {AbstractDTO} from "./renderers/decorators.ts";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {
@@ -42,6 +42,7 @@ type Story = StoryObj<PropsAndArgs>;
 
 class MeasurementsDTO extends AbstractDTO<number>{
     #height: number;
+    // @ts-expect-error: this is unimportant for the test, for now.
     #weight: number;
 
     constructor(value:Measurements) {
@@ -90,7 +91,7 @@ class LogCommand extends BaseCommand<ContextMenuParameter>{
 }
 
 
-class HighlightCommand extends BaseCommand<unknown>{
+class HighlightCommand extends BaseCommand<Struct>{
     get icon():IconProp { return "bomb"}
     get name() { return "Self-Destruct"}
     get accelerator() { return "⌘+h"}
@@ -127,7 +128,7 @@ const defaultRenderer = (args: PropsAndArgs) => {
                 name="measurements"
                 text="Height"
                 decorator={MeasurementsDTO}
-                renderer={(props: RendererProps<number, Struct>) => {
+                renderer={(props: RendererProps) => {
                     const measurements = props.value;
                     return (
                         <StatefulInput

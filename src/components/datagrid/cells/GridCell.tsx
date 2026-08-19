@@ -6,20 +6,21 @@ import {
     useEffect,
     useRef,
     useState,
-    useCallback, type ComponentPropsWithoutRef,
+    useCallback,
+    type ComponentType,
 } from "react";
-import type {Coordinates, Struct} from "../../../types/types";
+import type {Coordinates} from "../../../types/types";
 import {GridContext} from "../GridContext";
 import {joinCss} from "../../../util/utils";
 import styles from "../DataGrid.module.css";
-import type {DTO, RendererProps} from "../../renderers/types";
+import type {Configuration, DTO, RendererProps} from "../renderers/renderers.types.ts";
 import {EditMode, FocusMode} from "./modes";
 import useCellFactoryReducer from "./useCellFactoryReducer";
 import usePreviousState from "./usePreviousState";
 import {PageContext} from "../PageContext";
 import ContextMenu from "../../overlays/ContextMenu.tsx";
-import {getDecoratorByType, type Newable} from "../../renderers/typeInference.ts";
-import type {AbstractDTO} from "../../renderers/decorators.ts";
+import {getDecoratorByType, type Newable} from "../renderers/typeInference.ts";
+import type {AbstractDTO} from "../renderers/decorators.ts";
 import type {Record} from "../../../ObservableList.ts";
 
 
@@ -36,16 +37,13 @@ function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type: strin
  *
  * @param T the type of data contained in a Record
  */
-export type GridCellProps<T extends Struct, V> =
-    ComponentPropsWithoutRef<"div"> &
-    RendererProps<V, T> &{
+export type GridCellProps<V> = Configuration<{
+    renderer: ComponentType<RendererProps>,
+    decorator?: DTO<V> | Newable<any, any>,
+    row: Record,
     rowIndex: number,
     colIndex: number,
-    row: Record<T>,
-    renderer: (props: RendererProps<V, T>) => ReactElement,
-    decorator: DTO<V>,
-};
-
+}>
 
 /**
  * Responsible for rendering  cells and their content.
@@ -53,7 +51,7 @@ export type GridCellProps<T extends Struct, V> =
  * @param props
  * @constructor
  */
-export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>): ReactElement {
+export default function GridCell<V extends string | number | boolean>(props: GridCellProps<V>): ReactElement {
     // ================================= Declarations
     const {
         name,
@@ -61,7 +59,7 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
         rowIndex,
         colIndex,
         className,
-        renderer,
+        renderer:Renderer,
         editable = true,
         readOnly = false,
         type = "string",
@@ -271,14 +269,12 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
 
 
     // Weeding out unwanted props from higher up, sending only true renderer props.
-    const rendererProps:RendererProps<V, T> = {
+    const rendererProps = {
         name,
         editable,
         ref:rendererRef,
         readOnly,
         value: dto,
-        rowIndex,
-        colIndex,
         type: dto.renderType,
         format,
         onBlur,
@@ -308,7 +304,7 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
                 onDoubleClick={onClick}
                 onKeyDown={onKeyDown}
             >
-                {renderer(rendererProps)}
+               <Renderer {...rendererProps} />
             </div>
             {contextMenuItems != null ? (
                 <ContextMenu

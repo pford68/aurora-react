@@ -1,10 +1,4 @@
-import {
-    type ReactElement,
-    type KeyboardEvent,
-    useReducer,
-    useRef,
-    useEffect
-} from "react";
+import {type ReactElement, type KeyboardEvent, useReducer, useRef, useEffect} from "react";
 import PageFactory from "./PageFactory";
 import ObservableList, {Record} from "./../../ObservableList";
 import type {Command, Struct} from "../../types/types";
@@ -21,10 +15,11 @@ import TableColumn, {type TableColumnProps} from "./TableColumn";
 import ContextMenu from "../overlays/ContextMenu.tsx";
 import GridRow from "./GridRow.tsx";
 import GridCell from "./cells/GridCell.tsx";
-import StatefulInput, {type StatefulInputProps} from "../renderers/StatefulInput.tsx";
-import withPlaceholder from "../renderers/withPlaceholder.tsx";
-import withReadonlyMode from "../renderers/withReadonlyMode.tsx";
-import BooleanRenderer from "../renderers/BooleanRenderer.tsx";
+import StatefulInput from "./renderers/StatefulInput.tsx";
+import withPlaceholder from "./renderers/withPlaceholder.tsx";
+import withReadonlyMode from "./renderers/withReadonlyMode.tsx";
+import BooleanRenderer from "./renderers/BooleanRenderer.tsx";
+import type {RendererProps} from "./renderers/renderers.types.ts";
 
 
 // ==================================== Private
@@ -93,21 +88,22 @@ function reducer(state: GridState, action: GridAction): GridState {
     }
 }
 
-function defaultCellRenderer<T>(): (props: StatefulInputProps<T>) => ReactElement {
-    return (props: StatefulInputProps<T>) => {
-        const {value} = props;
-
-        if (typeof value?.valueOf() === "boolean") {
-            return <BooleanRenderer {...props} value={value.valueOf()} />
-        }
-        return <StatefulInput {...props} value={value?.valueOf()} ref={props.ref} />
+function defaultCellRenderer(props: RendererProps) {
+    const {value} = props;
+    if (typeof value?.valueOf() === "boolean") {
+        return <BooleanRenderer {...props} value={value}/>
     }
+    return <StatefulInput {...props} value={value?.valueOf()} ref={props.ref}/>
 }
 
 
-function defaultCellFactory<T extends Struct, V>(columnConfig: TableColumnProps<V>, index: number, rowIndex: number, row: T){
-    const renderer = columnConfig.renderer ?? defaultCellRenderer();
+function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, index: number, rowIndex: number, row: Record<T>){
+    const {renderer = defaultCellRenderer, cellFactory} = columnConfig;
 
+    if (cellFactory != null) {
+        return (() => cellFactory(columnConfig, index, rowIndex, row))();
+    }
+    // Default cell factory
     return (
         <GridCell
             {...columnConfig}
@@ -121,13 +117,13 @@ function defaultCellFactory<T extends Struct, V>(columnConfig: TableColumnProps<
 }
 
 
-function defaultRowFactory<T extends Struct>(row: T, rowIndex: number) {
+function defaultRowFactory<T extends Struct>(row: Record<T>, rowIndex: number) {
     return (
         <GridRow
             key={rowIndex}
             rowIndex={rowIndex}
             row={row}
-            cellFactory={defaultCellFactory}
+            cellFactory={cellFactoryProvider}
         />
     );
 }
@@ -148,7 +144,7 @@ export type DataGridProps = {
     /**
      * TableColumns and TableFooters are allowed.
      */
-    children: ReactElement | ReactElement[],
+    children: ReactElement<TableColumnProps> | ReactElement<TableColumnProps>[],
     /**
      * Whether to use alternate row colors.
      * @default false
@@ -203,7 +199,7 @@ export type DataGridProps = {
     resizable?: boolean,
     border?: boolean,
     contained?: boolean,
-    rowFactory?: (row: Struct, rowIndex: number) => ReactElement,
+    rowFactory?: (row: Record<Struct>, rowIndex: number) => ReactElement,
 };
 
 
@@ -260,6 +256,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
         resizable = false,
         border = true,
         contained = true,
+        rowFactory,
     } = props;
 
     //const [containerNode, setContainerNode] = useState<HTMLElement | null>(null);
@@ -275,14 +272,14 @@ export default function DataGrid(props: DataGridProps): ReactElement {
     const gridRef = useRef<HTMLDivElement>(null);
 
     //================================== Get visible columns once per render.
-    const getVisibleColumns = (children: ReactElement | ReactElement[]) => {
+    const getVisibleColumns = (children: ReactElement<TableColumnProps> | ReactElement<TableColumnProps>[]) => {
         const childArray = Array.isArray(children) ? children : [children];
         return childArray
             .filter(child => child.type === TableColumn);
     }
 
 
-    const visibleColumns = getVisibleColumns(children);
+    const visibleColumns: ReactElement<TableColumnProps>[]  = getVisibleColumns(children);
     const getMaxColumnWidth = () => ((containerWidth ?? 0) / visibleColumns.length)
 
     //=================================== State
@@ -429,7 +426,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
                         offset={pageSize * rowHeight}
                         pageSize={8}
                         rowHeight={rowHeight}
-                        rowFactory={defaultRowFactory}
+                        rowFactory={rowFactory ?? defaultRowFactory}
                     />
                 </div>
                 {

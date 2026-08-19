@@ -5,15 +5,15 @@ import Text from "./Text.tsx";
 import {type ComponentType} from "react";
 
 
-export default function withReadonlyMode<T, U extends RendererProps<T, U>>(WrappedComponent:ComponentType<U>): ComponentType<U> {
-    return function(props: RendererProps<T, U> ) {
+export default function withReadonlyMode(WrappedComponent:ComponentType<RendererProps>): ComponentType<RendererProps> {
+    return function(props: RendererProps) {
         const {className, active = false, value, validator} = props;
         const baseClassName = joinCss(styles.renderer, styles.text, className);
 
         if (!active) {
-            return <Text value={value as T} className={baseClassName} validator={validator}/>;
+            return <Text value={String(value)} className={baseClassName} validator={validator}/>;
         }
 
-        return <WrappedComponent {...props as U} />
+        return <WrappedComponent {...props} />
     }
 }
