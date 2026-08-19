@@ -7,62 +7,26 @@ import {
     useRef,
     useState,
     useCallback,
+    type ComponentType,
 } from "react";
-import type {Command, Coordinates, Predicate, Struct} from "../../../types/types";
+import type {Coordinates} from "../../../types/types";
 import {GridContext} from "../GridContext";
 import {joinCss} from "../../../util/utils";
 import styles from "../DataGrid.module.css";
-import Text from "../../renderers/Text";
-import {type DataTypes} from "../../../types/types";
-import {type Record} from "../../../ObservableList";
-import type {RendererProps} from "../../renderers/types";
+import type {Configuration, DTO, RendererProps} from "../renderers/renderers.types.ts";
 import {EditMode, FocusMode} from "./modes";
 import useCellFactoryReducer from "./useCellFactoryReducer";
 import usePreviousState from "./usePreviousState";
 import {PageContext} from "../PageContext";
 import ContextMenu from "../../overlays/ContextMenu.tsx";
-import {type ComponentPropsWithoutRef} from 'react';
-import defaultRegistry, {type Registry} from "../../renderers/Registry.ts";
+import {getDecoratorByType, type Newable} from "../renderers/typeInference.ts";
+import type {AbstractDTO} from "../renderers/decorators.ts";
+import type {Record} from "../../../ObservableList.ts";
 
 
-/**
- * Cell renderer props that can be configured from a TableColumn.
- *
- * @param T The data type of the data contained in the Record that supplies row data.
- */
-export type CellRenderProps<T extends Struct, V> = ComponentPropsWithoutRef<"input"> & {
-    /**
-     * The column of data to render in the table column.
-     * Where the data is an array of objects, the name corresponds to a key
-     * in each object.
-     *
-     * @override
-     */
-    name: string,
-    type?: DataTypes,
-    /**
-     * Whether the value can be edited.
-     * @default false
-     */
-    editable: boolean,
-    validator?: Predicate<V>,
-    renderer?: (props: RendererProps<V, T>) => ReactElement,
-    /** The initial width of the column. */
-    width?: number,
-    className?: string,
-    format?: string,
-    /** Used by numeric renderers */
-    precision?: number,
-    /** Whether text should wrap. */
-    wrap?: boolean,
-    /** Commands for the column's context menu. */
-    contextMenuItems?: Command<Struct>[],
-    /**
-     * Items for the column's DataLists.
-     * Turns the cells in the column into autocomplete fields.
-     */
-    listItems?: string[],
-    valueChanged?: (value: V) => void,
+function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type: string, prop?: Newable<T, V>): DTO<T> {
+    const decorator = prop ?? getDecoratorByType(value, type);
+    return new decorator(value);
 }
 
 /**
@@ -73,13 +37,13 @@ export type CellRenderProps<T extends Struct, V> = ComponentPropsWithoutRef<"inp
  *
  * @param T the type of data contained in a Record
  */
-export type GridCellProps<T extends Struct, V> = {
+export type GridCellProps<V> = Configuration<{
+    renderer: ComponentType<RendererProps>,
+    decorator?: DTO<V> | Newable<any, any>,
+    row: Record,
     rowIndex: number,
     colIndex: number,
-    row: Record<T>,
-    registry?: Registry,
-} & CellRenderProps<T, V>;
-
+}>
 
 /**
  * Responsible for rendering  cells and their content.
@@ -87,7 +51,7 @@ export type GridCellProps<T extends Struct, V> = {
  * @param props
  * @constructor
  */
-export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>): ReactElement {
+export default function GridCell<V extends string | number | boolean>(props: GridCellProps<V>): ReactElement {
     // ================================= Declarations
     const {
         name,
@@ -95,23 +59,19 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
         rowIndex,
         colIndex,
         className,
-        renderer: CustomRenderer,
+        renderer:Renderer,
         editable = true,
         readOnly = false,
         type = "string",
         format,
-        placeholder = "NULL",
         onBlur,
         onFocus,
         onKeyDown: onKyDownProp,
         onClick: onClickProp,
-        validator,
-        required,
         wrap = false,
         width,
         contextMenuItems,
-        registry = defaultRegistry,
-        valueChanged,
+        decorator: decoratorProp,
     } = props;
     const gridContext = useContext(GridContext);
     const {
@@ -121,12 +81,9 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
     } = gridContext;
     const selectionModel = gridContext.selectionModel?.current;
     const focusModel = gridContext.focusModel?.current;
-    const focusMode = new FocusMode(gridContext);
-    const editMode = new EditMode();
     const pageContext = useContext(PageContext);
     const ref = useRef<HTMLDivElement>(null);
     const rendererRef = useRef<HTMLInputElement>(null);
-
 
     // ================================================= State
     const [state, dispatch] = useCellFactoryReducer({
@@ -139,7 +96,17 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
         return  selectionModel?.isContained(rowIndex, colIndex) ?? false;
     });
     const value = (row.get(name) as V);
+    // I want to allow mere objects (instead of only constructors), but I have not tested this (2026/08/17)
+    const dto = typeof decoratorProp === "object"
+        ? decoratorProp
+        : getDecoratorInstance(value, type, decoratorProp);
 
+    if (dto === undefined) {
+        throw new Error(`Decorator not found: props = ${name}, ${value}`);
+    }
+
+    const focusMode = new FocusMode(gridContext);
+    const editMode = new EditMode(dto);
 
     //==================================================== Effects
     /*
@@ -182,7 +149,7 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
                 ref.current?.focus();
             } else if (previousActiveState.current === true) {
                 // When we click on another cell, the currently active cell should deactivate.
-                dispatch({type: "deactivate"});
+                dispatch({type: "deactivate", payload: dto});
             }
         }
         const onSelectionChanged = () => {
@@ -299,52 +266,25 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
     const rendererClass = joinCss(
         state.active ? styles.active : styles.inactive,
     );
-    /*
-    A custom renderer is like any other renderer, except that it needs the model row.
-    So I separate the two Renderer types.
-     */
-    const Renderer =
-        CustomRenderer
-            ? CustomRenderer
-            : registry.getRenderer(type);
-
-    const finalOnChange =  () => {
-        const validate = (value:V): boolean => {
-            if (required && value == null) return false;
-            const result = validator?.(value) ?? true;
-            if (result) valueChanged?.(value);
-            return result;
-        }
-        if (!validate(value)) {
-           dispatch({type: "invalidate", payload: false});
-        } else {
-            dispatch({type: "validated", payload: true});
-        }
-    };
 
 
     // Weeding out unwanted props from higher up, sending only true renderer props.
     const rendererProps = {
         name,
         editable,
-        rendererRef,
+        ref:rendererRef,
         readOnly,
-        value,
-        row: CustomRenderer != null ? row : undefined,  // Custom renderers need access to the row bc they handle compound values.
+        value: dto,
+        type: dto.renderType,
         format,
-        rowIndex,
-        colIndex,
-        type,
-        onChange: finalOnChange,
         onBlur,
         onFocus,
         onClick: onClickProp,
         onKeyDown: onKyDownProp,
         className: rendererClass,
         active: state.active,
-        precision: typeof value === "number" ? props.precision : undefined,
+        scale: typeof value === "number" ? props.scale : undefined,
     }
-
 
     return (
         <div
@@ -364,10 +304,7 @@ export default function GridCell<T extends Struct, V>(props: GridCellProps<T, V>
                 onDoubleClick={onClick}
                 onKeyDown={onKeyDown}
             >
-                {value == null && !state.active
-                    ? <Text value={placeholder} className={styles.null} validator={validator} />
-                    : <Renderer {...rendererProps} />
-                }
+               <Renderer {...rendererProps} />
             </div>
             {contextMenuItems != null ? (
                 <ContextMenu

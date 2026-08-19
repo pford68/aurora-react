@@ -1,8 +1,7 @@
 import * as React from "react";
 import type {Meta} from "@storybook/react-vite";
-import BooleanRenderer from "../../components/renderers/BooleanRenderer";
-import withReadonlyMode from "../../components/renderers/withReadonlyMode.tsx";
-import type {ComponentType} from "react";
+import BooleanRenderer from "./BooleanRenderer.tsx";
+import withReadonlyMode from "./withReadonlyMode.tsx";
 
 
 type PropsAndArgs = React.ComponentProps<typeof BooleanRenderer> & {
@@ -14,7 +13,7 @@ const meta: Meta<PropsAndArgs> = {
     component: BooleanRenderer,
     args: {
         width: 800,
-        format: "text",
+        type: "text",
     },
     argTypes: {
         value: {
@@ -40,7 +39,7 @@ const defaultRenderer = (args: PropsAndArgs) => {
     );
 };
 
-const Renderer = withReadonlyMode(BooleanRenderer as ComponentType<any>);
+const Renderer = withReadonlyMode(BooleanRenderer);
 const hocRenderer = (args: PropsAndArgs) => {
     const props = {...args, width: undefined};
     return (

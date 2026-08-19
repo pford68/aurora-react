@@ -7,7 +7,7 @@ import styles from "./overlays.module.css";
 import useNormalizedPosition from "../../hooks/useNormalizedPosition.tsx";
 
 type MenuProps = {
-    commands: Command<unknown>[],
+    commands: Command[],
     visible: boolean,
     top: number,
     left: number,

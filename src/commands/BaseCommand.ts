@@ -1,10 +1,10 @@
-import type {Command} from "../types/types";
+import type {Command, Struct} from "../types/types";
 
 /**
  * Base class for Commands
- * @param T The parameter type used by the Command
+ * @typeParam T The parameter type used by the Command
  */
-export default class BaseCommand<T>  implements Command<T>{
+export default class BaseCommand<T extends Struct = Struct>  implements Command<T>{
     readonly #params: T[];
 
     constructor() {

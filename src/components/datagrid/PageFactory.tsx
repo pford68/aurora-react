@@ -18,7 +18,7 @@ type PageFactoryProps<T extends Struct> = {
     root?: RefObject<HTMLElement | undefined | null>,
     offset?: number,
     threshold?: number | number[],
-    rowFactory: (row: T, rowIndex: number) => ReactElement,
+    rowFactory: (row: Record<T>, rowIndex: number) => ReactElement,
 };
 
 /**
@@ -78,7 +78,7 @@ type PageProps<T extends Struct> = {
     observer: IntersectionObserver,
     emitter: RefObject<Observable<IntersectionResult>>,
     pageIndex: number,
-    rowFactory: (row: T, rowIndex: number) => ReactElement,
+    rowFactory: (row: Record<T>, rowIndex: number) => ReactElement,
 };
 
 /**

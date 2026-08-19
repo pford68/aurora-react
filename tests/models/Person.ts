@@ -1,5 +1,5 @@
-import {Record} from "../../src/ObservableList";
-import type {Struct} from "../../src/types/types";
+import {Record} from "../../src";
+import type {Struct} from "../../src";
 
 export type Measurements = {
     height: number,

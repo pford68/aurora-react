@@ -1,7 +1,7 @@
 import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
-import Overlay from "../components/overlays/Overlay.tsx";
-import styles from "./css/Popup.stories.module.css"
+import Overlay from "./Overlay.tsx";
+import styles from "../../stories/css/Popup.stories.module.css"
 
 
 type PropsAndArgs = React.ComponentProps<typeof Overlay> & {
