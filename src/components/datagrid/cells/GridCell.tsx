@@ -19,15 +19,8 @@ import useCellFactoryReducer from "./useCellFactoryReducer";
 import usePreviousState from "./usePreviousState";
 import {PageContext} from "../PageContext";
 import ContextMenu from "../../overlays/ContextMenu.tsx";
-import {getDecoratorByType, type Newable} from "../renderers/typeInference.ts";
-import type {AbstractDTO} from "../renderers/decorators.ts";
 import type {Record} from "../../../ObservableList.ts";
 
-
-function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type: string, prop?: Newable<T, V>): DTO<T> {
-    const decorator = prop ?? getDecoratorByType(value, type);
-    return new decorator(value);
-}
 
 /**
  * CellFactoryProps does <strong>not</strong> extend BaseRendererProps. While
@@ -35,14 +28,14 @@ function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type: strin
  * its renderer, the GridCell does not allow the props to trickle down. Its
  * props can be quite different from the props it ultimately sets on its renderer.
  *
- * @param T the type of data contained in a Record
+ * @param V the type of data contained in a DTO
  */
 export type GridCellProps<V> = Configuration<{
     renderer: ComponentType<RendererProps>,
-    decorator?: DTO<V> | Newable<any, any>,
     row: Record,
     rowIndex: number,
     colIndex: number,
+    dto: DTO<V>,
 }>
 
 /**
@@ -71,7 +64,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         wrap = false,
         width,
         contextMenuItems,
-        decorator: decoratorProp,
+        dto,
     } = props;
     const gridContext = useContext(GridContext);
     const {
@@ -96,14 +89,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         return  selectionModel?.isContained(rowIndex, colIndex) ?? false;
     });
     const value = (row.get(name) as V);
-    // I want to allow mere objects (instead of only constructors), but I have not tested this (2026/08/17)
-    const dto = typeof decoratorProp === "object"
-        ? decoratorProp
-        : getDecoratorInstance(value, type, decoratorProp);
-
-    if (dto === undefined) {
-        throw new Error(`Decorator not found: props = ${name}, ${value}`);
-    }
+    dto.update(value);
 
     const focusMode = new FocusMode(gridContext);
     const editMode = new EditMode(dto);

@@ -16,10 +16,14 @@ const meta: Meta<PropsAndArgs> = {
         type: "text",
     },
     argTypes: {
+        type: {
+            options: ["checkbox", "switch", "text"],
+            control: {type: "radio"}
+        },
         value: {
             control: {type: "boolean"}
         }
-    }
+    },
 };
 
 export default meta;

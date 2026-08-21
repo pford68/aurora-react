@@ -19,7 +19,9 @@ import StatefulInput from "./renderers/StatefulInput.tsx";
 import withPlaceholder from "./renderers/withPlaceholder.tsx";
 import withReadonlyMode from "./renderers/withReadonlyMode.tsx";
 import BooleanRenderer from "./renderers/BooleanRenderer.tsx";
-import type {RendererProps} from "./renderers/renderers.types.ts";
+import type {DTO, RendererProps} from "./renderers/renderers.types.ts";
+import type {AbstractDTO} from "./renderers/decorators.ts";
+import {getDecoratorByType, type Newable} from "./renderers/typeInference.ts";
 
 
 // ==================================== Private
@@ -88,6 +90,11 @@ function reducer(state: GridState, action: GridAction): GridState {
     }
 }
 
+function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type?: string, prop?: Newable<T, V>): DTO<T> {
+    const decorator = prop ?? getDecoratorByType(value, type);
+    return new decorator(value);
+}
+
 function defaultCellRenderer(props: RendererProps) {
     const {value} = props;
     if (typeof value?.valueOf() === "boolean") {
@@ -98,12 +105,20 @@ function defaultCellRenderer(props: RendererProps) {
 
 
 function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, index: number, rowIndex: number, row: Record<T>){
-    const {renderer = defaultCellRenderer, cellFactory} = columnConfig;
+    const {renderer = defaultCellRenderer, cellFactory, type, decorator, name} = columnConfig;
 
     if (cellFactory != null) {
         return (() => cellFactory(columnConfig, index, rowIndex, row))();
     }
+
+    const value = row.get(name);
+
     // Default cell factory
+    const dto = getDecoratorInstance(value, type, decorator);
+
+    if (dto === undefined) {
+        throw new Error(`Decorator not found: props = ${name}, ${value}`);
+    }
     return (
         <GridCell
             {...columnConfig}
@@ -112,6 +127,7 @@ function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, i
             row={row}
             rowIndex={rowIndex}
             colIndex={index}
+            dto={dto}
         />
     )
 }

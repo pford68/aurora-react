@@ -63,8 +63,13 @@ class MeasurementsDTO extends AbstractDTO<number>{
         return super.toJSON();
     }
 
-    update(value: number): void {
-        this.#height = Number(value);
+    update(value: Measurements | number): void {
+        if (typeof value === "object") {
+            this.#height = value.height;
+            this.#weight = value.weight;
+        } else {
+            this.#height = value;
+        }
     }
 
     get renderType(): string {
