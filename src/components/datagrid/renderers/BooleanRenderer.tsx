@@ -3,13 +3,14 @@ import {joinCss} from "../../../util/utils.ts";
 import styles from "./Renderers.module.css";
 import type {RendererProps} from "./renderers.types.ts";
 import StatefulInput from "./StatefulInput.tsx";
-import type {Predicate} from "../../../types/types.ts";
+import type {Consumer, Predicate} from "../../../types/types.ts";
 
 type LocalOverrides = {
     ref?: RefObject<HTMLInputElement | null>,
     className?: string,
     validator?: Predicate<string>,
     autoComplete?: boolean,
+    onUpdate?: Consumer<boolean>,
 }
 export type BooleanRendererProps = Omit<RendererProps, keyof LocalOverrides> & LocalOverrides;
 
@@ -24,10 +25,9 @@ export default function BooleanRenderer(props: BooleanRendererProps): React.Reac
 
     const overrides = {
         name,
-        value: (value?.valueOf() === true ? "true" : "false"),
+        value: value?.toString(),
         className: joinCss(styles.renderer, styles.boolean, styles.active, className),
         // "switch" is weeded out, but format == switch is handled later on.
-        checked: value?.valueOf() === true,
         type: ["text", "switch", "checkbox"].includes(type) ? type : "text",
     };
 
@@ -41,6 +41,6 @@ export default function BooleanRenderer(props: BooleanRendererProps): React.Reac
     }
 
     return (
-        <StatefulInput {...overrides} ref={ref} type={type}/>
+        <StatefulInput {...overrides} ref={ref} type={type} />
     );
 }

@@ -2,13 +2,14 @@ import {type ReactElement, type RefObject, useState} from "react";
 import {joinCss} from "../../../util/utils.ts";
 import styles from "./Renderers.module.css";
 import type {RendererProps} from "./renderers.types.ts";
-import type {Predicate} from "../../../types/types.ts";
+import type {Consumer, Predicate} from "../../../types/types.ts";
 
 type LocalOverrides = {
     value?: string | number | boolean,
     validator?: Predicate<string>,
     ref?: RefObject<HTMLInputElement | null>,
     autoComplete?: boolean,
+    onUpdate?: Consumer<string | number | boolean>,
 }
 type StatefulInputProps = Omit<RendererProps, keyof LocalOverrides> & LocalOverrides;
 /**
@@ -21,13 +22,16 @@ type StatefulInputProps = Omit<RendererProps, keyof LocalOverrides> & LocalOverr
  * @constructor
  */
 export default function StatefulInput(props: StatefulInputProps): ReactElement {
+
     const {
         value: initValue,
         validator,
         className,
         ref,
-        onInput,
+        onUpdate,
         autoComplete = false,
+        onInput,
+        onChange,
     } = props;
     const [value, setValue] = useState<string>(String(initValue));
     const [valid, setValid] = useState<boolean>(() => {
@@ -46,8 +50,15 @@ export default function StatefulInput(props: StatefulInputProps): ReactElement {
                     const result = validator?.(updatedValue) ?? true;
                     setValid(result);
                     setValue(updatedValue);
-                    if (result) {
-                        onInput?.(e);
+                    onInput?.(e)
+                }
+            }}
+            onChange={e => {
+                const {target} = e;
+                if (target instanceof HTMLInputElement) {
+                    if (valid) {
+                        onUpdate?.(value);
+                        onChange?.(e);
                     }
                 }
             }}

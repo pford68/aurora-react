@@ -19,7 +19,7 @@ const meta: Meta<PropsAndArgs> = {
     },
     argTypes: {
         type: {
-            options: ['text', 'tel', 'url', 'date', "datetime-local", "email", "search", "range", "number"],
+            options: ['text', 'tel', 'url', 'date', "datetime-local", "email", "search", "range", "number", "checkbox"],
             control: {type: "radio"}
         }
     },
