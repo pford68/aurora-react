@@ -1,10 +1,10 @@
 import type {Dispatch, KeyboardEvent} from "react";
-import type {GridContextType} from "../GridContext";
-import CopyCommand from "../../../commands/CopyCommand";
-import PasteCommand from "../../../commands/PasteCommand";
-import CutCommand from "../../../commands/CutCommand";
-import type {CellFactoryAction} from "./useCellFactoryReducer.tsx";
-import type { DTO } from "../renderers/renderers.types.ts";
+import type {GridContextType} from "./GridContext.ts";
+import CopyCommand from "../../commands/CopyCommand.ts";
+import PasteCommand from "../../commands/PasteCommand.ts";
+import CutCommand from "../../commands/CutCommand.ts";
+import type {CellFactoryAction} from "./hooks/useCellStateReducer.tsx";
+import type { DTO } from "./renderers/renderers.types.ts";
 
 interface CellState {
     onKeyDown: (e: KeyboardEvent, dispatch: Dispatch<CellFactoryAction>) => void;

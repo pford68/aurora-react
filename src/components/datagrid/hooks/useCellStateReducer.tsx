@@ -1,6 +1,6 @@
 import {type Dispatch, type RefObject, useContext, useReducer} from "react";
-import SaveCommand from "../../../commands/SaveCommand";
-import {GridContext} from "../GridContext";
+import SaveCommand from "../../../commands/SaveCommand.ts";
+import {GridContext} from "../GridContext.ts";
 import type {DTO} from "../renderers/renderers.types.ts";
 
 
@@ -32,7 +32,7 @@ type useReducerProps = {
     name: string,
 }
 
-export default function useCellFactoryReducer(props: useReducerProps): [CellFactoryState, Dispatch<CellFactoryAction>] {
+export default function useCellStateReducer(props: useReducerProps): [CellFactoryState, Dispatch<CellFactoryAction>] {
 
     const {ref, rowIndex} = props;
     const gridContext = useContext(GridContext);
