@@ -4,7 +4,8 @@ import CopyCommand from "../../commands/CopyCommand.ts";
 import PasteCommand from "../../commands/PasteCommand.ts";
 import CutCommand from "../../commands/CutCommand.ts";
 import type {CellFactoryAction} from "./hooks/useCellStateReducer.tsx";
-import type { DTO } from "./renderers/renderers.types.ts";
+
+import type {DTO} from "../../model/dtos.ts";
 
 interface CellState {
     onKeyDown: (e: KeyboardEvent, dispatch: Dispatch<CellFactoryAction>) => void;
