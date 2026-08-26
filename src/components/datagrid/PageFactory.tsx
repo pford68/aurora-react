@@ -1,8 +1,8 @@
 import {type ReactElement, type RefObject, useEffect, useRef, useState, useContext} from "react";
-import {Record} from "./../../ObservableList";
+import {Record} from "../../model/ObservableList.ts";
 import type {Coordinates, Struct} from "../../types/types";
 import styles from "./DataGrid.module.css";
-import {Emitter, type Observable} from "./../../Observable";
+import {Emitter, type Observable} from "../../model/Observable.ts";
 import {PageContext} from "./PageContext";
 import {GridContext} from "./GridContext";
 import type {SelectionChange} from "./SelectionModel";

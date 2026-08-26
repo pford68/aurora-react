@@ -5,7 +5,7 @@ import {
     DateDTO,
     NumberDTO,
     StringDTO,
-} from "./decorators.ts";
+} from "../../../model/dtos.ts";
 
 
 export type Newable<T, V extends AbstractDTO<T>> = new (value: T) => V;

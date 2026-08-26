@@ -1,11 +1,11 @@
-import type {RefObject, ComponentPropsWithoutRef} from "react";
+import type {ComponentPropsWithoutRef, RefObject} from "react";
 import type {Command, Predicate, Struct} from "../../../types/types.ts";
-import type {Record} from "../../../ObservableList.ts";
+import type {Record} from "../../../model/ObservableList.ts";
+import type {DTO, DTOprops} from "../../../model/dtos.ts";
 
 
 export type EnhancedPanelProps<T> = Omit<ComponentPropsWithoutRef<'div'>, keyof T> & T;
-export type Configuration<T> = EnhancedPanelProps<T> & DTOprops & Omit<RendererProps, keyof T> & T;
-export type EnhancedInputProps<T> = Omit<ComponentPropsWithoutRef<'input'>, keyof T> & T;
+
 
 /**
  * Type for Renderer props.
@@ -29,7 +29,7 @@ export type RendererProps<T = string | number | boolean, U extends Struct = Stru
     validator?: Predicate<string>,
     format?: string | Intl.DateTimeFormatOptions,
     /** The list of options for autocompletes. If present, the renderer supports autocompletes. */
-    items?: {[key: string] :string | number | boolean}[],
+    items?: { [key: string]: string | number | boolean }[],
     /**
      * Whether the renderer accepts multiple values. This has an effect only on
      * renderers that support using multiple values.
@@ -63,25 +63,7 @@ export type RendererProps<T = string | number | boolean, U extends Struct = Stru
 }>;
 
 
-/**
- * @typeParam T - the data type of the value contained in the DTO
- */
-export interface DTO<T = string| number | boolean | undefined>{
-    /** The string to represent the value when it renders */
-    toString(): string;
-    valueOf(): T;
-    toJSON(): {[key:string]: T};
-    update(value: T): void
-    readonly renderType: string;
-}
+export type Configuration<T> = EnhancedPanelProps<T> & DTOprops & Omit<RendererProps, keyof T> & T;
+export type EnhancedInputProps<T> = Omit<ComponentPropsWithoutRef<'input'>, keyof T> & T;
 
-export type DTOprops = {
-    format?: string | Intl.DateTimeFormatOptions,
-    locale?: Intl.LocalesArgument,
-    /** The type value to send to HTML input elements. */
-    renderType?: "text" | "number" | "date" | "password"
-        | "tel" | "email" | "checkbox" | "switch" | "radio"
-        | "color" | "file" | "range" | "search",
-    scale?: number,
-}
 

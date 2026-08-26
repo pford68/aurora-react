@@ -1,5 +1,30 @@
-import type {DTO, DTOprops} from "./renderers.types.ts";
-import {toISODateString} from "../../../util/utils.ts";
+import {toISODateString} from "../util/utils.ts";
+
+/**
+ * @typeParam T - the data type of the value contained in the DTO
+ */
+export interface DTO<T = string | number | boolean | undefined> {
+    /** The string to represent the value when it renders */
+    toString(): string;
+
+    valueOf(): T;
+
+    toJSON(): { [key: string]: T };
+
+    update(value: T): void
+
+    readonly renderType: string;
+}
+
+export type DTOprops = {
+    format?: string | Intl.DateTimeFormatOptions,
+    locale?: Intl.LocalesArgument,
+    /** The type value to send to HTML input elements. */
+    renderType?: "text" | "number" | "date" | "password"
+        | "tel" | "email" | "checkbox" | "switch" | "radio"
+        | "color" | "file" | "range" | "search",
+    scale?: number,
+}
 
 /**
  * @typeParam T - the data type of the value contained in the DTO
@@ -213,3 +238,4 @@ export class BooleanDTO extends AbstractDTO<boolean> {
         return this.#renderType;
     }
 }
+

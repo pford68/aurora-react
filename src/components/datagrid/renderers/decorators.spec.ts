@@ -1,4 +1,4 @@
-import {BooleanDTO, CurrencyDTO, DateDTO, DateTimeDTO, NumberDTO} from "./decorators.ts";
+import {BooleanDTO, CurrencyDTO, DateDTO, DateTimeDTO, NumberDTO} from "../../../model/dtos.ts";
 
 describe("DateDTO", () => {
     it ("should render as a ISO-formatted Date string by default", () => {

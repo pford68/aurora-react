@@ -1,5 +1,5 @@
-import {Emitter} from "./Observable";
-import type {BiFunction, Predicate, Struct} from "./types/types";
+import {Emitter} from "./Observable.ts";
+import type {BiFunction, Predicate, Struct} from "../types/types.ts";
 import {v4 as uuid} from "uuid";
 
 

@@ -2,7 +2,7 @@ import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
 import DataGrid from "./DataGrid.tsx";
 import TableColumn from "./TableColumn.tsx";
-import ObservableList, {Record} from "../../ObservableList.ts";
+import ObservableList, {Record} from "../../model/ObservableList.ts";
 import {useRef} from "react";
 import Person, {type Measurements} from "../../../tests/models/Person.ts";
 import people from "../../../tests/fixtures/people.json";
@@ -10,9 +10,9 @@ import airlineSafety from "../../../tests/fixtures/airline_safety.json";
 import BaseCommand from "../../commands/BaseCommand.ts";
 import type {ContextMenuParameter, Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
-import type {RendererProps} from "./renderers/renderers.types.ts";
 import StatefulInput from "./renderers/StatefulInput.tsx";
-import {AbstractDTO} from "./renderers/decorators.ts";
+import {AbstractDTO} from "../../model/dtos.ts";
+import type {RendererProps} from "./renderers/renderers.types.ts";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {

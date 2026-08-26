@@ -1,8 +1,9 @@
-import type {RendererProps} from "./renderers.types.ts";
 import {joinCss} from "../../../util/utils.ts";
 import styles from "./Renderers.module.css";
 import Text from "./Text.tsx";
 import {type ComponentType} from "react";
+
+import type {RendererProps} from "./renderers.types.ts";
 
 
 export default function withReadonlyMode(WrappedComponent:ComponentType<RendererProps>): ComponentType<RendererProps> {

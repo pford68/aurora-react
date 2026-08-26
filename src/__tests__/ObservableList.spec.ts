@@ -1,6 +1,6 @@
 import peopleData from "../../tests/fixtures/people.json";
 import Person, {type Measurements} from "../../tests/models/Person";
-import ObservableList, {Record} from "..//ObservableList";
+import ObservableList, {Record} from "../model/ObservableList.ts";
 import type {Struct} from "../types/types";
 import {fail} from "node:assert";
 

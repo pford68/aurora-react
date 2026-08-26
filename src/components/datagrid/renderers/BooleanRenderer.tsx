@@ -1,9 +1,10 @@
 import React, {type RefObject} from "react";
 import {joinCss} from "../../../util/utils.ts";
 import styles from "./Renderers.module.css";
-import type {RendererProps} from "./renderers.types.ts";
 import StatefulInput from "./StatefulInput.tsx";
 import type {Consumer, Predicate} from "../../../types/types.ts";
+
+import type {RendererProps} from "./renderers.types.ts";
 
 type LocalOverrides = {
     ref?: RefObject<HTMLInputElement | null>,

@@ -1,4 +1,4 @@
-import {Emitter} from "./../../Observable";
+import {Emitter} from "../../model/Observable.ts";
 import type {Coordinates} from "../../types/types";
 
 /**

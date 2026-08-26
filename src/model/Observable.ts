@@ -1,4 +1,4 @@
-import type {Consumer} from "./types/types";
+import type {Consumer} from "../types/types.ts";
 
 /**
  * Implemented by classes that allow others to listen to changes
