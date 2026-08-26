@@ -9,18 +9,24 @@ import {
     useCallback,
     type ComponentType,
 } from "react";
-import type {Coordinates} from "../../../types/types";
-import {GridContext} from "../GridContext";
-import {joinCss} from "../../../util/utils";
-import styles from "../DataGrid.module.css";
-import type {Configuration, DTO, RendererProps} from "../renderers/renderers.types.ts";
-import {EditMode, FocusMode} from "./modes";
-import useCellFactoryReducer from "./useCellFactoryReducer";
-import usePreviousState from "./usePreviousState";
-import {PageContext} from "../PageContext";
-import ContextMenu from "../../overlays/ContextMenu.tsx";
-import type {Record} from "../../../ObservableList.ts";
+import type {Coordinates} from "../../types/types.ts";
+import {GridContext} from "./GridContext.ts";
+import {joinCss} from "../../util/utils.ts";
+import styles from "./DataGrid.module.css";
+import type {Configuration, RendererProps} from "./renderers/renderers.types.ts";
+import {EditMode, FocusMode} from "./cellStates.ts";
+import useCellStateReducer from "./hooks/useCellStateReducer.tsx";
+import usePreviousState from "./hooks/usePreviousState.tsx";
+import {PageContext} from "./PageContext.ts";
+import ContextMenu from "../overlays/ContextMenu.tsx";
+import type {Record} from "../../model/ObservableList.ts";
+import {AbstractDTO, type DTO, type DTOprops} from "../../model/dtos.ts";
+import {getDecoratorByType, type Newable} from "./renderers/typeInference.ts";
 
+function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type?: string, newable?: Newable<T, V>, props?: DTOprops): DTO<T> {
+    const decorator = newable ?? getDecoratorByType(value, type);
+    return new decorator(value, props);
+}
 
 /**
  * CellFactoryProps does <strong>not</strong> extend BaseRendererProps. While
@@ -35,7 +41,7 @@ export type GridCellProps<V> = Configuration<{
     row: Record,
     rowIndex: number,
     colIndex: number,
-    dto: DTO<V>,
+    decorator?: DTO<V> | Newable<any, any>,
 }>
 
 /**
@@ -56,7 +62,9 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         editable = true,
         readOnly = false,
         type = "string",
+        locale,
         format,
+        renderType,
         onBlur,
         onFocus,
         onKeyDown: onKyDownProp,
@@ -64,7 +72,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         wrap = false,
         width,
         contextMenuItems,
-        dto,
+        decorator: decoratorProp,
     } = props;
     const gridContext = useContext(GridContext);
     const {
@@ -79,7 +87,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
     const rendererRef = useRef<HTMLInputElement>(null);
 
     // ================================================= State
-    const [state, dispatch] = useCellFactoryReducer({
+    const [state, dispatch] = useCellStateReducer({
         ref: rendererRef,
         rowIndex,
         name,
@@ -89,7 +97,13 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         return  selectionModel?.isContained(rowIndex, colIndex) ?? false;
     });
     const value = (row.get(name) as V);
-    dto.update(value);
+    const dto = typeof decoratorProp === "object"
+        ? decoratorProp
+        : getDecoratorInstance(value, type, decoratorProp, {locale, renderType, format});
+
+    if (dto === undefined) {
+        throw new Error(`DTO not found: props = ${name}, ${value}`);
+    }
 
     const focusMode = new FocusMode(gridContext);
     const editMode = new EditMode(dto);
@@ -200,7 +214,9 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
                     focusModel?.focus(rowIndex, colIndex);
                     selectionModel?.reset(rowIndex, colIndex);
                 } else {
-                    e.stopPropagation();
+                    if ((e.target as HTMLInputElement).type !== "checkbox"){
+                        e.stopPropagation();
+                    }
                 }
         }
     }, [
@@ -270,6 +286,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         className: rendererClass,
         active: state.active,
         scale: typeof value === "number" ? props.scale : undefined,
+        update: dto.clone.bind(dto)
     }
 
     return (

@@ -1,6 +1,6 @@
 import {type ReactElement, type KeyboardEvent, useReducer, useRef, useEffect} from "react";
 import PageFactory from "./PageFactory";
-import ObservableList, {Record} from "./../../ObservableList";
+import ObservableList, {Record} from "../../model/ObservableList.ts";
 import type {Command, Struct} from "../../types/types";
 import styles from "./DataGrid.module.css";
 import {joinCss} from "./../../util/utils";
@@ -14,14 +14,12 @@ import {useStorageClipboard} from "../../hooks/useStorageClipboard.tsx";
 import TableColumn, {type TableColumnProps} from "./TableColumn";
 import ContextMenu from "../overlays/ContextMenu.tsx";
 import GridRow from "./GridRow.tsx";
-import GridCell from "./cells/GridCell.tsx";
+import GridCell from "./GridCell.tsx";
 import StatefulInput from "./renderers/StatefulInput.tsx";
 import withPlaceholder from "./renderers/withPlaceholder.tsx";
 import withReadonlyMode from "./renderers/withReadonlyMode.tsx";
 import BooleanRenderer from "./renderers/BooleanRenderer.tsx";
-import type {DTO, RendererProps} from "./renderers/renderers.types.ts";
-import type {AbstractDTO} from "./renderers/decorators.ts";
-import {getDecoratorByType, type Newable} from "./renderers/typeInference.ts";
+import type {RendererProps} from "./renderers/renderers.types.ts";
 
 
 // ==================================== Private
@@ -90,35 +88,27 @@ function reducer(state: GridState, action: GridAction): GridState {
     }
 }
 
-function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type?: string, prop?: Newable<T, V>): DTO<T> {
-    const decorator = prop ?? getDecoratorByType(value, type);
-    return new decorator(value);
-}
 
 function defaultCellRenderer(props: RendererProps) {
-    const {value} = props;
+    const {value, ref} = props;
     if (typeof value?.valueOf() === "boolean") {
         return <BooleanRenderer {...props} value={value}/>
     }
-    return <StatefulInput {...props} value={value?.valueOf()} ref={props.ref}/>
+    return <StatefulInput {...props} value={value?.valueOf()} ref={ref}/>
 }
 
 
 function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, index: number, rowIndex: number, row: Record<T>){
-    const {renderer = defaultCellRenderer, cellFactory, type, decorator, name} = columnConfig;
+    const {
+        renderer = defaultCellRenderer,
+        cellFactory,
+    } = columnConfig;
 
     if (cellFactory != null) {
         return (() => cellFactory(columnConfig, index, rowIndex, row))();
     }
 
-    const value = row.get(name);
-
-    // Default cell factory
-    const dto = getDecoratorInstance(value, type, decorator);
-
-    if (dto === undefined) {
-        throw new Error(`Decorator not found: props = ${name}, ${value}`);
-    }
+    //======================================= Default cell factory
     return (
         <GridCell
             {...columnConfig}
@@ -127,7 +117,6 @@ function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, i
             row={row}
             rowIndex={rowIndex}
             colIndex={index}
-            dto={dto}
         />
     )
 }
@@ -275,15 +264,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
         rowFactory,
     } = props;
 
-    //const [containerNode, setContainerNode] = useState<HTMLElement | null>(null);
     const containerRef = useRef<HTMLDivElement>(null)
-
-    /*
-    const containerRefCallback = useCallback((node: HTMLElement | null) => {
-        if (node !== null) {
-            setContainerNode(node); // Save the actual DOM node to state
-        }
-    }, []);*/
     const containerWidth: number = 0;
     const gridRef = useRef<HTMLDivElement>(null);
 

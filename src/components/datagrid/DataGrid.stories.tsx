@@ -42,7 +42,6 @@ type Story = StoryObj<PropsAndArgs>;
 
 class MeasurementsDTO extends AbstractDTO<number>{
     #height: number;
-    // @ts-expect-error: this is unimportant for the test, for now.
     #weight: number;
 
     constructor(value:Measurements) {
@@ -63,13 +62,11 @@ class MeasurementsDTO extends AbstractDTO<number>{
         return super.toJSON();
     }
 
-    update(value: Measurements | number): void {
+    clone(value: Measurements | number): AbstractDTO<number> {
         if (typeof value === "object") {
-            this.#height = value.height;
-            this.#weight = value.weight;
-        } else {
-            this.#height = value;
+            return new MeasurementsDTO(value)
         }
+        return new MeasurementsDTO({height: value, weight: this.#weight});
     }
 
     get renderType(): string {

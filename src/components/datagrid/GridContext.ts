@@ -1,7 +1,7 @@
 import {createContext, type Dispatch, type ReactElement, type RefObject} from "react";
 import FocusModel from "./FocusModel";
 import SelectionModel from "./SelectionModel";
-import ObservableList from "./../../ObservableList";
+import ObservableList from "../../model/ObservableList.ts";
 import type {Command, Struct} from "../../types/types";
 import type {GridAction} from "./DataGrid";
 import {CommandStack} from "./../../util/CommandStack";

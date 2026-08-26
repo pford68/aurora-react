@@ -52,7 +52,7 @@ export default function useCellStateReducer(props: useReducerProps): [CellFactor
                 const {name} = ref.current ?? {};
                 const dto = action.payload;
                 const value = ref.current ? ref.current.value : null;
-                dto?.update(value);
+                dto?.clone(value);
                 if (dto != null && items != null && value != null && !(String(value).trim().length === 0 && !gridContext.nullable)) {
                     const cmd = new SaveCommand(items);
                     cmd.setParameter({index: rowIndex, value: {[String(name)]: dto.valueOf()}})
