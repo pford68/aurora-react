@@ -4,7 +4,7 @@ import {joinCss} from "./../../util/utils";
 import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext";
 import type {TableColumnProps} from "./TableColumn.tsx";
-import type {Record} from "../../ObservableList.ts";
+import type {Record} from "../../model/ObservableList.ts";
 
 type GridRowProps<T extends Struct, V> = {
     row: Record<T>,

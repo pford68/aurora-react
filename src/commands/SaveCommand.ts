@@ -1,6 +1,6 @@
 import BaseCommand from "./BaseCommand";
 import type {Command, Struct} from "../types/types";
-import ObservableList, {type PartialUpdate} from "../ObservableList";
+import ObservableList, {type PartialUpdate} from "../model/ObservableList.ts";
 import {isSubSet} from "../util/utils";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 

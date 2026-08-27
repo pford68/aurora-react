@@ -18,6 +18,6 @@ export * from "./util/layout.tsx";
 export * from "./util/constants.ts";
 export * from "./util/CommandStack.ts";
 export * from "./util/validations.ts";
-export * from "./Observable.ts";
-export * from "./ObservableList.ts";
+export * from "./model/Observable.ts";
+export * from "./model/ObservableList.ts";
 export * from "./types/types.ts";

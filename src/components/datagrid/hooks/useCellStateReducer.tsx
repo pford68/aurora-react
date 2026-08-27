@@ -1,7 +1,7 @@
 import {type Dispatch, type RefObject, useContext, useReducer} from "react";
-import SaveCommand from "../../../commands/SaveCommand";
-import {GridContext} from "../GridContext";
-import type {DTO} from "../renderers/renderers.types.ts";
+import SaveCommand from "../../../commands/SaveCommand.ts";
+import {GridContext} from "../GridContext.ts";
+import type {DTO} from "../../../model/dtos.ts";
 
 
 export type CellFactoryState = {
@@ -18,7 +18,7 @@ export type CellFactoryAction = {
         | "validated"
         | "clear"
         | "undo"
-        | "redo",
+        | "redo"
     payload?: DTO<any>,
 }
 
@@ -32,7 +32,20 @@ type useReducerProps = {
     name: string,
 }
 
-export default function useCellFactoryReducer(props: useReducerProps): [CellFactoryState, Dispatch<CellFactoryAction>] {
+function checkable(renderType: string) {
+    return renderType === "checkbox" || renderType === "switch";
+}
+
+function findValue(node: HTMLInputElement | null, dto?:DTO) {
+    let value = node ?node.value : null;
+    if (node && dto != null && checkable(dto?.renderType)) {
+        value = String(node.checked);
+    }
+    return value;
+}
+
+
+export default function useCellStateReducer(props: useReducerProps): [CellFactoryState, Dispatch<CellFactoryAction>] {
 
     const {ref, rowIndex} = props;
     const gridContext = useContext(GridContext);
@@ -40,6 +53,7 @@ export default function useCellFactoryReducer(props: useReducerProps): [CellFact
         items,
         undoStack,
         redoStack,
+        nullable,
     } = gridContext;
 
     const reducer = (state: CellFactoryState, action: CellFactoryAction) => {
@@ -50,11 +64,12 @@ export default function useCellFactoryReducer(props: useReducerProps): [CellFact
             case "deactivate": { // Sends to focused mode and flushes changes.
                 const {name} = ref.current ?? {};
                 const dto = action.payload;
-                const value = ref.current ? ref.current.value : null;
-                dto?.update(value);
-                if (dto != null && items != null && value != null && !(String(value).trim().length === 0 && !gridContext.nullable)) {
+                let value = findValue(ref.current, dto);
+                if (items != null && (value != null || nullable)) {
+                    const updatedValue = String(value).trim().length > 0 ? value : null;
+                    const newDto = dto?.clone(updatedValue);
                     const cmd = new SaveCommand(items);
-                    cmd.setParameter({index: rowIndex, value: {[String(name)]: dto.valueOf()}})
+                    cmd.setParameter({index: rowIndex, value: {[String(name)]: newDto?.valueOf()}})
                     cmd.execute();
                     redoStack?.clear();
                     undoStack?.push(cmd);

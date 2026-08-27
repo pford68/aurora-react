@@ -1,7 +1,7 @@
 import type {Command, Struct} from "../types/types";
 import {v4 as uuid} from "uuid";
 import BaseCommand from "./BaseCommand";
-import {Record} from "../ObservableList";
+import {Record} from "../model/ObservableList.ts";
 import {isTextSelected} from "../util/utils";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
