@@ -10,7 +10,7 @@ type LocalOverrides = {
     className?: string,
     validator?: Predicate<string>,
     autoComplete?: boolean,
-    format?: "checkbox" | "switch",
+    type?: string,
 }
 export type BooleanRendererProps = Omit<RendererProps, keyof LocalOverrides> & LocalOverrides;
 
@@ -20,10 +20,9 @@ export default function Toggle(props: BooleanRendererProps): React.ReactElement 
         ref,
         className,
         value,
-        format
+        type,
     } = props;
 
-    const type = "checkbox";
 
     const overrides = {
         name,
@@ -31,17 +30,17 @@ export default function Toggle(props: BooleanRendererProps): React.ReactElement 
         className: joinCss(styles.renderer, styles.boolean, styles.active, className),
     };
 
-    if (format === "switch") {
+    if (type === "switch") {
         return (
             <label className={styles.switch}>
-                <input {...overrides} ref={ref} type={type} />
+                <input {...overrides} ref={ref} type="checkbox" />
                 <span className={joinCss(styles.slider, styles.round)}></span>
             </label>
         )
     }
 
     return (
-        <input {...overrides} ref={ref} type={type} />
+        <input {...overrides} ref={ref} type="checkbox" />
     );
 }
 

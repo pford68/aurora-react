@@ -13,7 +13,7 @@ const meta: Meta<PropsAndArgs> = {
     component: Toggle,
     args: {
         width: 800,
-        format: "checkbox",
+        type: "checkbox",
     },
     argTypes: {
         type: {
