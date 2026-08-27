@@ -1,6 +1,6 @@
 import type {Command, Struct} from "../types/types";
 import CopyCommand from "./CopyCommand";
-import ObservableList, {Record} from "../ObservableList";
+import ObservableList, {Record} from "../model/ObservableList.ts";
 import BaseCommand from "./BaseCommand";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 

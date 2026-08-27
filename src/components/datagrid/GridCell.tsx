@@ -9,24 +9,23 @@ import {
     useCallback,
     type ComponentType,
 } from "react";
-import type {Coordinates} from "../../../types/types";
-import {GridContext} from "../GridContext";
-import {joinCss} from "../../../util/utils";
-import styles from "../DataGrid.module.css";
-import type {Configuration, DTO, RendererProps} from "../renderers/renderers.types.ts";
-import {EditMode, FocusMode} from "./modes";
-import useCellFactoryReducer from "./useCellFactoryReducer";
-import usePreviousState from "./usePreviousState";
-import {PageContext} from "../PageContext";
-import ContextMenu from "../../overlays/ContextMenu.tsx";
-import {getDecoratorByType, type Newable} from "../renderers/typeInference.ts";
-import type {AbstractDTO} from "../renderers/decorators.ts";
-import type {Record} from "../../../ObservableList.ts";
+import type {Coordinates} from "../../types/types.ts";
+import {GridContext} from "./GridContext.ts";
+import {joinCss} from "../../util/utils.ts";
+import styles from "./DataGrid.module.css";
+import type {Configuration, RendererProps} from "./Datagrid.types.ts";
+import {EditMode, FocusMode} from "./cellStates.ts";
+import useCellStateReducer from "./hooks/useCellStateReducer.tsx";
+import usePreviousState from "./hooks/usePreviousState.tsx";
+import {PageContext} from "./PageContext.ts";
+import ContextMenu from "../overlays/ContextMenu.tsx";
+import type {Record} from "../../model/ObservableList.ts";
+import {AbstractDTO, type DTO, type DTOprops} from "../../model/dtos.ts";
+import {getDecoratorByType, type Newable} from "./typeInference.ts";
 
-
-function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type: string, prop?: Newable<T, V>): DTO<T> {
-    const decorator = prop ?? getDecoratorByType(value, type);
-    return new decorator(value);
+function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type?: string, newable?: Newable<T, V>, props?: DTOprops): DTO<T> {
+    const decorator = newable ?? getDecoratorByType(value, type);
+    return new decorator(value, props);
 }
 
 /**
@@ -35,14 +34,14 @@ function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type: strin
  * its renderer, the GridCell does not allow the props to trickle down. Its
  * props can be quite different from the props it ultimately sets on its renderer.
  *
- * @param T the type of data contained in a Record
+ * @param V the type of data contained in a DTO
  */
 export type GridCellProps<V> = Configuration<{
     renderer: ComponentType<RendererProps>,
-    decorator?: DTO<V> | Newable<any, any>,
     row: Record,
     rowIndex: number,
     colIndex: number,
+    decorator?: DTO<V> | Newable<any, any>,
 }>
 
 /**
@@ -63,7 +62,9 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         editable = true,
         readOnly = false,
         type = "string",
+        locale,
         format,
+        renderType,
         onBlur,
         onFocus,
         onKeyDown: onKyDownProp,
@@ -86,7 +87,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
     const rendererRef = useRef<HTMLInputElement>(null);
 
     // ================================================= State
-    const [state, dispatch] = useCellFactoryReducer({
+    const [state, dispatch] = useCellStateReducer({
         ref: rendererRef,
         rowIndex,
         name,
@@ -96,13 +97,12 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         return  selectionModel?.isContained(rowIndex, colIndex) ?? false;
     });
     const value = (row.get(name) as V);
-    // I want to allow mere objects (instead of only constructors), but I have not tested this (2026/08/17)
     const dto = typeof decoratorProp === "object"
         ? decoratorProp
-        : getDecoratorInstance(value, type, decoratorProp);
+        : getDecoratorInstance(value, type, decoratorProp, {locale, renderType, format});
 
     if (dto === undefined) {
-        throw new Error(`Decorator not found: props = ${name}, ${value}`);
+        throw new Error(`DTO not found: props = ${name}, ${value}`);
     }
 
     const focusMode = new FocusMode(gridContext);
@@ -201,21 +201,28 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
     // ====================================== Event handlers
     const onClick = useCallback((e: MouseEvent) => {
         const {detail} = e;
+        // If the state is active, we just want to be able to click and type normally.
+        if (state.active) return;
+
+        // Handle double-clicks vs. single-clicks
         switch (detail) {
             case 2:
-                if (state.active) return;
+                //if (state.active) return;
                 dispatch?.({type: "activate"});
                 break;
             default:
+               // if ((dto.renderType == "checkbox" || dto.renderType == "switch" || dto.renderType == "date") && state.active) return;  // Handles toggles.
                 e.preventDefault();
                 if (e.shiftKey) {
                     selectionModel?.select(rowIndex, colIndex);
-                } else if (!state.active) {
+               } else /* if (!state.active)*/ {
                     focusModel?.focus(rowIndex, colIndex);
                     selectionModel?.reset(rowIndex, colIndex);
-                } else {
+                }/* else {
                     e.stopPropagation();
-                }
+                }*/
+                // this is the single-click/active use cas.  The cell is active. I see no need to allow propagation.
+                e.stopPropagation();
         }
     }, [
         state,

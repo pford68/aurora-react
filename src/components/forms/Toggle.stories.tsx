@@ -1,25 +1,27 @@
 import * as React from "react";
 import type {Meta} from "@storybook/react-vite";
-import BooleanRenderer from "./BooleanRenderer.tsx";
-import withReadonlyMode from "./withReadonlyMode.tsx";
+import Toggle from "./Toggle.tsx";
+import withReadonlyMode from "../datagrid/withReadonlyMode.tsx";
 
 
-type PropsAndArgs = React.ComponentProps<typeof BooleanRenderer> & {
+type PropsAndArgs = React.ComponentProps<typeof Toggle> & {
     width: number,
 };
 
 const meta: Meta<PropsAndArgs> = {
-    title: "renderers/BooleanRenderer",
-    component: BooleanRenderer,
+    title: "renderers/Toggle",
+    component: Toggle,
     args: {
         width: 800,
-        type: "text",
+        type: "checkbox",
+        active: false,
     },
     argTypes: {
-        value: {
-            control: {type: "boolean"}
-        }
-    }
+        type: {
+            options: ["checkbox", "switch"],
+            control: {type: "radio"}
+        },
+    },
 };
 
 export default meta;
@@ -32,14 +34,14 @@ const defaultRenderer = (args: PropsAndArgs) => {
             <form style={{width: "50%"}}>
                 <label>
                     {props.name}
-                    <BooleanRenderer {...props} />
+                    <Toggle {...props} />
                 </label>
             </form>
         </div>
     );
 };
 
-const Renderer = withReadonlyMode(BooleanRenderer);
+const Renderer = withReadonlyMode(Toggle);
 const hocRenderer = (args: PropsAndArgs) => {
     const props = {...args, width: undefined};
     return (
@@ -60,6 +62,10 @@ export const Primary = {
 }
 
 export const WithReadOnlyMode = {
-    render: hocRenderer,
+    args: {
+        type: "checkbox"
+    },
+
+    render: hocRenderer
 }
 

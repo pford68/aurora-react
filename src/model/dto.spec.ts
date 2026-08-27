@@ -1,18 +1,18 @@
-import {CurrencyDTO, DateDTO, DateTimeDTO, NumberDTO} from "./decorators.ts";
+import {BooleanDTO, CurrencyDTO, DateDTO, DateTimeDTO, NumberDTO} from "./dtos.ts";
 
-describe("DateDecorator", () => {
+describe("DateDTO", () => {
     it ("should render as a ISO-formatted Date string by default", () => {
         expect(`${new DateDTO(1786827480000)}`).toBe("2026-08-15");
     });
 })
 
-describe("DateTimeDecorator", () => {
+describe("DateTimeDTO", () => {
     it ("should render as a ISO-formatted Date/Time string by default", () => {
         expect(`${new DateTimeDTO(1786812300000)}`).toBe("2026-08-15T16:45:00.000Z");
     });
 })
 
-describe("CurrencyDecorator", () => {
+describe("CurrencyDTO", () => {
     it ("should render as a currency value (USD) by default", () => {
         expect(`${new CurrencyDTO(15.736777)}`).toBe("$15.74");
         expect(`${new CurrencyDTO(100015.736777)}`).toBe("$100,015.74");
@@ -24,9 +24,16 @@ describe("CurrencyDecorator", () => {
             expect(new CurrencyDTO().toString()).toBe("$0.00");
         });
     })
+
+    describe("valueOf", () => {
+        it("should return 0 if the value if undefined", () => {
+            // @ts-expect-error: the test requires violating the typing on the constructor.
+            expect(new CurrencyDTO().valueOf()).toBe(0);
+        });
+    })
 })
 
-describe("NumberDecorator", () => {
+describe("NumberDTO", () => {
     it ("should render in US format with a scale of 2 by default", () => {
         expect(`${new NumberDTO(15.736777)}`).toBe("15.74");
         expect(`${new NumberDTO(100015.736777)}`).toBe("100015.74");
@@ -39,3 +46,8 @@ describe("NumberDecorator", () => {
         });
     })
 })
+
+describe("BooleanDTO", () => {
+    const dto = new BooleanDTO(true, {renderType:"switch"})
+    expect(dto.renderType).toBe("switch");
+});

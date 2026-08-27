@@ -1,6 +1,6 @@
-import {Emitter} from "./../../Observable";
+import {Emitter} from "../../model/Observable.ts";
 import type {Coordinates, Struct} from "../../types/types";
-import ObservableList, {type Record} from "./../../ObservableList";
+import ObservableList, {type Record} from "../../model/ObservableList.ts";
 import {drawBox} from "./../../util/utils";
 
 export type SelectionChange = {

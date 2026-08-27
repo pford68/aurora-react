@@ -2,7 +2,7 @@ import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
 import DataGrid from "./DataGrid.tsx";
 import TableColumn from "./TableColumn.tsx";
-import ObservableList, {Record} from "../../ObservableList.ts";
+import ObservableList, {Record} from "../../model/ObservableList.ts";
 import {useRef} from "react";
 import Person, {type Measurements} from "../../../tests/models/Person.ts";
 import people from "../../../tests/fixtures/people.json";
@@ -10,9 +10,9 @@ import airlineSafety from "../../../tests/fixtures/airline_safety.json";
 import BaseCommand from "../../commands/BaseCommand.ts";
 import type {ContextMenuParameter, Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
-import type {RendererProps} from "./renderers/renderers.types.ts";
-import StatefulInput from "./renderers/StatefulInput.tsx";
-import {AbstractDTO} from "./renderers/decorators.ts";
+import StatefulInput from "../forms/StatefulInput.tsx";
+import {AbstractDTO} from "../../model/dtos.ts";
+import type {RendererProps} from "./Datagrid.types.ts";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {
@@ -27,7 +27,7 @@ const meta: Meta<PropsAndArgs> = {
     component: DataGrid,
     args: {
         alternateRows: false,
-        nullable: false,
+        nullable: true,
         stickyHeaders: true,
         columnSizing: "auto",
         contained: false,
@@ -42,13 +42,12 @@ type Story = StoryObj<PropsAndArgs>;
 
 class MeasurementsDTO extends AbstractDTO<number>{
     #height: number;
-    // @ts-expect-error: this is unimportant for the test, for now.
     #weight: number;
 
     constructor(value:Measurements) {
         super()
-        this.#height = value.height;
-        this.#weight = value.weight;
+        this.#height = value?.height ?? 0;
+        this.#weight = value?.weight ?? 0;
     }
 
     toString(): string {
@@ -63,8 +62,11 @@ class MeasurementsDTO extends AbstractDTO<number>{
         return super.toJSON();
     }
 
-    update(value: number): void {
-        this.#height = Number(value);
+    clone(value: Measurements | number): AbstractDTO<number> {
+        if (typeof value === "object") {
+            return new MeasurementsDTO(value)
+        }
+        return new MeasurementsDTO({height: value, weight: this.#weight});
     }
 
     get renderType(): string {
@@ -122,7 +124,7 @@ const defaultRenderer = (args: PropsAndArgs) => {
             <TableColumn name="lastName" text="Last Name" required />
             <TableColumn type="currency" name="amount" text="Amount" />
             <TableColumn type="number" name="age" text="Age" />
-            <TableColumn type="boolean" name="active" text="Active" />
+            <TableColumn type="boolean" name="active" text="Active" renderType="checkbox" />
             <TableColumn type="date" name="lastUpdated" text="Last Updated" width={100} />
             <TableColumn
                 name="measurements"

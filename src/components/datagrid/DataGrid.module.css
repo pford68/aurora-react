@@ -250,6 +250,16 @@
 }
 
 
+.cell [type="text"] {
+    width: 100%;
+    height: 100%;
+}
+
+.cell [type="checkbox"] {
+    transform: scale(0.3);
+    justify-content: center;
+}
+
 .edge {
     width: 0;
     height: 100%;

@@ -3,7 +3,7 @@ import Person from "../../../tests/models/Person.ts";
 import type {Struct} from "../../types/types.ts";
 import PasteCommand from "../PasteCommand.ts";
 import CopyCommand from "../CopyCommand.ts";
-import ObservableList from "../../ObservableList.ts";
+import ObservableList from "../../model/ObservableList.ts";
 
 describe("PasteCommand", () => {
     let list:ObservableList<Struct>;
