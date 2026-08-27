@@ -14,6 +14,7 @@ const meta: Meta<PropsAndArgs> = {
     args: {
         width: 800,
         type: "checkbox",
+        active: false,
     },
     argTypes: {
         type: {
@@ -61,6 +62,10 @@ export const Primary = {
 }
 
 export const WithReadOnlyMode = {
-    render: hocRenderer,
+    args: {
+        type: "checkbox"
+    },
+
+    render: hocRenderer
 }
 
