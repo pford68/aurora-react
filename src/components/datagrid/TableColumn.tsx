@@ -15,8 +15,8 @@ import {MIN_COLUMN_WIDTH, SORT_DIRECTION_ASC, SORT_DIRECTION_DESC} from "./const
 import ColumnResizer from "./headers/ColumnResizer";
 import {joinCss} from "./../../util/utils";
 import Pin from "./headers/Pin";
-import type {Configuration, RendererProps} from "./renderers/renderers.types.ts";
-import type {Newable} from "./renderers/typeInference.ts";
+import type {Configuration, RendererProps} from "./Datagrid.types.ts";
+import type {Newable} from "./typeInference.ts";
 import type {Record} from "../../model/ObservableList.ts";
 
 /**

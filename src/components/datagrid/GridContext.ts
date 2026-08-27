@@ -33,7 +33,7 @@ export const initialGridContext: GridContextType = {
     sortDirection: "",
     items: undefined,
     stickyHeaders: true,
-    nullable: false,
+    nullable: true,
     pinned: new Set<string>(),
     offsets: new Map(),
     columnWidths: new Map(),

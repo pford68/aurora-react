@@ -1,7 +1,7 @@
 import type {ComponentPropsWithoutRef, RefObject} from "react";
-import type {Command, Predicate, Struct} from "../../../types/types.ts";
-import type {Record} from "../../../model/ObservableList.ts";
-import type {DTO, DTOprops} from "../../../model/dtos.ts";
+import type {Command, Predicate, Struct} from "../../types/types.ts";
+import type {Record} from "../../model/ObservableList.ts";
+import type {DTO, DTOprops} from "../../model/dtos.ts";
 
 
 export type EnhancedPanelProps<T> = Omit<ComponentPropsWithoutRef<'div'>, keyof T> & T;

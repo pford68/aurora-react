@@ -15,11 +15,11 @@ import TableColumn, {type TableColumnProps} from "./TableColumn";
 import ContextMenu from "../overlays/ContextMenu.tsx";
 import GridRow from "./GridRow.tsx";
 import GridCell from "./GridCell.tsx";
-import StatefulInput from "./renderers/StatefulInput.tsx";
-import withPlaceholder from "./renderers/withPlaceholder.tsx";
-import withReadonlyMode from "./renderers/withReadonlyMode.tsx";
-import BooleanRenderer from "./renderers/BooleanRenderer.tsx";
-import type {RendererProps} from "./renderers/renderers.types.ts";
+import StatefulInput from "../forms/StatefulInput.tsx";
+import withPlaceholder from "./withPlaceholder.tsx";
+import withReadonlyMode from "./withReadonlyMode.tsx";
+import Toggle from "../forms/Toggle.tsx";
+import type {RendererProps} from "./Datagrid.types.ts";
 
 
 // ==================================== Private
@@ -92,7 +92,7 @@ function reducer(state: GridState, action: GridAction): GridState {
 function defaultCellRenderer(props: RendererProps) {
     const {value, ref} = props;
     if (typeof value?.valueOf() === "boolean") {
-        return <BooleanRenderer {...props} value={value}/>
+        return <Toggle {...props} value={value}/>
     }
     return <StatefulInput {...props} value={value?.valueOf()} ref={ref}/>
 }
@@ -249,7 +249,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
         data,
         className,
         stickyHeaders = true,
-        nullable = false,
+        nullable = true,
         alternateRows = false,
         columnSizing,
         rowHeight = 48, // TODO: Sync with grid-template rows,

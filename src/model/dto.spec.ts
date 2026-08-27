@@ -1,4 +1,4 @@
-import {BooleanDTO, CurrencyDTO, DateDTO, DateTimeDTO, NumberDTO} from "../../../model/dtos.ts";
+import {BooleanDTO, CurrencyDTO, DateDTO, DateTimeDTO, NumberDTO} from "./dtos.ts";
 
 describe("DateDTO", () => {
     it ("should render as a ISO-formatted Date string by default", () => {
@@ -22,6 +22,13 @@ describe("CurrencyDTO", () => {
         it("should return $0.00 if the value if undefined", () => {
             // @ts-expect-error: the test requires violating the typing on the constructor.
             expect(new CurrencyDTO().toString()).toBe("$0.00");
+        });
+    })
+
+    describe("valueOf", () => {
+        it("should return 0 if the value if undefined", () => {
+            // @ts-expect-error: the test requires violating the typing on the constructor.
+            expect(new CurrencyDTO().valueOf()).toBe(0);
         });
     })
 })

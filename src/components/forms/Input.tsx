@@ -25,7 +25,9 @@ export type InputType =
 
 export type Alignment = "left" | "right" | "top" | "bottom";
 
-
+/**
+ * @deprecated
+ */
 export type InputProps = {
     name: string,
     value?: string | number | undefined,
@@ -114,7 +116,11 @@ export function LabeledInput(props: LabeledInputProps): ReactElement {
     );
 }
 
-
+/**
+ * @deprecated
+ * @param props
+ * @constructor
+ */
 export default function Input(props: InputProps): ReactElement {
 
     const fProps = {...props};

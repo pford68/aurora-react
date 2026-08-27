@@ -1,18 +1,17 @@
 import {type ReactElement, type RefObject, useState} from "react";
-import {joinCss} from "../../../util/utils.ts";
-import styles from "./Renderers.module.css";
-import type {Consumer, Predicate} from "../../../types/types.ts";
+import {joinCss} from "../../util/utils.ts";
+import styles from "../datagrid/Renderers.module.css";
+import type {Predicate} from "../../types/types.ts";
+import type {RendererProps} from "../datagrid/Datagrid.types.ts";
 
-import type {RendererProps} from "./renderers.types.ts";
 
 type LocalOverrides = {
     value?: string | number | boolean,
     validator?: Predicate<string>,
     ref?: RefObject<HTMLInputElement | null>,
     autoComplete?: boolean,
-    onUpdate?: Consumer<string | number | boolean>,
 }
-type StatefulInputProps = Omit<RendererProps, keyof LocalOverrides> & LocalOverrides;
+export type StatefulInputProps = Omit<RendererProps, keyof LocalOverrides> & LocalOverrides;
 /**
  * Input elements with a local state, allow them to retain uncommitted changes.
  * StatefulInput can be passed as-is to forwardRef() to expose the input element to
@@ -29,7 +28,6 @@ export default function StatefulInput(props: StatefulInputProps): ReactElement {
         validator,
         className,
         ref,
-        onUpdate,
         autoComplete = false,
         onInput,
         onChange,
@@ -58,7 +56,8 @@ export default function StatefulInput(props: StatefulInputProps): ReactElement {
                 const {target} = e;
                 if (target instanceof HTMLInputElement) {
                     if (valid) {
-                        onUpdate?.(value);
+                        const updatedValue = target.value ?? null;
+                        setValue(updatedValue);
                         onChange?.(e);
                     }
                 }

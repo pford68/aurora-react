@@ -1,5 +1,6 @@
 import {toISODateString} from "../util/utils.ts";
 
+
 /**
  * @typeParam T - the data type of the value contained in the DTO
  */
@@ -11,7 +12,7 @@ export interface DTO<T = string | number | boolean | undefined> {
 
     toJSON(): { [key: string]: T };
 
-    clone(value: T): void
+    clone(value: T | null): DTO
 
     readonly renderType: string;
 }
@@ -58,7 +59,7 @@ export class DateDTO extends AbstractDTO<number> {
 
     constructor(value: number, options?: DTOprops) {
         super();
-        this.#value = value;
+        this.#value = Number(value);
         if (options != null) {
             const {locale} = options;
             this.#locale = locale ?? this.#locale;
@@ -86,7 +87,7 @@ export class DateDTO extends AbstractDTO<number> {
             locale: this.#locale,
             format: this.#format,
         }
-        return new DateDTO(Number(v), config);
+        return new DateDTO(v, config);
     }
 
     get value(): number {
@@ -138,7 +139,7 @@ export class NumberDTO extends AbstractDTO<number> {
 
     constructor(value: number, options?: DTOprops) {
         super();
-        this.#value = value;
+        this.#value = Number(value);
         if (options != null) {
             const {scale} = options
             this.#scale = scale ?? this.#scale;
@@ -159,7 +160,7 @@ export class NumberDTO extends AbstractDTO<number> {
             renderType: this.#renderType as "number",
             scale: this.#scale,
         }
-        return new NumberDTO(Number(value), config);
+        return new NumberDTO(value, config);
     }
 
     get renderType(): string {
@@ -190,12 +191,12 @@ export class CurrencyDTO extends NumberDTO{
 
 
 export class StringDTO extends AbstractDTO<string> {
-    #value: string;
+    #value: string = "";
     #renderType: string = "text";
 
     constructor(value: string, options?: DTOprops) {
         super();
-        this.#value = value;
+        if (value != null) this.#value = value;
         if (options != null) {
             const {renderType} = options
             this.#renderType = renderType ?? this.renderType;
@@ -228,7 +229,7 @@ export class BooleanDTO extends AbstractDTO<boolean> {
 
     constructor(value: boolean, options?: DTOprops) {
         super();
-        this.#value = value;
+        this.#value = String(value) === "true";
         if (options != null) {
             const {renderType} = options;
             this.#renderType = renderType ?? this.renderType;

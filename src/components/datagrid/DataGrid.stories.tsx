@@ -10,9 +10,9 @@ import airlineSafety from "../../../tests/fixtures/airline_safety.json";
 import BaseCommand from "../../commands/BaseCommand.ts";
 import type {ContextMenuParameter, Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
-import StatefulInput from "./renderers/StatefulInput.tsx";
+import StatefulInput from "../forms/StatefulInput.tsx";
 import {AbstractDTO} from "../../model/dtos.ts";
-import type {RendererProps} from "./renderers/renderers.types.ts";
+import type {RendererProps} from "./Datagrid.types.ts";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {
@@ -27,7 +27,7 @@ const meta: Meta<PropsAndArgs> = {
     component: DataGrid,
     args: {
         alternateRows: false,
-        nullable: false,
+        nullable: true,
         stickyHeaders: true,
         columnSizing: "auto",
         contained: false,
@@ -46,8 +46,8 @@ class MeasurementsDTO extends AbstractDTO<number>{
 
     constructor(value:Measurements) {
         super()
-        this.#height = value.height;
-        this.#weight = value.weight;
+        this.#height = value?.height ?? 0;
+        this.#weight = value?.weight ?? 0;
     }
 
     toString(): string {

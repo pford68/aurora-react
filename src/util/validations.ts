@@ -14,5 +14,5 @@ export function isString(s:unknown): boolean {
 }
 
 export function isEmpty(s:unknown): boolean {
-    return s === null || s === undefined;
+    return s === null || s === undefined || String(s).trim().length === 0;
 }

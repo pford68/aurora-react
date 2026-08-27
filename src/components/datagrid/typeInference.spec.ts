@@ -1,6 +1,6 @@
 import {getDecoratorByType} from "./typeInference.ts";
 import {expect} from "vitest";
-import {BooleanDTO, DateDTO, NumberDTO, StringDTO} from "../../../model/dtos.ts";
+import {BooleanDTO, DateDTO, NumberDTO, StringDTO} from "../../model/dtos.ts";
 
 
 describe("getDecoratorByType", () => {
