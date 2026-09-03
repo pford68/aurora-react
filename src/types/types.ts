@@ -1,6 +1,6 @@
 import type {ReactNode, RefObject} from "react";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
-import ObservableList, {Record} from "../model/ObservableList.ts";
+import ObservableList, {ListItem} from "../model/ObservableList.ts";
 
 export type Consumer<T> = (value: T) => void;
 export type BiConsumer<T, U> = (value1:T, value2:U) => void;
@@ -35,8 +35,8 @@ export interface Command<T extends Struct = Struct> {
 }
 
 interface ISelectionModel {
-    getSelectedItem(): Record<Struct>,
-    getSelectedItems(): Record<Struct>[],
+    getSelectedItem(): ListItem<Struct>,
+    getSelectedItems(): ListItem<Struct>[],
 }
 
 export type ContextMenuParameter = {

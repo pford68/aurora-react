@@ -1,7 +1,7 @@
 import SaveCommand from '../SaveCommand.ts';
 import people from "../../../tests/fixtures/people.json";
 import Person from "../../../tests/models/Person.ts";
-import ObservableList, {Record} from "../../model/ObservableList.ts";
+import ObservableList, {ListItem} from "../../model/ObservableList.ts";
 import type {Struct} from "../../types/types.ts";
 
 
@@ -34,8 +34,8 @@ describe('SaveCommand', () => {
         cmd.execute();
         list.sort((a, b) => Number(a.get("age")) - Number(b.get("age")));
         cmd.undo();
-        const record = list.find((r: Record<Struct>) => r.id === id);
-        expect(list.findIndex((r: Record<Struct>) => r.id === id)).not.toBe(1);
+        const record = list.find((r: ListItem<Struct>) => r.id === id);
+        expect(list.findIndex((r: ListItem<Struct>) => r.id === id)).not.toBe(1);
         expect(record?.get("firstName")).toBe("John")
     });
 
@@ -56,8 +56,8 @@ describe('SaveCommand', () => {
         list.sort((a, b) => Number(a.get("age")) - Number(b.get("age")));
         cmd.undo();
         cmd.redo();
-        const record = list.find((r: Record<Struct>) => r.id === id);
-        expect(list.findIndex((r: Record<Struct>) => r.id === id)).not.toBe(1);
+        const record = list.find((r: ListItem<Struct>) => r.id === id);
+        expect(list.findIndex((r: ListItem<Struct>) => r.id === id)).not.toBe(1);
         expect(record?.get("firstName")).toBe("Bill")
     });
 });

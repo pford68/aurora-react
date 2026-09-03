@@ -2,7 +2,7 @@ import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
 import DataGrid from "./DataGrid.tsx";
 import TableColumn from "./TableColumn.tsx";
-import ObservableList, {Record} from "../../model/ObservableList.ts";
+import ObservableList, {ListItem} from "../../model/ObservableList.ts";
 import {useRef} from "react";
 import Person, {type Measurements} from "../../../tests/models/Person.ts";
 import people from "../../../tests/fixtures/people.json";
@@ -183,7 +183,7 @@ export const Primary: Story = {
 
 export const AirlineSafety: Story = {
     args: {
-        data: new ObservableList(airlineSafety.map(item => new Record(item))),
+        data: new ObservableList(airlineSafety.map(item => new ListItem(item))),
         showRowCount: false,
     },
     render: airlineSafetyRenderer,

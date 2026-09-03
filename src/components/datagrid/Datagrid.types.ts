@@ -1,6 +1,6 @@
 import type {ComponentPropsWithoutRef, RefObject} from "react";
 import type {Command, Predicate, Struct} from "../../types/types.ts";
-import type {Record} from "../../model/ObservableList.ts";
+import type {ListItem} from "../../model/ObservableList.ts";
 import type {DTO, DTOprops} from "../../model/dtos.ts";
 
 
@@ -39,7 +39,7 @@ export type RendererProps<T = string | number | boolean, U extends Struct = Stru
     /**
      * The entire data row, needed for things like compound field values.
      */
-    row?: Record<U>,
+    row?: ListItem<U>,
     /** Used by numeric renderers */
     scale?: number,
     locale?: Intl.LocalesArgument,

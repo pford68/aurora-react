@@ -1,6 +1,6 @@
 import type {Command, Struct} from "../types/types";
 import CopyCommand from "./CopyCommand";
-import ObservableList, {Record} from "../model/ObservableList.ts";
+import ObservableList, {ListItem} from "../model/ObservableList.ts";
 import BaseCommand from "./BaseCommand";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
@@ -18,7 +18,7 @@ export default class PasteCommand<T extends Struct>
     readonly icon: IconProp = "paste";
     readonly name: string = "Paste";
     readonly accelerator: string = "⌘+v";
-    readonly #previous: {id: string, clone: Record<T>}[];
+    readonly #previous: {id: string, clone: ListItem<T>}[];
     #items: ObservableList<T>;
 
     constructor(items: ObservableList<T>) {

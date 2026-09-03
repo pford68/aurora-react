@@ -2,16 +2,20 @@ import {
     AbstractDTO,
     BooleanDTO,
     CurrencyDTO,
-    DateDTO, type DTOprops,
+    DateDTO,
+    type DTOprops,
     NumberDTO,
     StringDTO,
-} from "../../model/dtos.ts";
+} from "./dtos.ts";
 
 
 export type Newable<T, V extends AbstractDTO<T>> = new (value: T, props?: DTOprops) => V;
 
+
 export function getDecoratorByType<T, V extends AbstractDTO<T>>(value: T, type?: string): Newable<T, V> {
+
     const key = type ?? (value?.constructor.name != null ? String(value.constructor.name) : null) ?? typeof value;
+
     switch(key?.toLowerCase()) {
         case "date":
             return DateDTO as unknown as Newable<T, V>;

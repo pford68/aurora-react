@@ -1,6 +1,6 @@
 import {type ReactElement, type KeyboardEvent, useReducer, useRef, useEffect} from "react";
 import PageFactory from "./PageFactory";
-import ObservableList, {Record} from "../../model/ObservableList.ts";
+import ObservableList, {ListItem} from "../../model/ObservableList.ts";
 import type {Command, Struct} from "../../types/types";
 import styles from "./DataGrid.module.css";
 import {joinCss} from "./../../util/utils";
@@ -98,7 +98,7 @@ function defaultCellRenderer(props: RendererProps) {
 }
 
 
-function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, index: number, rowIndex: number, row: Record<T>){
+function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, index: number, rowIndex: number, row: ListItem<T>){
     const {
         renderer = defaultCellRenderer,
         cellFactory,
@@ -122,7 +122,7 @@ function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, i
 }
 
 
-function defaultRowFactory<T extends Struct>(row: Record<T>, rowIndex: number) {
+function defaultRowFactory<T extends Struct>(row: ListItem<T>, rowIndex: number) {
     return (
         <GridRow
             key={rowIndex}
@@ -204,7 +204,7 @@ export type DataGridProps = {
     resizable?: boolean,
     border?: boolean,
     contained?: boolean,
-    rowFactory?: (row: Record<Struct>, rowIndex: number) => ReactElement,
+    rowFactory?: (row: ListItem<Struct>, rowIndex: number) => ReactElement,
 };
 
 
@@ -335,7 +335,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
     }
 
     //====================================== Rendering
-    const wrappedComparator = (a: Record<Struct>, b: Record<Struct>): number => {
+    const wrappedComparator = (a: ListItem<Struct>, b: ListItem<Struct>): number => {
         const sortColumn = visibleColumns
             .find(col => col.props.name === state.sortColumns[0]);
         if (sortColumn == null) return 0;

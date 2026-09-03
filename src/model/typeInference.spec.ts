@@ -1,6 +1,6 @@
 import {getDecoratorByType} from "./typeInference.ts";
 import {expect} from "vitest";
-import {BooleanDTO, DateDTO, NumberDTO, StringDTO} from "../../model/dtos.ts";
+import {BooleanDTO, DateDTO, NumberDTO, StringDTO} from "./dtos.ts";
 
 
 describe("getDecoratorByType", () => {
@@ -17,7 +17,7 @@ describe("getDecoratorByType", () => {
 
     it("should return the renderer for the specified primitive value, if type is not present/found", () => {
         const n = 5;
-        let Decorator = getDecoratorByType(n);
+        const Decorator = getDecoratorByType(n);
         expect(new Decorator(n).constructor).toBe(NumberDTO);
 
         const p = true;

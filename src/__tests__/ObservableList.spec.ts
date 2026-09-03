@@ -1,10 +1,10 @@
 import peopleData from "../../tests/fixtures/people.json";
 import Person, {type Measurements} from "../../tests/models/Person";
-import ObservableList, {Record} from "../model/ObservableList.ts";
+import ObservableList, {ListItem} from "../model/ObservableList.ts";
 import type {Struct} from "../types/types";
 import {fail} from "node:assert";
 
-function testAllKeys(r: Record<Struct>) {
+function testAllKeys(r: ListItem<Struct>) {
     expect(r.get("firstName")).toBe("Adolis");
     expect(r.get("lastName")).toBe("Garcia");
     expect(r.get("age")).toBe(29);
@@ -15,12 +15,12 @@ function testAllKeys(r: Record<Struct>) {
     expect(m.height).toBe(70);
 }
 describe("Record", () => {
-    let record: Record<Struct>;
+    let record: ListItem<Struct>;
     let people: Struct[];
 
     beforeEach(() => {
         people = structuredClone(peopleData);
-        record = new Record(people[5]);
+        record = new ListItem(people[5]);
     });
 
     describe("get", () => {
@@ -76,13 +76,13 @@ describe("Record", () => {
 
     describe("copy", () => {
         it("should copy all data from the specified Record", () => {
-            const newRecord = new Record<Struct>(people[1]);
+            const newRecord = new ListItem<Struct>(people[1]);
             newRecord.copy(record);
             testAllKeys(newRecord);
         });
 
         it("should augment this Record", () => {
-            const newRecord = new Record<Struct>({
+            const newRecord = new ListItem<Struct>({
                 country: "US",
                 HR: "a lot",
                 state: "Texas",
@@ -141,7 +141,7 @@ describe("ObservableList", () => {
     describe("get", () => {
         it("should get the Record at the specified index", () => {
             const record = list.get(5);
-            expect(record instanceof Record).toBeTruthy();
+            expect(record instanceof ListItem).toBeTruthy();
         });
 
         it("should get the Record at the specified index", () => {

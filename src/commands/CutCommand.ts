@@ -1,6 +1,6 @@
 import CopyCommand from "./CopyCommand";
 import type {Struct} from "../types/types";
-import {Record} from "../model/ObservableList.ts";
+import {ListItem} from "../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 export default class CutCommand<T extends Struct> extends CopyCommand<T> {
@@ -8,9 +8,9 @@ export default class CutCommand<T extends Struct> extends CopyCommand<T> {
     icon: IconProp = "cut";
     name: string = "Cut";
     readonly accelerator: string = "⌘+x";
-    readonly #previous: {id: string, clone: Record<T>}[];
+    readonly #previous: {id: string, clone: ListItem<T>}[];
 
-    constructor(selectedItems: Record<T>[]) {
+    constructor(selectedItems: ListItem<T>[]) {
         super(selectedItems);
         this.#previous = [];
     }

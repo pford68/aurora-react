@@ -4,13 +4,13 @@ import {joinCss} from "./../../util/utils";
 import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext";
 import type {TableColumnProps} from "./TableColumn.tsx";
-import type {Record} from "../../model/ObservableList.ts";
+import type {ListItem} from "../../model/ObservableList.ts";
 
 type GridRowProps<T extends Struct, V> = {
-    row: Record<T>,
+    row: ListItem<T>,
     rowIndex: number,
     className?: string,
-    cellFactory: (columnConfig: TableColumnProps<V>, index: number, rowIndex: number, row: Record<T>) => ReactElement,
+    cellFactory: (columnConfig: TableColumnProps<V>, index: number, rowIndex: number, row: ListItem<T>) => ReactElement,
 }
 
 export default function GridRow<T extends Struct, V>(props: GridRowProps<T, V>): ReactElement {

@@ -8,7 +8,7 @@ import {v4 as uuid} from "uuid";
  *
  * @typeParam T The type of data contained in the Record
  */
-export class Record<T extends Struct = Struct> {
+export class ListItem<T extends Struct = Struct> {
     #data: T;
     /** Whether the record has been marked for deletion */
     #deleted: boolean = false;
@@ -65,11 +65,11 @@ export class Record<T extends Struct = Struct> {
         return JSON.stringify(this.#data);
     }
 
-    clone(): Record<T> {
-        return new Record(structuredClone(this.getAll()));
+    clone(): ListItem<T> {
+        return new ListItem(structuredClone(this.getAll()));
     }
 
-    copy(that: Record<T>): void {
+    copy(that: ListItem<T>): void {
         this.update(that.getAll());
     }
 }
@@ -79,17 +79,17 @@ export type ListChangeType = "added" | "modified" | "deleted";
 export type ListChange<T extends Struct> = {
     index: number,
     type: ListChangeType,
-    record?: Record<T>,
+    record?: ListItem<T>,
 }
 export type ListItemUpdate<T extends Struct> = {
     index: number,
-    record: Record<T>,
+    record: ListItem<T>,
 }
 export type PartialUpdate<T extends Struct> = {
     index: number,
     value: T,
-    record?: Record<T>,
-    previous?: Record<T>,
+    record?: ListItem<T>,
+    previous?: ListItem<T>,
 }
 
 
@@ -99,9 +99,9 @@ export type PartialUpdate<T extends Struct> = {
  * @typeParam T The type of data contained in each Record in the list
  */
 export default class ObservableList<T extends Struct> extends Emitter<ListChange<Struct>[]> {
-    #data: Record<T>[];
+    #data: ListItem<T>[];
 
-    constructor(data: Record<T>[]) {
+    constructor(data: ListItem<T>[]) {
         super();
         this.#data = data;
     }
@@ -112,19 +112,19 @@ export default class ObservableList<T extends Struct> extends Emitter<ListChange
             .length;
     }
 
-    get(index: number): Record<T> | undefined {
+    get(index: number): ListItem<T> | undefined {
         return this.#data[index];
     }
 
-    add(record: Record<T>): void {
+    add(record: ListItem<T>): void {
         this.#data[this.#data.length] = record;
     }
 
-    slice(startIndex: number, endIndex?: number): Record<T>[] {
+    slice(startIndex: number, endIndex?: number): ListItem<T>[] {
         return this.#data.slice(startIndex, endIndex);
     }
 
-    getAll(): Record<T>[] {
+    getAll(): ListItem<T>[] {
         return this.filter(record => !record.deleted);
     }
 
@@ -136,7 +136,7 @@ export default class ObservableList<T extends Struct> extends Emitter<ListChange
      * @param index The index at which to insert the Record.
      * @param record The Record to insert
      */
-    insertAt(index: number, record: Record<T>): boolean {
+    insertAt(index: number, record: ListItem<T>): boolean {
         this.#data[index] = record;
         this.emit("dataChanged", [{type: "modified", index, record}]);
         return true;
@@ -187,7 +187,7 @@ export default class ObservableList<T extends Struct> extends Emitter<ListChange
         return false;
     }
 
-    insertBefore(index: number, record: Record<T>): void {
+    insertBefore(index: number, record: ListItem<T>): void {
         this.#data = [
             ...this.#data.slice(0, index),
             record,
@@ -195,19 +195,19 @@ export default class ObservableList<T extends Struct> extends Emitter<ListChange
         ];
     }
 
-    sort(comparator: BiFunction<Record<T>, Record<T>, number>): void {
+    sort(comparator: BiFunction<ListItem<T>, ListItem<T>, number>): void {
         this.#data.sort(comparator);
     }
 
-    find(criteria: Predicate<Record<T>>): Record<T> | undefined {
+    find(criteria: Predicate<ListItem<T>>): ListItem<T> | undefined {
         return this.#data.find(criteria);
     }
 
-    findIndex(criteria: Predicate<Record<T>>): number | undefined {
+    findIndex(criteria: Predicate<ListItem<T>>): number | undefined {
         return this.#data.findIndex(criteria);
     }
 
-    filter(criteria: Predicate<Record<T>>): Record<T>[] {
+    filter(criteria: Predicate<ListItem<T>>): ListItem<T>[] {
         return this.#data.filter(criteria);
     }
 }

@@ -1,7 +1,7 @@
 import type {Command, Struct} from "../types/types";
 import {v4 as uuid} from "uuid";
 import BaseCommand from "./BaseCommand";
-import {Record} from "../model/ObservableList.ts";
+import {ListItem} from "../model/ObservableList.ts";
 import {isTextSelected} from "../util/utils";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
@@ -18,10 +18,10 @@ export default class CopyCommand<T extends Struct>
     icon: IconProp = "copy";
     name: string = "Copy";
     readonly accelerator: string = "⌘+c";
-    readonly #selectedItems: Record<T>[];
+    readonly #selectedItems: ListItem<T>[];
     static TOKEN: string = uuid();
 
-    constructor(selectedItems: Record<T>[]) {
+    constructor(selectedItems: ListItem<T>[]) {
         super();
         this.#selectedItems = selectedItems;
     }
@@ -59,7 +59,7 @@ export default class CopyCommand<T extends Struct>
         this.getParameters().push(value);
     }
 
-    get selectedItems(): Record<T>[] {
+    get selectedItems(): ListItem<T>[] {
         return this.#selectedItems;
     }
 }

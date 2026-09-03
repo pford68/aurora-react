@@ -19,9 +19,9 @@ import useCellStateReducer from "./hooks/useCellStateReducer.tsx";
 import usePreviousState from "./hooks/usePreviousState.tsx";
 import {PageContext} from "./PageContext.ts";
 import ContextMenu from "../overlays/ContextMenu.tsx";
-import type {Record} from "../../model/ObservableList.ts";
+import type {ListItem} from "../../model/ObservableList.ts";
 import {AbstractDTO, type DTO, type DTOprops} from "../../model/dtos.ts";
-import {getDecoratorByType, type Newable} from "./typeInference.ts";
+import {getDecoratorByType, type Newable} from "../../model/typeInference.ts";
 
 function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type?: string, newable?: Newable<T, V>, props?: DTOprops): DTO<T> {
     const decorator = newable ?? getDecoratorByType(value, type);
@@ -29,16 +29,11 @@ function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type?: stri
 }
 
 /**
- * CellFactoryProps does <strong>not</strong> extend BaseRendererProps. While
- * the GridCell uses information passed down from the TableColumn to configure
- * its renderer, the GridCell does not allow the props to trickle down. Its
- * props can be quite different from the props it ultimately sets on its renderer.
- *
- * @param V the type of data contained in a DTO
+ * @typeParamy V the type of data contained in a DTO
  */
 export type GridCellProps<V> = Configuration<{
     renderer: ComponentType<RendererProps>,
-    row: Record,
+    row: ListItem,
     rowIndex: number,
     colIndex: number,
     decorator?: DTO<V> | Newable<any, any>,
@@ -204,24 +199,20 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         // If the state is active, we just want to be able to click and type normally.
         if (state.active) return;
 
-        // Handle double-clicks vs. single-clicks
+        // Handle double-clicks vs.single-clicks
         switch (detail) {
             case 2:
-                //if (state.active) return;
                 dispatch?.({type: "activate"});
                 break;
             default:
-               // if ((dto.renderType == "checkbox" || dto.renderType == "switch" || dto.renderType == "date") && state.active) return;  // Handles toggles.
                 e.preventDefault();
                 if (e.shiftKey) {
                     selectionModel?.select(rowIndex, colIndex);
                } else /* if (!state.active)*/ {
                     focusModel?.focus(rowIndex, colIndex);
                     selectionModel?.reset(rowIndex, colIndex);
-                }/* else {
-                    e.stopPropagation();
-                }*/
-                // this is the single-click/active use cas.  The cell is active. I see no need to allow propagation.
+                }
+                // This is the single-click/active use case.  The cell is active. I see no need to allow propagation.
                 e.stopPropagation();
         }
     }, [
