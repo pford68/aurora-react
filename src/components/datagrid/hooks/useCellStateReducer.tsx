@@ -10,7 +10,7 @@ function checkable(renderType: string) {
 
 function findValue(node: HTMLInputElement | null, dto?:DTO) {
     let value = node ?node.value : null;
-    if (node && dto != null && checkable(dto?.renderType)) {
+    if (node && dto != null && checkable(dto?.formType)) {
         value = String(node.checked);
     }
     return value;

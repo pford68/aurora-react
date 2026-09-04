@@ -48,8 +48,8 @@ describe("NumberDTO", () => {
 })
 
 describe("BooleanDTO", () => {
-    it("should return the configured renderType", () => {
-        const dto = new BooleanDTO(true, {renderType:"switch"});
-        expect(dto.renderType).toBe("switch");
+    it("should return the configured formType", () => {
+        const dto = new BooleanDTO(true, {formType:"switch"});
+        expect(dto.formType).toBe("switch");
     });
 });

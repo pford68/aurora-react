@@ -69,7 +69,7 @@ class MeasurementsDTO extends AbstractDTO<number>{
         return new MeasurementsDTO({height: value, weight: this.#weight});
     }
 
-    get renderType(): string {
+    get formType(): string {
         return "number";
     }
 }
@@ -124,7 +124,7 @@ const defaultRenderer = (args: PropsAndArgs) => {
             <TableColumn name="lastName" text="Last Name" required />
             <TableColumn type="currency" name="amount" text="Amount" />
             <TableColumn type="number" name="age" text="Age" />
-            <TableColumn type="boolean" name="active" text="Active" renderType="checkbox" />
+            <TableColumn type="boolean" name="active" text="Active" formType="checkbox" />
             <TableColumn type="date" name="lastUpdated" text="Last Updated" width={100} />
             <TableColumn
                 name="measurements"

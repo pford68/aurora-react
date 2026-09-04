@@ -59,7 +59,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         type = "string",
         locale,
         format,
-        renderType,
+        formType,
         onBlur,
         onFocus,
         onKeyDown: onKyDownProp,
@@ -94,7 +94,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
     const value = (row.get(name) as V);
     const dto = typeof decoratorProp === "object"
         ? decoratorProp
-        : getDecoratorInstance(value, type, decoratorProp, {locale, renderType, format});
+        : getDecoratorInstance(value, type, decoratorProp, {locale, formType, format});
 
     if (dto === undefined) {
         throw new Error(`DTO not found: props = ${name}, ${value}`);
@@ -273,7 +273,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         ref:rendererRef,
         readOnly,
         value: dto,
-        type: dto.renderType,
+        type: dto.formType,
         format,
         onBlur,
         onFocus,
