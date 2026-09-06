@@ -50,3 +50,10 @@ export function isValidTimestamp(value: number) {
     return !Number.isNaN(new Date(value).getTime());
 }
 
+export function numericId() {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return array[0]; // Returns a unique 32-bit unsigned integer
+}
+
+
