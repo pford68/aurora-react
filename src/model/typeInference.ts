@@ -2,7 +2,7 @@ import {
     AbstractDTO,
     BooleanDTO,
     CurrencyDTO,
-    DateDTO,
+    DateDTO, type DTO,
     type DTOprops,
     NumberDTO,
     StringDTO,
@@ -28,4 +28,9 @@ export function getDecoratorByType<T, V extends AbstractDTO<T>>(value: T, type?:
         default:
             return StringDTO as unknown as Newable<T, V>;
     }
+}
+
+export function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type?: string, newable?: Newable<T, V>, props?: DTOprops): DTO<T> {
+    const decorator = newable ?? getDecoratorByType(value, type);
+    return new decorator(value, props);
 }
