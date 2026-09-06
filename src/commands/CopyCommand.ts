@@ -54,7 +54,7 @@ export default class CopyCommand<T extends Struct>
                 data[name] = isTextSelected() ? getSelection()?.toString() : record.get(name);
             });
             // @ts-expect-error:{ [key: string]: unknown; } is assignable to T: T could be a different subtype of Struct.
-            value.data?.push(data)
+            value.data?.push(data);
         });
         this.getParameters().push(value);
     }
