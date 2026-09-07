@@ -14,7 +14,7 @@ function testAllKeys(r: ListItem<Struct>) {
     // @ts-expect-error: m is of type unknown
     expect(m.height).toBe(70);
 }
-describe("Record", () => {
+describe("ListItem", () => {
     let record: ListItem<Struct>;
     let people: Struct[];
 
@@ -135,7 +135,7 @@ describe("ObservableList", () => {
 
     beforeEach(() => {
         people = structuredClone(peopleData);
-        list = new ObservableList((people.map(person => new Person(person))));
+        list = new ObservableList(people);
     });
 
     describe("get", () => {
@@ -173,7 +173,7 @@ describe("ObservableList", () => {
             const record = list.get(2);
             if (record != null) {
                 record.set("firstName", "Jack");
-                list.insertAt(2, record);
+                list.insertAt(2, record.getAll());
                 expect(record.get("firstName")).toBe("Jack");
             } else {
                 fail("The record should have been found.")

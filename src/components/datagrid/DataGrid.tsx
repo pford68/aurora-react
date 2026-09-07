@@ -141,11 +141,11 @@ function defaultComparator(a: unknown, b: unknown) {
 }
 
 
-export type DataGridProps = {
+export type DataGridProps<T> = {
     /**
      * The data to display in the grid.
      */
-    data: ObservableList<Struct>,
+    data: ObservableList<T>,
     /**
      * TableColumns and TableFooters are allowed.
      */
@@ -244,7 +244,7 @@ export type GridAction = {
  * @param props
  * @constructor
  */
-export default function DataGrid(props: DataGridProps): ReactElement {
+export default function DataGrid<T>(props: DataGridProps<T>): ReactElement {
     const {
         data,
         className,

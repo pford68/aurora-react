@@ -2,16 +2,15 @@ import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
 import DataGrid from "./DataGrid.tsx";
 import TableColumn from "./TableColumn.tsx";
-import ObservableList, {ListItem} from "../../model/ObservableList.ts";
+import ObservableList from "../../model/ObservableList.ts";
 import {useRef} from "react";
-import Person, {type Measurements} from "../../../tests/models/Person.ts";
+import {type Measurements} from "../../../tests/models/Person.ts";
 import people from "../../../tests/fixtures/people.json";
 import airlineSafety from "../../../tests/fixtures/airline_safety.json";
 import BaseCommand from "../../commands/BaseCommand.ts";
 import type {ContextMenuParameter, Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 import StatefulInput from "../forms/StatefulInput.tsx";
-import {AbstractDTO} from "../../model/dtos.ts";
 import type {RendererProps} from "./Datagrid.types.ts";
 
 
@@ -40,39 +39,7 @@ export default meta;
 
 type Story = StoryObj<PropsAndArgs>;
 
-class MeasurementsDTO extends AbstractDTO<number>{
-    #height: number;
-    #weight: number;
 
-    constructor(value:Measurements) {
-        super()
-        this.#height = value?.height ?? 0;
-        this.#weight = value?.weight ?? 0;
-    }
-
-    toString(): string {
-        return String(this.valueOf());
-    }
-
-    valueOf(): number {
-        return this.#height;
-    }
-
-    toJSON(): { [p: string]: number } {
-        return super.toJSON();
-    }
-
-    clone(value: Measurements | number): AbstractDTO<number> {
-        if (typeof value === "object") {
-            return new MeasurementsDTO(value)
-        }
-        return new MeasurementsDTO({height: value, weight: this.#weight});
-    }
-
-    get formType(): string {
-        return "number";
-    }
-}
 
 
 class LogCommand extends BaseCommand<ContextMenuParameter>{
@@ -129,7 +96,6 @@ const defaultRenderer = (args: PropsAndArgs) => {
             <TableColumn
                 name="measurements"
                 text="Height"
-                decorator={MeasurementsDTO}
                 renderer={(props: RendererProps) => {
                     const measurements = props.value;
                     return (
@@ -172,9 +138,10 @@ const airlineSafetyRenderer = (args: PropsAndArgs) => {
 };
 
 
+
 export const Primary: Story = {
     args: {
-        data: new ObservableList(people.map((item => new Person(item)))),
+        data: new ObservableList(people),
         sortColumn: "lastName",
     },
     render: defaultRenderer,
@@ -183,7 +150,7 @@ export const Primary: Story = {
 
 export const AirlineSafety: Story = {
     args: {
-        data: new ObservableList(airlineSafety.map(item => new ListItem(item))),
+        data: new ObservableList(airlineSafety),
         showRowCount: false,
     },
     render: airlineSafetyRenderer,

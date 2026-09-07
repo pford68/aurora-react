@@ -1,15 +1,15 @@
 import SaveCommand from '../SaveCommand.ts';
 import people from "../../../tests/fixtures/people.json";
-import Person from "../../../tests/models/Person.ts";
 import ObservableList, {ListItem} from "../../model/ObservableList.ts";
 import type {Struct} from "../../types/types.ts";
+import type {Person} from "../../../tests/types.ts";
 
 
 describe('SaveCommand', () => {
-    let list:ObservableList<Struct>;
+    let list:ObservableList<Person>;
 
     beforeEach(() => {
-        list = new ObservableList(people.map(person => new Person(person)));
+        list = new ObservableList(people as Person[]);
     })
 
     it('should update an ObservableList', () => {
