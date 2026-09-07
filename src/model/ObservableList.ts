@@ -6,6 +6,9 @@ type Identifiable = {
     id: number | string | undefined
 }
 
+type ItemState = Identifiable & {
+    deleted: boolean,
+}
 
 /**
  * The base class for data rows in the table model.
@@ -26,11 +29,11 @@ export class ListItem<T> {
     /**
      *
      * @param {T} data The data contained in the ListItem
-     * @param {number | string} [id] For cloning
+     * @param {ItemState} [state] For cloning
      */
-    constructor(data: T, id: number | string | undefined = undefined) {
+    constructor(data: T, state?: ItemState) {
         this.#data = data;
-        this.#id = (data as Identifiable).id ?? id ?? numericId();
+        this.#id = (data as Identifiable).id ?? state?.id ?? numericId();
     }
 
     getAll(): T {
@@ -84,7 +87,8 @@ export class ListItem<T> {
      *
      */
     clone(): this {
-        return this.create(structuredClone(this.getAll()), this.id);
+        const state = {id: this.id, deleted: this.deleted};
+        return this.create(structuredClone(this.getAll()), state);
     }
 
     /**
@@ -98,12 +102,12 @@ export class ListItem<T> {
     /**
      * A convenience method for creating new instances in a way that works with subclasses.
      * @param data
-     * @param {string | number} [id]
+     * @param {ItemState} [state]
      * @protected
      */
-    protected create(data: T, id: string | number | undefined): this {
-        const Constructor = this.constructor  as new (data: T, id: string | number | undefined) => this;
-        return new Constructor(data, id);
+    protected create(data: T, state: ItemState): this {
+        const Constructor = this.constructor  as new (data: T, state: ItemState) => this;
+        return new Constructor(data, state);
     }
 }
 
