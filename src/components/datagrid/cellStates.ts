@@ -1,8 +1,8 @@
 import type {Dispatch, KeyboardEvent} from "react";
 import type {GridContextType} from "./GridContext.ts";
-import CopyCommand from "../../commands/CopyCommand.ts";
-import PasteCommand from "../../commands/PasteCommand.ts";
-import CutCommand from "../../commands/CutCommand.ts";
+import CopyCommand from "./commands/CopyCommand.ts";
+import PasteCommand from "./commands/PasteCommand.ts";
+import CutCommand from "./commands/CutCommand.ts";
 import type {CellFactoryAction} from "./hooks/useCellStateReducer.tsx";
 
 import type {DTO} from "../../model/dtos.ts";

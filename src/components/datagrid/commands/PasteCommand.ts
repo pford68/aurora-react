@@ -1,7 +1,7 @@
-import type {Command, Struct} from "../types/types";
-import CopyCommand from "./CopyCommand";
-import ObservableList, {Record} from "../model/ObservableList.ts";
-import BaseCommand from "./BaseCommand";
+import type {Command, Struct} from "../../../types/types.ts";
+import CopyCommand from "./CopyCommand.ts";
+import ObservableList, {Record} from "../../../model/ObservableList.ts";
+import BaseCommand from "./BaseCommand.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 type PasteParameter = {

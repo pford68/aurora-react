@@ -1,4 +1,4 @@
-import type {Command, Struct} from "../types/types";
+import type {Command, Struct} from "../../../types/types.ts";
 
 /**
  * Base class for Commands

@@ -1,5 +1,5 @@
 import {type Dispatch, type RefObject, useContext, useReducer} from "react";
-import SaveCommand from "../../../commands/SaveCommand.ts";
+import SaveCommand from "../commands/SaveCommand.ts";
 import {GridContext} from "../GridContext.ts";
 import type {DTO} from "../../../model/dtos.ts";
 
