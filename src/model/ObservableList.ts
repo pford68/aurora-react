@@ -26,6 +26,13 @@ export class ListItem<T> {
     #deleted: boolean = false;
     #id: number | string;
 
+
+    static from<T, U extends ListItem<T>>(original: ListItem<T>, updates: T): U {
+        const data = {...original.getAll(), ...updates};
+        const Constructor = original.constructor  as new (data: T, state?: ItemState) => U;
+        return new Constructor(data);
+    }
+
     /**
      *
      * @param {T} data The data contained in the ListItem
@@ -51,15 +58,6 @@ export class ListItem<T> {
 
 
     /**
-     * Sets a new value at the specified key, which does not need to exist beforehand.
-     * @param key
-     * @param value
-     */
-    set(key: string, value: unknown): void {
-        this.#data = {...this.#data,  [key]: value};
-    }
-
-    /**
      * @returns {boolean} Whether the record has been marked for deletion.
      */
     get deleted(): boolean {
@@ -74,9 +72,10 @@ export class ListItem<T> {
         this.#deleted = value;
     }
 
-    update(partial: T): void {
-        this.#data= {...this.#data, ...partial};
+    get state(): ItemState {
+        return {id: this.id, deleted: this.deleted};
     }
+
 
     toString(): string {
         return JSON.stringify(this.#data)
@@ -84,20 +83,38 @@ export class ListItem<T> {
 
 
     /**
-     *
+     * Makes a deep copy of this instance.
      */
     clone(): this {
-        const state = {id: this.id, deleted: this.deleted};
-        return this.create(structuredClone(this.getAll()), state);
+        let clonedData: T;
+
+        if (this.#isClonable(this.#data)) {
+            clonedData = this.#data.clone();
+        } else if (Object.isFrozen(this.#data) || Object.isSealed(this.#data)) {
+            // If the object is frozen, a swallow or deep object spread creates a safe, mutable copy
+            clonedData = { ...this.#data};
+        } else if (Object.getPrototypeOf(this.#data) === Object.prototype) {
+            // If the data is a struct, perform a deep copy
+            clonedData = structuredClone(this.#data);
+        } else {
+            // Custom class fallback
+            const instance = this.#data as {constructor: new (args: Partial<T>) => T};
+            const Constructor = instance.constructor;
+            clonedData = new Constructor({...this.#data});
+        }
+
+        return this.create(clonedData, this.state);
     }
 
     /**
-     * Copies data from another ListItem to this and overrides the values in this.
-     * @param that
+     * Merges new data with this instance's data and returns a new instance.
+     * @param data
+     * @returns ListItem A new instance with the merged data.
      */
-    copy(that: this): void {
-        this.update(that.getAll());
+    merge(data: T): this {
+        return this.create({...this.getAll(), ...data});
     }
+
 
     /**
      * A convenience method for creating new instances in a way that works with subclasses.
@@ -105,9 +122,21 @@ export class ListItem<T> {
      * @param {ItemState} [state]
      * @protected
      */
-    protected create(data: T, state: ItemState): this {
-        const Constructor = this.constructor  as new (data: T, state: ItemState) => this;
+    protected create(data: T, state?: ItemState): this {
+        const Constructor = this.constructor  as new (data: T, state?: ItemState) => this;
         return new Constructor(data, state);
+    }
+
+    /**
+     * Structural type guard for custom cloning
+     */
+    #isClonable(value: unknown): value is { clone(): T } {
+        return (
+            typeof value === 'object' &&
+            value !== null &&
+            'clone' in value &&
+            typeof (value as Record<string, unknown>).clone === 'function'
+        );
     }
 }
 
@@ -166,9 +195,9 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
     }
 
     /**
-     * Inserts/replaces the specified Record at the specified index.  The Record can be
-     * an updated version of the original.  Use this when you have an Record and want to
-     * re-insert it to notify listeners that the list has been updated.
+     * Replaces/inserts the specified Record at the specified index.  IF an item exists
+     * at the specified index, it is replaced.  To insert an item in the list without
+     * replacing the existing item (shifting subsequent items down), use insertBefore().
      *
      * @param index The index at which to insert the Record.
      * @param data The data to insert
@@ -212,10 +241,10 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
         return false;
     }
 
-    insertBefore(index: number, record: ListItem<T>): void {
+    insertBefore(index: number, data: T): void {
         this.#data = [
             ...this.#data.slice(0, index),
-            record,
+            new ListItem(data),
             ...this.#data.slice(index)
         ];
     }

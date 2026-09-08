@@ -1,6 +1,6 @@
-import CopyCommand from "./CopyCommand";
-import type {Struct} from "../types/types";
-import {ListItem} from "../model/ObservableList.ts";
+import CopyCommand from "./CopyCommand.ts";
+import type {Struct} from "../../../types/types.ts";
+import {ListItem} from "../../../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 export default class CutCommand<T extends Struct> extends CopyCommand<T> {
@@ -22,8 +22,12 @@ export default class CutCommand<T extends Struct> extends CopyCommand<T> {
 
     undo(): boolean {
         this.#previous.forEach((prevRecord) => {
-            const record = this.selectedItems.find(record => record.id === prevRecord.id);
+            const currentIndex = this.selectedItems.findIndex(record => record.id === prevRecord.id);
             record?.copy(prevRecord.clone);
+            if (currentIndex < -1) {
+                const existingItem = this.selectedItems[currentIndex];
+
+            }
         });
 
         return true;

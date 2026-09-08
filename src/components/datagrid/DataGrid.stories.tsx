@@ -7,7 +7,7 @@ import {useRef} from "react";
 import {type Measurements} from "../../../tests/models/Person.ts";
 import people from "../../../tests/fixtures/people.json";
 import airlineSafety from "../../../tests/fixtures/airline_safety.json";
-import BaseCommand from "../../commands/BaseCommand.ts";
+import BaseCommand from "./commands/BaseCommand.ts";
 import type {ContextMenuParameter, Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 import StatefulInput from "../forms/StatefulInput.tsx";

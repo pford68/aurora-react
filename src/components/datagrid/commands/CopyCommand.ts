@@ -1,8 +1,8 @@
-import type {Command, Struct} from "../types/types";
+import type {Command, Struct} from "../../../types/types.ts";
 import {v4 as uuid} from "uuid";
-import BaseCommand from "./BaseCommand";
-import {ListItem} from "../model/ObservableList.ts";
-import {isTextSelected} from "../util/utils";
+import BaseCommand from "./BaseCommand.ts";
+import {ListItem} from "../../../model/ObservableList.ts";
+import {isTextSelected} from "../../../util/utils.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 type CopyParameter<T extends Struct> = {

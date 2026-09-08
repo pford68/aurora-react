@@ -1,5 +1,4 @@
 import peopleData from "../../tests/fixtures/people.json";
-import Person, {type Measurements} from "../../tests/models/Person";
 import ObservableList, {ListItem} from "../model/ObservableList.ts";
 import type {Struct} from "../types/types";
 import {fail} from "node:assert";
@@ -14,6 +13,8 @@ function testAllKeys(r: ListItem<Struct>) {
     // @ts-expect-error: m is of type unknown
     expect(m.height).toBe(70);
 }
+
+
 describe("ListItem", () => {
     let record: ListItem<Struct>;
     let people: Struct[];
@@ -45,64 +46,21 @@ describe("ListItem", () => {
         })
     })
 
-    describe("set", () => {
-        it("should replace the value at the specified key", () => {
-            record.set("firstName", "Fred");
-            expect(record.get("firstName")).toBe("Fred");
-            expect(record.get("lastName")).toBe("Garcia");
-            expect(record.get("age")).toBe(29);
-            expect(record.get("active")).toBe(true);
-            expect(record.get("lastUpdated")).toBe(1704401089);
-        });
-
-        it("should be extensible to know how to save changes to complex properties", () => {
-            const person = new Person(people[5]);
-            person.set("measurements", 900);
-            expect((person.get("measurements") as Measurements).height).toBe(900);
-        })
-    });
-
     describe("clone", () => {
         it("should create a new Record with all data from the cloned Record", () => {
             const clone = record.clone();
             testAllKeys(clone);
         });
 
-        it("should create a new id for the new Record", () => {
+        it("should not create a new id for the new Record", () => {
             const clone = record.clone();
-            expect(clone.id).not.toEqual(record.id);
+            expect(clone.id).toEqual(record.id);
         })
-    });
-
-    describe("copy", () => {
-        it("should copy all data from the specified Record", () => {
-            const newRecord = new ListItem<Struct>(people[1]);
-            newRecord.copy(record);
-            testAllKeys(newRecord);
-        });
-
-        it("should augment this Record", () => {
-            const newRecord = new ListItem<Struct>({
-                country: "US",
-                HR: "a lot",
-                state: "Texas",
-            });
-            newRecord.copy(record)
-            expect(newRecord.get("state")).toBe("Texas");
-            expect(newRecord.get("HR")).toBe("a lot");
-            expect(newRecord.get("country")).toBe("US");
-            testAllKeys(newRecord);
-        });
     });
 
     describe("The `deleted` property", () => {
         it("should be readable", () => {
             expect(record.deleted).toBeFalsy();
-        });
-
-        it("should be writable", () => {
-            record.deleted = true;
-            expect(record.deleted).toBeTruthy();
         });
     });
 
@@ -111,7 +69,7 @@ describe("ListItem", () => {
             expect(record.id).not.toBeUndefined();
         });
 
-        it("should not be writable", () => {
+        it("should be immutable", () => {
             try {
                 // @ts-expect-error: intentionally causing an error here--assigning a value to a readonly property..
                 record.id = "gjfkghgh";
@@ -170,26 +128,60 @@ describe("ObservableList", () => {
 
     describe("insertAt", () => {
         it("should take an updated record and insert it at the specified index", () => {
-            const record = list.get(2);
-            if (record != null) {
-                record.set("firstName", "Jack");
-                list.insertAt(2, record.getAll());
-                expect(record.get("firstName")).toBe("Jack");
+            const index = 2;
+            const oldRecord = list.get(index);
+            if (oldRecord != null) {
+                const state = {id: oldRecord.id, deleted: false};
+                const newItem = new ListItem({"firstName": "Jack"}, state);
+                list.insertAt(index, newItem.getAll());
+                expect(list.get(index)?.get("firstName")).toBe("Jack");
             } else {
                 fail("The record should have been found.")
             }
         });
     });
 
+    describe("insertBefore", () => {
+        beforeEach(() => {
+
+        })
+
+        it("should insert it at the specified index", () => {
+            const index = 2;
+            const oldRecord = list.get(index);
+            if (oldRecord != null) {
+                const state = {id: oldRecord.id, deleted: false};
+                const newItem = new ListItem({"firstName": "Jack"}, state);
+                list.insertAt(index, newItem.getAll());
+                expect(list.get(index)?.get("firstName")).toBe("Jack");
+            } else {
+                fail("The record should have been found.")
+            }
+        });
+
+        it("should shift subsequent records down by one index", () => {
+            const index = 2;
+            const oldRecord = list.get(index);
+            if (oldRecord != null) {
+                const state = {id: oldRecord.id, deleted: false};
+                const newItem = new ListItem({"firstName": "Jack"}, state);
+                list.insertAt(index, newItem.getAll());
+                expect(list.get(index)?.get("firstName")).toBe("Jack");
+            } else {
+                fail("The record should have been found.")
+            }
+        });
+    })
+
     describe("batchUpdate", () => {
         it("should take a list of  updated records and insert each at the specified index", () => {
             const [first, second] = list.slice(2, 4);
             if (first != null && second != null) {
-                first.set("firstName", "Jack");
-                second.set("firstName", "aaaak");
+                const item1 = ListItem.from(first, {"firstName": "Jack"});
+                const item2 = ListItem.from(second, {"firstName": "aaaak"});
                 const updates = [
-                    {index: 2, record: first},
-                    {index: 3, record: second},
+                    {index: 2, record: item1},
+                    {index: 3, record: item2},
                 ]
                 list.batchUpdate(updates);
                 expect(list?.get(2)?.get("firstName")).toBe("Jack");

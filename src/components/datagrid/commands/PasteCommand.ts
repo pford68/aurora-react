@@ -1,7 +1,7 @@
-import type {Command, Struct} from "../types/types";
-import CopyCommand from "./CopyCommand";
-import ObservableList, {ListItem} from "../model/ObservableList.ts";
-import BaseCommand from "./BaseCommand";
+import type {Command, Struct} from "../../../types/types.ts";
+import CopyCommand from "./CopyCommand.ts";
+import ObservableList, {ListItem} from "../../../model/ObservableList.ts";
+import BaseCommand from "./BaseCommand.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 type PasteParameter = {
@@ -33,8 +33,10 @@ export default class PasteCommand<T extends Struct>
 
     undo(): boolean {
         this.#previous.forEach((prevRecord) => {
-            const record = this.#items.find(record => record.id === prevRecord.id);
-            record?.copy(prevRecord.clone);
+            const index = this.#items.findIndex(record => record.id === prevRecord.id);
+            if (index != null) {
+                this.#items.insertAt(index, prevRecord.clone.getAll());
+            }
         });
 
         return true;
@@ -66,8 +68,8 @@ export default class PasteCommand<T extends Struct>
             let currentColIndex = startColumnIndex;
             update.columnNames.forEach((copiedCol: string) => {
                 const destName = columnNames[currentColIndex];
-                if (destName != null) {
-                    record?.set(destName, item[copiedCol]);
+                if (destName != null && record != null) {
+                    this.#items.insertAt(index, {...record.getAll(), [destName]: item[copiedCol]});
                 }
                 currentColIndex++;
             });

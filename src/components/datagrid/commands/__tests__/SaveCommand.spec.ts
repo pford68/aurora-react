@@ -1,8 +1,8 @@
 import SaveCommand from '../SaveCommand.ts';
-import people from "../../../tests/fixtures/people.json";
-import ObservableList, {ListItem} from "../../model/ObservableList.ts";
-import type {Struct} from "../../types/types.ts";
-import type {Person} from "../../../tests/types.ts";
+import people from "../../../../../tests/fixtures/people.json";
+import ObservableList, {ListItem} from "../../../../model/ObservableList.ts";
+import type {Struct} from "../../../../types/types.ts";
+import type {Person} from "../../../../../tests/types.ts";
 
 
 describe('SaveCommand', () => {

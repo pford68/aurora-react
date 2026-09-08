@@ -3,7 +3,7 @@ import type {Meta, StoryObj} from "@storybook/react-vite";
 import Menu from "./Menu.tsx";
 import styles from "../../stories/css/Popup.stories.module.css"
 import {useRef, useState} from "react";
-import BaseCommand from "../../commands/BaseCommand.ts";
+import BaseCommand from "../datagrid/commands/BaseCommand.ts";
 import type {Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 

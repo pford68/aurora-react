@@ -1,5 +1,5 @@
-import people from "../../../tests/fixtures/people.json";
-import Person from "../../../tests/models/Person.ts";
+import people from "../../../../../tests/fixtures/people.json";
+import Person from "../../../../../tests/models/Person.ts";
 import CopyCommand from "../CopyCommand.ts";
 
 describe("CopyCommand", () => {
