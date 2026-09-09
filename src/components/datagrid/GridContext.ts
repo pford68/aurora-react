@@ -25,7 +25,7 @@ export type GridContextType = {
     undoStack?: CommandStack,
     redoStack?: CommandStack,
     gridRef?: RefObject<HTMLDivElement | null>,
-    contextMenuItems?: Command<Struct>[],
+    contextMenuItems?: Command[],
 }
 export const initialGridContext: GridContextType = {
     columns: [],

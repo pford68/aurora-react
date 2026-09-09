@@ -1,36 +1,46 @@
-import type {Command, Struct} from "../../../types/types.ts";
+import type {BiFunction, Command, Struct} from "../../../types/types.ts";
 import {v4 as uuid} from "uuid";
-import BaseCommand from "./BaseCommand.ts";
 import {Record} from "../../../model/ObservableList.ts";
 import {isTextSelected} from "../../../util/utils.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
-type CopyParameter<T extends Struct> = {
-    /** The order of column names in the data. */
-    columnNames: string[],
-    data?: T[],
+export type Clipboard = {
+    setItem: BiFunction<string, string, void>
 }
 
-export default class CopyCommand<T extends Struct>
-    extends BaseCommand<CopyParameter<T>>
-    implements Command<CopyParameter<T>>
-{
-    icon: IconProp = "copy";
-    name: string = "Copy";
-    readonly accelerator: string = "⌘+c";
-    readonly #selectedItems: Record<T>[];
+export type CopyConfig<T extends Struct> = {
+    selectedItems: Record<T>[],
+    columns: string[],
+    clipboard?: Clipboard,
+}
+
+export default class CopyCommand<T extends Struct> implements Command {
+    static readonly icon: IconProp = "copy";
+    static readonly name: string = "Copy";
+    static readonly accelerator: string = "⌘+c";
+    #selectedItems: Record<T>[];
+    #values: {[key:string]: unknown}[];
+    #clipboard: Clipboard = sessionStorage;
+    #columns: string[];
     static TOKEN: string = uuid();
 
-    constructor(selectedItems: Record<T>[]) {
-        super();
+    constructor(config: CopyConfig<T>) {
+        const {selectedItems, clipboard, columns} = config;
+        this.#clipboard = clipboard ?? this.#clipboard;
         this.#selectedItems = selectedItems;
+        this.#columns = columns;
+        this.#values = [];
+        selectedItems.forEach(record => {
+            const data: {[key:string]: unknown} = {};
+            columns.forEach(name => {
+                data[name] = isTextSelected() ? getSelection()?.toString() : record.get(name);
+            });
+            this.#values.push(data);
+        });
     }
 
     execute(): boolean {
-        // For now, I am using session storage as the clipboard.
-        // Not all browsers can write to the clipboard with Javascript.
-        const items = { items: this.getParameters() }
-        sessionStorage.setItem(CopyCommand.TOKEN, JSON.stringify(items));
+        this.#clipboard.setItem(CopyCommand.TOKEN, JSON.stringify(this.#values));
         return true;
     }
 
@@ -42,24 +52,15 @@ export default class CopyCommand<T extends Struct>
         return false;
     }
 
-
-    setParameter(value: CopyParameter<T>) {
-        const names: string[] = value.columnNames;
-        if (value.data === undefined) {
-            value.data = [];
-        }
-        this.selectedItems.forEach(record => {
-            const data: {[key:string]: unknown} = {};
-            names.forEach(name => {
-                data[name] = isTextSelected() ? getSelection()?.toString() : record.get(name);
-            });
-            // @ts-expect-error:{ [key: string]: unknown; } is assignable to T: T could be a different subtype of Struct.
-            value.data?.push(data)
-        });
-        this.getParameters().push(value);
+    get values(): {[key:string]: unknown}[] {
+        return this.#values;
     }
 
     get selectedItems(): Record<T>[] {
         return this.#selectedItems;
+    }
+
+    get columns(): string[] {
+        return this.#columns;
     }
 }

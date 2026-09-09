@@ -6,7 +6,6 @@ export * from './components/controls/CloseButton.tsx';
 export * from './components/forms/Input.tsx';
 export * from './components/forms/Multiline.tsx';
 export * from './components/forms/StateList.tsx';
-export * from './components/datagrid/commands/BaseCommand.ts';
 export * from './components/datagrid/commands/CopyCommand.ts';
 export * from './components/datagrid/commands/CutCommand.ts';
 export * from './components/datagrid/commands/PasteCommand.ts';

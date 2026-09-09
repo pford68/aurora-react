@@ -1,8 +1,8 @@
 import people from "../../../../../tests/fixtures/people.json";
 import Person from "../../../../../tests/models/Person.ts";
-import CopyCommand from "../CopyCommand.ts";
+import CutCommand from "../CutCommand.ts";
 
-describe("CopyCommand", () => {
+describe("CutCommand", () => {
     let list:Person[];
 
     beforeEach(() => {
@@ -18,11 +18,11 @@ describe("CopyCommand", () => {
         });
 
         it("should add the parameters to sessionStorage", () => {
-            const cmd = new CopyCommand({selectedItems, columns: ["firstName", "lastName", "age"]});
+            const cmd = new CutCommand({selectedItems, columns: ["firstName", "lastName", "age"]});
             cmd.execute();
 
             // Inspecting the clipboard item
-            const item = sessionStorage.getItem(CopyCommand.TOKEN);
+            const item = sessionStorage.getItem(CutCommand.TOKEN);
             const EXPECTED_ENTRIES = 3;
             expect(item).toBeDefined();
             expect(typeof item).toBe("string");

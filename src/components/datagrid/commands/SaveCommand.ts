@@ -1,29 +1,24 @@
-import BaseCommand from "./BaseCommand.ts";
 import type {Command, Struct} from "../../../types/types.ts";
 import ObservableList, {type PartialUpdate} from "../../../model/ObservableList.ts";
-import {isSubSet} from "../../../util/utils.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 
 /**
  * For making/undoing changes to existing Records.
  */
-export default class SaveCommand<T extends Struct>
-    extends BaseCommand<PartialUpdate<T>>
-    implements Command<PartialUpdate<T>>
-{
-    readonly icon: IconProp = "save";
-    readonly name: string = "Save";
-    readonly accelerator: string = "⌘+s";
-    readonly #items: ObservableList<T>;
+export default class SaveCommand<T extends Struct> implements Command {
+    static readonly icon: IconProp = "save";
+    static readonly name: string = "Save";
+    static readonly accelerator: string = "⌘+s";
+    #updates: PartialUpdate<T>[];
+    // @ts-expect-error
+    #list: ObservableList<T>; // TODO:  Will be needed in CORE-11.
 
-    constructor(items: ObservableList<T>) {
-        super();
-        this.#items = items;
-    }
 
-    get items(): ObservableList<T> {
-        return this.#items;
+    constructor(list: ObservableList<T>, updates: PartialUpdate<T>[]) {
+        this.#list = list;
+        this.#updates =  updates;
+        this.#updates.forEach(item => item.previous = item.record?.clone())
     }
 
     redo(): boolean {
@@ -31,7 +26,7 @@ export default class SaveCommand<T extends Struct>
     }
 
     undo(): boolean {
-        this.getParameters()
+        this.#updates
             .forEach(({record, previous}) => {
                 if (previous != null) {
                     record?.copy(previous);
@@ -42,36 +37,21 @@ export default class SaveCommand<T extends Struct>
     }
 
     execute(): boolean {
-        const updates = this.getParameters();
+        const updates = this.#updates;
         if (updates.length === 0) {
             console.warn("No parameters loaded, nothing to execute.")
             return false;
         }
 
-        updates.forEach(update => {
-            for (const updateKey in update.value) {
-                update.record?.set(updateKey, update.value[updateKey]);
-            }
+        updates.forEach(({ record, value }) => {
+            if (!record) return;
+            (Object.keys(value) as Array<keyof typeof value>).forEach(key => {
+                // TODO: List items will be immutable in CORE-11.
+                record.set(String(key), value[key]);
+            });
         });
 
         return true;
-    }
-
-
-    /**
-     * Used to add a parameter to the command for later execution.
-     *
-     * @param param {PartialUpdate}
-     * @override
-     */
-    setParameter(param: PartialUpdate<T>) {
-        const {index, value} = param;
-        const current = this.items.get(index);
-        // Don't update unless there are changes.
-        if (current == null || isSubSet(value, current?.getAll() ?? {})) return;
-        param.record = current;
-        param.previous = current.clone();  // Use the clone to restore the record if needed.
-        this.getParameters().push(param);
     }
 
 }

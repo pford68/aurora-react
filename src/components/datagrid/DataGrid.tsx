@@ -198,7 +198,7 @@ export type DataGridProps = {
      * A list of Commands that will be used to crete a contextmenu.
      * This is both necessary and sufficient
      */
-    contextMenuItems?: Command<Struct>[],
+    contextMenuItems?: Command[],
     height?: number,
     width?: number,
     resizable?: boolean,

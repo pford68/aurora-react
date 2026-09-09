@@ -1,17 +1,17 @@
-import CopyCommand from "./CopyCommand.ts";
+import CopyCommand, {type CopyConfig} from "./CopyCommand.ts";
 import type {Struct} from "../../../types/types.ts";
 import {Record} from "../../../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 export default class CutCommand<T extends Struct> extends CopyCommand<T> {
 
-    icon: IconProp = "cut";
-    name: string = "Cut";
-    readonly accelerator: string = "⌘+x";
+    static readonly icon: IconProp = "cut";
+    static readonly name: string = "Cut";
+    static readonly accelerator: string = "⌘+x";
     readonly #previous: {id: string, clone: Record<T>}[];
 
-    constructor(selectedItems: Record<T>[]) {
-        super(selectedItems);
+    constructor(config: CopyConfig<T>) {
+        super(config);
         this.#previous = [];
     }
 
@@ -35,13 +35,10 @@ export default class CutCommand<T extends Struct> extends CopyCommand<T> {
     }
 
     #execute(doClone: boolean): boolean {
-        const params = this.getParameters();
-        const param = params[params.length - 1];
-        const {columnNames} = param;
         this.selectedItems.forEach(item => {
             if (doClone) this.#previous.push({id: item.id, clone: item.clone()});
 
-            columnNames.forEach(name => {
+            this.columns.forEach(name => {
                 item.set(name, null);
             })
         });

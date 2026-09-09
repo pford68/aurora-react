@@ -1,29 +1,35 @@
 import type {Command, Struct} from "../../../types/types.ts";
-import CopyCommand from "./CopyCommand.ts";
+import CopyCommand, {type Clipboard} from "./CopyCommand.ts";
 import ObservableList, {Record} from "../../../model/ObservableList.ts";
-import BaseCommand from "./BaseCommand.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
-type PasteParameter = {
+type PasteConfig<T extends Struct> = {
+    items: ObservableList<T>
     rowIndex: number,
     colIndex: number,
     /** columnNames should be the current total column order at the time of the paste.*/
-    columnNames: string[],
+    columns: string[],
+    clipboard?: Clipboard,
 }
 
-export default class PasteCommand<T extends Struct>
-    extends BaseCommand<PasteParameter>
-    implements Command<PasteParameter>
-{
-    readonly icon: IconProp = "paste";
-    readonly name: string = "Paste";
-    readonly accelerator: string = "⌘+v";
+export default class PasteCommand<T extends Struct> implements Command {
+    static readonly icon: IconProp = "paste";
+    static readonly name: string = "Paste";
+    static readonly accelerator: string = "⌘+v";
     readonly #previous: {id: string, clone: Record<T>}[];
+    readonly #clipboard: Clipboard = sessionStorage;
+    #rowIndex: number;
+    #colIndex: number;
+    #columns: string[];
     #items: ObservableList<T>;
 
-    constructor(items: ObservableList<T>) {
-        super();
+    constructor(config: PasteConfig<T>) {
+        const {items, clipboard, rowIndex, colIndex, columns} = config
         this.#items = items;
+        this.#clipboard = clipboard ?? this.#clipboard;
+        this.#rowIndex = rowIndex;
+        this.#colIndex = colIndex;
+        this.#columns = columns;
         this.#previous = [];
     }
 
@@ -48,11 +54,8 @@ export default class PasteCommand<T extends Struct>
         const clipboardItems = sessionStorage.getItem(CopyCommand.TOKEN);
         if (clipboardItems == null) return false;
 
-        const params = this.getParameters();
-        const param = params[params.length - 1];
-        if (param == null) return false;
-
-        const {rowIndex: startRowIndex, colIndex: startColumnIndex, columnNames} = param;
+        const startRowIndex = this.#rowIndex;
+        const startColumnIndex = this.#colIndex;
         const updates = JSON.parse(clipboardItems);
         const update = updates.items.pop();
         if (update == null) return false;
@@ -65,7 +68,7 @@ export default class PasteCommand<T extends Struct>
 
             let currentColIndex = startColumnIndex;
             update.columnNames.forEach((copiedCol: string) => {
-                const destName = columnNames[currentColIndex];
+                const destName = this.#columns[currentColIndex];
                 if (destName != null) {
                     record?.set(destName, item[copiedCol]);
                 }

@@ -7,12 +7,11 @@ import {useRef} from "react";
 import Person, {type Measurements} from "../../../tests/models/Person.ts";
 import people from "../../../tests/fixtures/people.json";
 import airlineSafety from "../../../tests/fixtures/airline_safety.json";
-import BaseCommand from "./commands/BaseCommand.ts";
-import type {ContextMenuParameter, Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 import StatefulInput from "../forms/StatefulInput.tsx";
 import {AbstractDTO} from "../../model/dtos.ts";
 import type {RendererProps} from "./Datagrid.types.ts";
+import type {Command} from "../../types/types.ts";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {
@@ -75,7 +74,7 @@ class MeasurementsDTO extends AbstractDTO<number>{
 }
 
 
-class LogCommand extends BaseCommand<ContextMenuParameter>{
+class LogCommand implements Command{
     get icon():IconProp { return "pencil"}
     get name() { return "Log"}
     get accelerator() { return "⌘+l"}
@@ -93,7 +92,7 @@ class LogCommand extends BaseCommand<ContextMenuParameter>{
 }
 
 
-class HighlightCommand extends BaseCommand<Struct>{
+class HighlightCommand implements Command{
     get icon():IconProp { return "bomb"}
     get name() { return "Self-Destruct"}
     get accelerator() { return "⌘+h"}

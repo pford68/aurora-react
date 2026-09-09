@@ -23,15 +23,21 @@ export type DataTypes =
     | "map"
     | "enum";
 
-export interface Command<T extends Struct = Struct> {
+export interface Command {
     execute(): boolean;
     undo(): boolean,
     redo(): boolean,
-    setParameter(param: T): void;
-    getParameters(): T[];
-    icon?: IconProp,
     name?: string,
-    accelerator?: ReactNode,
+    readonly icon?: IconProp,
+    readonly accelerator?: ReactNode,
+}
+// TODO:  T will no longer extend struct in CORE-11.
+export type CommandContext<T extends Struct> = {
+    selectedRecords: [
+        record: T,
+        pendingChanges: Partial<T>,
+    ],
+    list: ObservableList<T>
 }
 
 interface ISelectionModel {
