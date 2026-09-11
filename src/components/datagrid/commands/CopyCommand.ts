@@ -14,6 +14,11 @@ export type CopyConfig<T extends Struct> = {
     clipboard?: Clipboard,
 }
 
+export type CopyPayload = {
+    payload: { data: {[key: string]: unknown}[], columnNames?: string[] }
+}
+
+
 export default class CopyCommand<T extends Struct> implements Command {
     static readonly icon: IconProp = "copy";
     static readonly name: string = "Copy";
@@ -40,7 +45,8 @@ export default class CopyCommand<T extends Struct> implements Command {
     }
 
     execute(): boolean {
-        this.#clipboard.setItem(CopyCommand.TOKEN, JSON.stringify(this.#values));
+        const payload:CopyPayload = {payload: { data: this.#values, columnNames: this.#columns }};
+        this.#clipboard.setItem(CopyCommand.TOKEN, JSON.stringify(payload));
         return true;
     }
 

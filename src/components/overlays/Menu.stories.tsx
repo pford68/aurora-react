@@ -3,9 +3,8 @@ import type {Meta, StoryObj} from "@storybook/react-vite";
 import Menu from "./Menu.tsx";
 import styles from "../../stories/css/Popup.stories.module.css"
 import {useRef, useState} from "react";
-import BaseCommand from "../datagrid/commands/BaseCommand.ts";
-import type {Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
+import MenuItem from "./MenuItem.tsx";
 
 
 type PropsAndArgs = React.ComponentProps<typeof Menu> & {
@@ -33,35 +32,34 @@ export default meta;
 
 type Story = StoryObj<PropsAndArgs>;
 
-class FileCommand extends BaseCommand<Struct>{
-    get icon():IconProp { return "file"}
-    get name() { return "File"}
-    get accelerator() { return "⌘+f"}
-    execute(): boolean {
-
-        return true;
+const commands = [
+    {
+        icon: "file",
+        name: "File",
+        accelerator:  "⌘+f",
+        execute: (e: React.MouseEvent) => {
+           console.log(e.target);
+        }
+    },
+    {
+        icon: "print",
+        name: "Print",
+        accelerator:  "⌘+p",
+        execute: () => {
+            window.print();
+            return true;
+        }
+    },
+    {
+        icon: "bomb",
+        name: "Self-Destruct",
+        accelerator:  "⌘+h",
+        execute: () => {
+            alert("Why would you select a menu item labeled \"self-destruct\"?");
+            return true;
+        }
     }
-}
-
-class PrintCommand extends BaseCommand<Struct>{
-    get icon():IconProp { return "print"}
-    get name():string { return "Print"}
-    get accelerator() { return "⌘+p"}
-    execute(): boolean {
-        window.print();
-        return true;
-    }
-}
-
-class HighlightCommand extends BaseCommand<Struct>{
-    get icon():IconProp { return "bomb"}
-    get name() { return "Self-Destruct"}
-    get accelerator() { return "⌘+h"}
-    execute(): boolean {
-        alert("Why would you select a menu item labeled \"self-destruct\"?");
-        return true;
-    }
-}
+]
 
 
 const defaultRenderer = (args: PropsAndArgs) => {
@@ -73,6 +71,7 @@ const defaultRenderer = (args: PropsAndArgs) => {
         top:0,
         left: 0
     });
+
     return (
         <div style={{position: "absolute", left: `${left}px`, top: `${top}px`}}
              onClick={() => {
@@ -93,12 +92,16 @@ const defaultRenderer = (args: PropsAndArgs) => {
                 visible={state.visible}
                 top={state.top}
                 left={state.left}
-                commands={[
-                    new FileCommand(),
-                    new PrintCommand(),
-                    new HighlightCommand(),
-                ]}
-            />
+            >
+                {commands.map(command => (
+                    <MenuItem
+                        name={command.name}
+                        icon={command.icon as IconProp}
+                        accelerator={command.accelerator}
+                        execute={command.execute}
+                    />
+                ))}
+            </Menu>
         </div>
     );
 };

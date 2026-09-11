@@ -56,23 +56,24 @@ export default class PasteCommand<T extends Struct> implements Command {
 
         const startRowIndex = this.#rowIndex;
         const startColumnIndex = this.#colIndex;
-        const updates = JSON.parse(clipboardItems);
-        const update = updates.items.pop();
-        if (update == null) return false;
+        console.log(clipboardItems)
+        const parsedItems = JSON.parse(clipboardItems);
+       // const update = updates.items.pop();
+        //if (update == null) return false;
 
-        const {data} = update;
-        data.forEach((item: T, index: number) => {
+        const {data, columnNames} = parsedItems.payload;
+        data.forEach((item:T, index: number) => {
             const recordIndex = startRowIndex + index;
             const record = this.#items.get(recordIndex);
             if (doClone && record != null) this.#previous.push({id: record.id, clone: record.clone()});
 
-            let currentColIndex = startColumnIndex;
-            update.columnNames.forEach((copiedCol: string) => {
-                const destName = this.#columns[currentColIndex];
-                if (destName != null) {
+           let currentColIndex = startColumnIndex;
+           columnNames.forEach((copiedCol: string) => {
+               const destName = this.#columns[currentColIndex];
+               if (destName != null) {
                     record?.set(destName, item[copiedCol]);
-                }
-                currentColIndex++;
+               }
+               currentColIndex++;
             });
         });
         return true;

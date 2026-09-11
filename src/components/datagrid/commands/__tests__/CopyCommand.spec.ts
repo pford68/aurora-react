@@ -1,6 +1,7 @@
 import people from "../../../../../tests/fixtures/people.json";
 import Person from "../../../../../tests/models/Person.ts";
 import CopyCommand from "../CopyCommand.ts";
+import {expect} from "vitest";
 
 describe("CopyCommand", () => {
     let list:Person[];
@@ -22,19 +23,19 @@ describe("CopyCommand", () => {
             cmd.execute();
 
             // Inspecting the clipboard item
-            const item = sessionStorage.getItem(CopyCommand.TOKEN);
-            const EXPECTED_ENTRIES = 3;
-            expect(item).toBeDefined();
-            expect(typeof item).toBe("string");
-            expect(item?.includes("Corey")).toBeTruthy();
-            expect(item?.includes("Seager")).toBeTruthy();
-            expect(item?.includes("Luka")).toBeTruthy();
-            expect(item?.includes("Doncic")).toBeTruthy();
-            expect(item?.includes("John")).toBeTruthy();
-            expect(item?.includes("Smith")).toBeTruthy();
-            expect(item?.match(/firstName/g)?.length).toBe(EXPECTED_ENTRIES);
-            expect(item?.match(/lastName/g)?.length).toBe(EXPECTED_ENTRIES);
-            expect(item?.match(/"age"/g)?.length).toBe(EXPECTED_ENTRIES);
+            const clipboardItem = sessionStorage.getItem(CopyCommand.TOKEN);
+            expect(clipboardItem).toBeDefined();
+            expect(clipboardItem).not.toBeNull();
+
+            const parsedItem = JSON.parse(clipboardItem ?? "");
+            const {payload} = parsedItem;
+            expect(typeof clipboardItem).toBe("string");
+            expect(payload.data[1]["firstName"]).toBe("Corey")
+            expect(payload.data[1]["lastName"]).toBe("Seager");
+            expect(payload.data[2]["firstName"]).toBe("Luka");
+            expect(payload.data[2]["lastName"]).toBe("Doncic");
+            expect(payload.data[0]["firstName"]).toBe("John");
+            expect(payload.data[0]["lastName"]).toBe("Smith");
         });
     })
 })

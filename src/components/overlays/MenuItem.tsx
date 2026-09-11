@@ -1,30 +1,33 @@
-import {type ReactElement} from "react";
-import type {Command} from "../../types/types.ts";
+import {type MouseEventHandler, type ReactElement} from "react";
 import styles from "./overlays.module.css";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 type MenuItemProps= {
-    command: Command,
+    name: string,
+    accelerator?: string,
+    icon?: IconProp,
+    execute: MouseEventHandler
 }
 
-export default function MenuItem({command}: MenuItemProps): ReactElement {
-
+export default function MenuItem(props: MenuItemProps): ReactElement {
+    const {name, execute, accelerator, icon} = props;
     return (
         <div
             className={styles.menuItem}
-            onClick={command.execute}
+            onClick={execute}
         >
             <span className={styles.left}>
                 <span className={styles.icon}>
                     {
-                        typeof command.icon == "string"
-                            ? <FontAwesomeIcon icon={command.icon} />
+                        typeof icon == "string"
+                            ? <FontAwesomeIcon icon={icon} />
                             : ""
                     }
                 </span>
-                <span>{command.name}</span>
+                <span>{name}</span>
             </span>
-            <span className={styles.accelerator}>{command.accelerator}</span>
+            <span className={styles.accelerator}>{accelerator}</span>
         </div>
     )
 }

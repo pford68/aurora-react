@@ -1,12 +1,11 @@
-import {type ReactElement, type RefObject, useContext, useEffect, useRef, useState} from "react";
-import type {Command, Struct} from "../../types/types.ts";
+import {type ReactElement, type RefObject, useEffect, useState} from "react";
 import {joinCss} from "../../util/utils.ts";
 import styles from "./overlays.module.css";
 import Menu from "./Menu.tsx";
-import {GridContext} from "../datagrid/GridContext.ts";
+
 
 type ContextMenuProps = {
-    commands: Command<Struct>[],
+    items: ReactElement[],
     targetRef: RefObject<HTMLElement | null>,
     className?: string,
 }
@@ -14,13 +13,13 @@ type ContextMenuProps = {
 
 export default function ContextMenu(props: ContextMenuProps): ReactElement {
     const {
-        commands,
+        items,
         targetRef,
         className,
     } = props;
     const [state, setState] = useState({visible: false, top: 0, left:0 });
-    const eventTarget = useRef<HTMLElement | null>(null);
-    const gridContext = useContext(GridContext);
+    //const eventTarget = useRef<HTMLElement | null>(null);
+    //const gridContext = useContext(GridContext);
 
     useEffect(() => {
         const onBodyClick = () => setState({...state, visible: false});
@@ -36,13 +35,14 @@ export default function ContextMenu(props: ContextMenuProps): ReactElement {
             e.preventDefault();
             e.stopPropagation();  // Allows nested menus
 
+            /*
             if (e.target instanceof HTMLElement) {
                 eventTarget.current = e.target;
                 const focused = gridContext.focusModel?.current?.focused;
                 if (focused != null) {
                     gridContext.selectionModel?.current?.reset(focused?.rowIndex, focused?.colIndex);
                 }
-            }
+            }*/
 
             setState((prev => {
                 return {
@@ -65,23 +65,16 @@ export default function ContextMenu(props: ContextMenuProps): ReactElement {
     }, []);
 
     if (state.visible) {
-        commands.forEach((c => {
-            c.setParameter({
-                targetRef: eventTarget,
-                selectionModel: gridContext.selectionModel?.current,
-                items: gridContext.items,
-            })
-        }));
-
         return (
             <Menu
-                commands={commands}
                 visible={state.visible}
                 top={state.top}
                 left={state.left}
                 className={joinCss(styles.contextmenu, className)}
                 onClick={() => setState({...state, visible: false})}
-            />
+            >
+                {items}
+            </Menu>
         );
     }
 

@@ -1,4 +1,4 @@
-import type {ReactNode, RefObject} from "react";
+import type {RefObject} from "react";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 import ObservableList, {Record} from "../model/ObservableList.ts";
 
@@ -29,16 +29,9 @@ export interface Command {
     redo(): boolean,
     name?: string,
     readonly icon?: IconProp,
-    readonly accelerator?: ReactNode,
+    readonly accelerator?: string,
 }
-// TODO:  T will no longer extend struct in CORE-11.
-export type CommandContext<T extends Struct> = {
-    selectedRecords: [
-        record: T,
-        pendingChanges: Partial<T>,
-    ],
-    list: ObservableList<T>
-}
+
 
 interface ISelectionModel {
     getSelectedItem(): Record<Struct>,

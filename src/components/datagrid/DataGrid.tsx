@@ -1,7 +1,7 @@
 import {type ReactElement, type KeyboardEvent, useReducer, useRef, useEffect} from "react";
 import PageFactory from "./PageFactory";
 import ObservableList, {Record} from "../../model/ObservableList.ts";
-import type {Command, Struct} from "../../types/types";
+import type {Struct} from "../../types/types";
 import styles from "./DataGrid.module.css";
 import {joinCss} from "./../../util/utils";
 import {GridContext} from "./GridContext";
@@ -194,11 +194,7 @@ export type DataGridProps = {
      * @todo
      */
     secondarySort?: boolean,
-    /**
-     * A list of Commands that will be used to crete a contextmenu.
-     * This is both necessary and sufficient
-     */
-    contextMenuItems?: Command[],
+    contextMenuItems?: ReactElement[],
     height?: number,
     width?: number,
     resizable?: boolean,
@@ -430,7 +426,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
                     contextMenuItems
                         ? (
                             <ContextMenu
-                                commands={contextMenuItems}
+                                items={contextMenuItems}
                                 targetRef={gridRef}
                             />
                         )

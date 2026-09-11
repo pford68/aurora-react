@@ -114,14 +114,17 @@ export class FocusMode implements CellState {
                     const doCut = e.key === "x" || e.key ===" Cut";
                     const selectedItems = selectionModel?.getSelectedItems();
                     if (selectedItems != null && selectionModel?.edges != null) {
-                        const cmd = doCut
-                            ? new CutCommand(selectedItems)
-                            : new CopyCommand(selectedItems);
                         const {left, right} = selectionModel.edges;
                         const selectedNames: string[] = columnNames.filter((_name, index) => {
                             return index >= left && index <= right;
                         });
-                        cmd.setParameter({columnNames: selectedNames});
+                        const copyConfig = {
+                            selectedItems,
+                            columns: selectedNames
+                        }
+                        const cmd = doCut
+                            ? new CutCommand(copyConfig)
+                            : new CopyCommand(copyConfig);
                         const result = cmd.execute();
                         if (doCut && result) {
                             undoStack?.push(cmd);
@@ -135,9 +138,14 @@ export class FocusMode implements CellState {
                 if (e.ctrlKey || e.metaKey) {
                     e.preventDefault();
                     if (selectionModel?.edges != null) {
-                        const cmd = new PasteCommand(items);
                         const {left, top} = selectionModel.edges;
-                        cmd.setParameter({rowIndex: top, colIndex: left, columnNames});
+                        const pasteConfig = {
+                            items,
+                            rowIndex: top,
+                            colIndex: left,
+                            columns: columnNames
+                        }
+                        const cmd = new PasteCommand(pasteConfig);
                         const result = cmd.execute();
                         if (result) {
                             undoStack?.push(cmd);

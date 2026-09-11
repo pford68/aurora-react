@@ -31,7 +31,7 @@ describe("PasteCommand", () => {
         const data = JSON.stringify(subItems);
         sessionStorage.setItem(
             CopyCommand.TOKEN,
-            `{"items": [{ "data": ${data}, "columnNames": ${JSON.stringify(colNames)} }]}`
+            `{ "payload": {"data": ${data}, "columnNames": ${JSON.stringify(colNames)}}}`
         );
     });
 
