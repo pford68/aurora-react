@@ -7,12 +7,11 @@ import {useRef} from "react";
 import Person, {type Measurements} from "../../../tests/models/Person.ts";
 import people from "../../../tests/fixtures/people.json";
 import airlineSafety from "../../../tests/fixtures/airline_safety.json";
-import BaseCommand from "../../commands/BaseCommand.ts";
-import type {ContextMenuParameter, Struct} from "../../types/types.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 import StatefulInput from "../forms/StatefulInput.tsx";
 import {AbstractDTO} from "../../model/dtos.ts";
 import type {RendererProps} from "./Datagrid.types.ts";
+import MenuItem from "../overlays/MenuItem.tsx";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {
@@ -75,30 +74,26 @@ class MeasurementsDTO extends AbstractDTO<number>{
 }
 
 
-class LogCommand extends BaseCommand<ContextMenuParameter>{
-    get icon():IconProp { return "pencil"}
-    get name() { return "Log"}
-    get accelerator() { return "⌘+l"}
-    execute = (): boolean => {
-        console.log("execute", this.getParameters()[0]);
-        console.log("execute: selectedItems", this.getParameters()[0].selectionModel.getSelectedItem());
-        console.log("execute: name", this.getParameters()[0].targetRef.current?.getAttribute("[data-col-name]"));
-        const param = this.getParameters().pop();
-        const {targetRef} = param ?? {};
-        if (targetRef?.current) {
-            console.log("Value: ", targetRef.current.textContent);
+const log = {
+    icon :"pencil",
+    name:"Log",
+    accelerator: "⌘+l",
+    execute: (e: React.MouseEvent) => {
+        if (e.target instanceof HTMLElement) {
+            console.log("Value: ", e.target.textContent);
         }
         return true;
     }
 }
 
 
-class HighlightCommand extends BaseCommand<Struct>{
-    get icon():IconProp { return "bomb"}
-    get name() { return "Self-Destruct"}
-    get accelerator() { return "⌘+h"}
-    execute(): boolean {
+const highlight = {
+    icon: "bomb",
+    name: "Self-Destruct",
+    accelerator: "⌘+h",
+    execute: (e: React.MouseEvent) =>{
         alert("Why would you select a menu item labeled \"self-destruct\"?");
+        console.log(e.target)
         return true;
     }
 }
@@ -110,7 +105,12 @@ const defaultRenderer = (args: PropsAndArgs) => {
         <DataGrid
             {...props}
             contextMenuItems={[
-                new LogCommand(),
+                <MenuItem
+                    icon={log.icon as IconProp}
+                    name={log.name}
+                    accelerator={log.accelerator}
+                    execute={log.execute}
+                />,
             ]}
         >
             <TableColumn
@@ -118,7 +118,12 @@ const defaultRenderer = (args: PropsAndArgs) => {
                 text="First Name"
                 validator={(v:string) => v != "Bob"}
                 contextMenuItems={[
-                    new HighlightCommand()
+                    <MenuItem
+                        icon={highlight.icon as IconProp}
+                        name={highlight.name}
+                        accelerator={highlight.accelerator}
+                        execute={highlight.execute}
+                    />,
                 ]}
             />
             <TableColumn name="lastName" text="Last Name" required />

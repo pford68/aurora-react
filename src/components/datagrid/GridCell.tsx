@@ -315,7 +315,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
             </div>
             {contextMenuItems != null ? (
                 <ContextMenu
-                    commands={contextMenuItems}
+                    items={contextMenuItems}
                     targetRef={ref}
                 />
             ) : ""}

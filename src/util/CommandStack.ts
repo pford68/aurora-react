@@ -1,7 +1,7 @@
-import  type {Command, Struct} from "../types/types";
+import  type {Command} from "../types/types";
 
 export class CommandStack {
-    #data: Command<Struct>[];
+    #data: Command[];
 
     constructor() {
         this.#data = [];
@@ -15,11 +15,11 @@ export class CommandStack {
         this.#data = [];
     }
 
-    push(item: Command<Struct>): void {
+    push(item: Command): void {
         this.#data.push(item);
     }
 
-    pop(): Command<Struct> | undefined {
+    pop(): Command | undefined {
         return this.#data.pop();
     }
 
