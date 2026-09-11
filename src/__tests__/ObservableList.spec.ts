@@ -1,10 +1,10 @@
 import peopleData from "../../tests/fixtures/people.json";
-import Person, {type Measurements} from "../../tests/models/Person";
-import ObservableList, {Record} from "../model/ObservableList.ts";
+import ObservableList, {ListItem} from "../model/ObservableList.ts";
 import type {Struct} from "../types/types";
 import {fail} from "node:assert";
+import Person, {type Measurements} from "../../tests/models/Person.ts";
 
-function testAllKeys(r: Record<Struct>) {
+function testAllKeys(r: ListItem<Struct>) {
     expect(r.get("firstName")).toBe("Adolis");
     expect(r.get("lastName")).toBe("Garcia");
     expect(r.get("age")).toBe(29);
@@ -14,13 +14,15 @@ function testAllKeys(r: Record<Struct>) {
     // @ts-expect-error: m is of type unknown
     expect(m.height).toBe(70);
 }
-describe("Record", () => {
-    let record: Record<Struct>;
+
+
+describe("ListItem", () => {
+    let record: ListItem<Struct>;
     let people: Struct[];
 
     beforeEach(() => {
         people = structuredClone(peopleData);
-        record = new Record(people[5]);
+        record = new ListItem(people[5]);
     });
 
     describe("get", () => {
@@ -45,14 +47,14 @@ describe("Record", () => {
         })
     })
 
-    describe("set", () => {
-        it("should replace the value at the specified key", () => {
-            record.set("firstName", "Fred");
-            expect(record.get("firstName")).toBe("Fred");
-            expect(record.get("lastName")).toBe("Garcia");
-            expect(record.get("age")).toBe(29);
-            expect(record.get("active")).toBe(true);
-            expect(record.get("lastUpdated")).toBe(1704401089);
+    describe("merge", () => {
+        it("should replace the values at the specified keys", () => {
+            const merged = record.merge({firstName: "Fred"});
+            expect(merged.get("firstName")).toBe("Fred");
+            expect(merged.get("lastName")).toBe("Garcia");
+            expect(merged.get("age")).toBe(29);
+            expect(merged.get("active")).toBe(true);
+            expect(merged.get("lastUpdated")).toBe(1704401089);
         });
 
         it("should be extensible to know how to save changes to complex properties", () => {
@@ -63,31 +65,29 @@ describe("Record", () => {
     });
 
     describe("clone", () => {
-        it("should create a new Record with all data from the cloned Record", () => {
+        it("should create a new item with all data from the cloned item", () => {
             const clone = record.clone();
             testAllKeys(clone);
         });
 
-        it("should create a new id for the new Record", () => {
+        it("should copy the id from the original item", () => {
             const clone = record.clone();
-            expect(clone.id).not.toEqual(record.id);
+            expect(clone.id).toEqual(record.id);
         })
     });
 
-    describe("copy", () => {
-        it("should copy all data from the specified Record", () => {
-            const newRecord = new Record<Struct>(people[1]);
-            newRecord.copy(record);
+    describe("from", () => {
+        it("should copy all data from the specified ListItem", () => {
+            const newRecord = ListItem.from(record);
             testAllKeys(newRecord);
         });
 
-        it("should augment this Record", () => {
-            const newRecord = new Record<Struct>({
+        it("should augment the original record", () => {
+            const newRecord = ListItem.from(record, {
                 country: "US",
                 HR: "a lot",
                 state: "Texas",
             });
-            newRecord.copy(record)
             expect(newRecord.get("state")).toBe("Texas");
             expect(newRecord.get("HR")).toBe("a lot");
             expect(newRecord.get("country")).toBe("US");
@@ -135,16 +135,16 @@ describe("ObservableList", () => {
 
     beforeEach(() => {
         people = structuredClone(peopleData);
-        list = new ObservableList((people.map(person => new Person(person))));
+        list = new ObservableList(people);
     });
 
     describe("get", () => {
-        it("should get the Record at the specified index", () => {
+        it("should get the item at the specified index", () => {
             const record = list.get(5);
-            expect(record instanceof Record).toBeTruthy();
+            expect(record instanceof ListItem).toBeTruthy();
         });
 
-        it("should get the Record at the specified index", () => {
+        it("should get the item at the specified index", () => {
             const record = list.get(5);
             expect(record).toBeDefined();
             if (record != null) {
@@ -169,12 +169,13 @@ describe("ObservableList", () => {
     })
 
     describe("insertAt", () => {
-        it("should take an updated record and insert it at the specified index", () => {
+        it("should take an updated list item and insert it at the specified index", () => {
             const record = list.get(2);
             if (record != null) {
-                record.set("firstName", "Jack");
-                list.insertAt(2, record);
-                expect(record.get("firstName")).toBe("Jack");
+                const newRecord = record.merge({firstName: "Jack"});
+                list.insertAt(2, newRecord.getAll());
+                const updatedRecord = list.get(2);
+                expect(updatedRecord?.get("firstName")).toBe("Jack");
             } else {
                 fail("The record should have been found.")
             }
@@ -182,14 +183,12 @@ describe("ObservableList", () => {
     });
 
     describe("batchUpdate", () => {
-        it("should take a list of  updated records and insert each at the specified index", () => {
+        it("should take a list of  updated list items and insert each at the specified index", () => {
             const [first, second] = list.slice(2, 4);
             if (first != null && second != null) {
-                first.set("firstName", "Jack");
-                second.set("firstName", "aaaak");
                 const updates = [
-                    {index: 2, record: first},
-                    {index: 3, record: second},
+                    {index: 2, record: first.merge({firstName: "Jack"})},
+                    {index: 3, record: second.merge({firstName: "aaaak"})},
                 ]
                 list.batchUpdate(updates);
                 expect(list?.get(2)?.get("firstName")).toBe("Jack");
@@ -201,7 +200,7 @@ describe("ObservableList", () => {
     });
 
     describe("find", () => {
-        it("should return the first Record that matches the criteria", () => {
+        it("should return the first item that matches the criteria", () => {
             let record = list
                 .find((item) => item.get("firstName") == "Adolis");
             expect(record).toBeDefined();
@@ -215,7 +214,7 @@ describe("ObservableList", () => {
     });
 
     describe("findIndex", () => {
-        it("should return the index first Record that matches the criteria", () => {
+        it("should return the index first item that matches the criteria", () => {
             let index = list
                 .findIndex((item) => item.get("firstName") == "Adolis");
             expect(index).toBe(5);
@@ -254,7 +253,7 @@ describe("ObservableList", () => {
     });
 
     describe("slice", () => {
-        it("should return the Records between the specified indices exclusive", () => {
+        it("should return the list items between the specified indices exclusive", () => {
             const records = list.slice(1,4);
             expect(records.length).toBe(3);
         });

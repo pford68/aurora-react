@@ -1,29 +1,57 @@
 import {Emitter} from "./Observable.ts";
-import type {BiFunction, Predicate, Struct} from "../types/types.ts";
+import type {BiFunction, Predicate} from "../types/types.ts";
 import {v4 as uuid} from "uuid";
 
+type Identifiable = {
+    id: string
+}
+
+type ItemState = Identifiable & {
+    deleted: boolean,
+}
 
 /**
- * The base class for data rows in the table model.
+ * Allows associating metadata with data, without enriching/altering the data.
  *
+ * <p>This class exists to associated metadata with list items:
+ * missing IDs, status (e.g., deleted), etc.  Otherwise, it would
+ * not be necessary. </p>
+ *
+ * @param {T} data The object to wrap.
  * @typeParam T The type of data contained in the Record
  */
-export class Record<T extends Struct = Struct> {
+export class ListItem<T> {
     #data: T;
     /** Whether the record has been marked for deletion */
     #deleted: boolean = false;
     readonly #id: string;
 
-    constructor(data: T) {
-        this.#data = data;
-        this.#id = uuid();
+    /**
+     * Creates a new copy of the specified item, only with modifications to the copy.
+     * @param original
+     * @param updates
+     */
+    static from<T, U extends ListItem<T>>(original: ListItem<T>, updates?: T): U {
+        const data = {...original.getAll(), ...(updates ?? {})};
+        const Constructor = original.constructor  as new (data: T, state?: ItemState) => U;
+        return new Constructor(data);
+    }
+
+    /**
+     *
+     * @param {T} data The data contained in the ListItem
+     */
+    constructor(data: T | ListItem<T>) {
+        this.#data = data instanceof ListItem ? data.getAll() : data;
+        this.#deleted = (data as ItemState).deleted === true;
+        this.#id = (data as Identifiable).id ?? uuid();
     }
 
     getAll(): T {
         return this.#data;
     }
 
-    get(key: string): unknown {
+    get(key: keyof T): unknown {
         return this.#data[key];
     }
 
@@ -34,15 +62,6 @@ export class Record<T extends Struct = Struct> {
 
 
     /**
-     * Sets a new value at the specified key, which does not need to exist beforehand.
-     * @param key
-     * @param value
-     */
-    set(key: string, value: unknown): void {
-        this.#data = {...this.#data,  [key]: value};
-    }
-
-    /**
      * @returns {boolean} Whether the record has been marked for deletion.
      */
     get deleted(): boolean {
@@ -51,44 +70,95 @@ export class Record<T extends Struct = Struct> {
 
     /**
      * If the value is true, it Marks the record for deletion.
-     * @param value {boolean} Whether to mark the record for the deletion
+     * @param {boolean} value  Whether to mark the record for the deletion
      */
     set deleted(value: boolean) {
         this.#deleted = value;
     }
 
-    update(partial: T): void {
-        this.#data = {...this.#data, ...partial};
+    get state(): ItemState {
+        return {id: this.id, deleted: this.deleted};
     }
 
     toString(): string {
         return JSON.stringify(this.#data);
     }
 
-    clone(): Record<T> {
-        return new Record(structuredClone(this.getAll()));
+
+    /**
+     * Makes a deep copy of this instance.
+     */
+    clone(): this {
+        let clonedData: T;
+
+        if (this.#isClonable(this.#data)) {
+            clonedData = this.#data.clone();
+        } else if (Object.isFrozen(this.#data) || Object.isSealed(this.#data)) {
+            // If the object is frozen, a swallow or deep object spread creates a safe, mutable copy
+            clonedData = { ...this.#data, ...this.state};
+        } else if (Object.getPrototypeOf(this.#data) === Object.prototype) {
+            // If the data is a struct, perform a deep copy
+            clonedData = structuredClone({...this.#data, ...this.state});
+        } else {
+            // Custom class fallback
+            const instance = this.#data as {constructor: new (args: Partial<T>) => T};
+            const Constructor = instance.constructor;
+            clonedData = new Constructor({...this.#data, ...this.state});
+        }
+
+        return this.create(clonedData);
     }
 
-    copy(that: Record<T>): void {
-        this.update(that.getAll());
+    /**
+     * Merges new data with this instance's data and returns a new instance.
+     * @param data
+     * @returns ListItem A new instance with the merged data.
+     */
+    merge(data: Partial<T>): this {
+        return this.create({...this.getAll(), ...data, ...this.state});
+    }
+
+
+    /**
+     * A convenience method for creating new instances in a way that works with subclasses.
+     * @param data
+     * @param {ItemState} [state]
+     * @protected
+     */
+    protected create(data: T): this {
+        const Constructor = this.constructor  as new (data: T) => this;
+        return new Constructor(data);
+    }
+
+    /**
+     * Structural type guard for custom cloning
+     */
+    #isClonable(value: unknown): value is { clone(): T } {
+        return (
+            typeof value === 'object' &&
+            value !== null &&
+            'clone' in value &&
+            typeof (value as Record<string, unknown>).clone === 'function'
+        );
     }
 }
 
 
 export type ListChangeType = "added" | "modified" | "deleted";
-export type ListChange<T extends Struct> = {
+export type ListChange<T> = {
     index: number,
     type: ListChangeType,
-    record?: Record<T>,
+    record?: ListItem<T>,
 }
-export type ListItemUpdate<T extends Struct> = {
+export type ListItemUpdate<T> = {
     index: number,
-    record: Record<T>,
+    record: ListItem<T>,
 }
-export type PartialUpdate<T extends Struct> = {
-    value: T,
-    record?: Record<T>,
-    previous?: Record<T>,
+export type PartialUpdate<T> = {
+    index: number,
+    value: Partial<T>,
+    record?: ListItem<T>,
+    previous?: ListItem<T>,
 }
 
 
@@ -97,12 +167,12 @@ export type PartialUpdate<T extends Struct> = {
  *
  * @typeParam T The type of data contained in each Record in the list
  */
-export default class ObservableList<T extends Struct> extends Emitter<ListChange<Struct>[]> {
-    #data: Record<T>[];
+export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
+    #data: ListItem<T>[];
 
-    constructor(data: Record<T>[]) {
+    constructor(data: T[]) {
         super();
-        this.#data = data;
+        this.#data = data.map(item => new ListItem(item));
     }
 
     get length(): number {
@@ -111,49 +181,42 @@ export default class ObservableList<T extends Struct> extends Emitter<ListChange
             .length;
     }
 
-    get(index: number): Record<T> | undefined {
+    get(index: number): ListItem<T> | undefined {
         return this.#data[index];
     }
 
-    add(record: Record<T>): void {
-        this.#data[this.#data.length] = record;
+    add(record: T): void {
+        this.#data[this.#data.length] = new ListItem(record);
     }
 
-    slice(startIndex: number, endIndex?: number): Record<T>[] {
+    slice(startIndex: number, endIndex?: number): ListItem<T>[] {
         return this.#data.slice(startIndex, endIndex);
     }
 
-    getAll(): Record<T>[] {
+    getAll(): ListItem<T>[] {
         return this.filter(record => !record.deleted);
     }
 
     /**
-     * Inserts/replaces the specified Record at the specified index.  The Record can be
-     * an updated version of the original.  Use this when you have an Record and want to
-     * re-insert it to notify listeners that the list has been updated.
+     * Replaces/inserts the specified Record at the specified index.  IF an item exists
+     * at the specified index, it is replaced.  To insert an item in the list without
+     * replacing the existing item (shifting subsequent items down), use insertBefore().
      *
      * @param index The index at which to insert the Record.
-     * @param record The Record to insert
+     * @param data The data to insert
      */
-    insertAt(index: number, record: Record<T>): boolean {
+    insertAt(index: number, data: T | ListItem<T>): boolean {
+        let record;
+        if (data instanceof ListItem) {
+            record = new ListItem(data);
+        } else {
+            record = new ListItem<T>(data);
+        }
         this.#data[index] = record;
         this.emit("dataChanged", [{type: "modified", index, record}]);
         return true;
     }
 
-    /**
-     * Updates the record at the specified index.  Use this when you have
-     * data to mix in, but don't have the Record itself.
-     *
-     * @param index
-     * @param data
-     */
-    updateAt(index: number, data: T): boolean {
-        const record = this.#data[index];
-        record.update(data)
-        this.emit("dataChanged", [{type: "modified", index, record}]);
-        return true;
-    }
 
     /**
      * Update multiple records at once.
@@ -186,27 +249,27 @@ export default class ObservableList<T extends Struct> extends Emitter<ListChange
         return false;
     }
 
-    insertBefore(index: number, record: Record<T>): void {
+    insertBefore(index: number, data: T): void {
         this.#data = [
             ...this.#data.slice(0, index),
-            record,
+            new ListItem(data),
             ...this.#data.slice(index)
         ];
     }
 
-    sort(comparator: BiFunction<Record<T>, Record<T>, number>): void {
+    sort(comparator: BiFunction<ListItem<T>, ListItem<T>, number>): void {
         this.#data.sort(comparator);
     }
 
-    find(criteria: Predicate<Record<T>>): Record<T> | undefined {
+    find(criteria: Predicate<ListItem<T>>): ListItem<T> | undefined {
         return this.#data.find(criteria);
     }
 
-    findIndex(criteria: Predicate<Record<T>>): number | undefined {
+    findIndex(criteria: Predicate<ListItem<T>>): number | undefined {
         return this.#data.findIndex(criteria);
     }
 
-    filter(criteria: Predicate<Record<T>>): Record<T>[] {
+    filter(criteria: Predicate<ListItem<T>>): ListItem<T>[] {
         return this.#data.filter(criteria);
     }
 }

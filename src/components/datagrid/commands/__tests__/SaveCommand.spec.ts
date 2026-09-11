@@ -1,24 +1,24 @@
 import SaveCommand from '../SaveCommand.ts';
 import people from "../../../../../tests/fixtures/people.json";
-import Person from "../../../../../tests/models/Person.ts";
-import ObservableList, {Record} from "../../../../model/ObservableList.ts";
+import ObservableList, {ListItem} from "../../../../model/ObservableList.ts";
 import type {Struct} from "../../../../types/types.ts";
 
 
 describe('SaveCommand', () => {
     let list:ObservableList<Struct>;
-    const index = 1;
+    const TEST_RECORD_INDEX = 1;
 
     function getUpdates(name :string = "Bob") {
-        const record = list.get(index)
+        const record = list.get(TEST_RECORD_INDEX)
         return [{
+            index: TEST_RECORD_INDEX,
             record,
             value: {firstName: name},
         }];
     }
 
     beforeEach(() => {
-        list = new ObservableList(people.map(person => new Person(person)));
+        list = new ObservableList<Struct>(people);
     })
 
     it('should update an ObservableList', () => {
@@ -38,26 +38,35 @@ describe('SaveCommand', () => {
 
     it('should still undo an update to an ObservableList after sorting', () => {
         const updates = getUpdates();
-        const id = list.get(index)?.id;
+        const id = list.get(TEST_RECORD_INDEX)?.id;
         const cmd = new SaveCommand(list, updates);
         cmd.execute();
         list.sort((a, b) => Number(a.get("age")) - Number(b.get("age")));
         cmd.undo();
-        const record = list.find((r: Record<Struct>) => r.id === id);
-        expect(list.findIndex((r: Record<Struct>) => r.id === id)).not.toBe(1);
+        const record = list.find((r: ListItem<Struct>) => r.id == id);
+        expect(list.findIndex((r: ListItem<Struct>) => r.id == id)).not.toBe(TEST_RECORD_INDEX);
         expect(record?.get("firstName")).toBe("John")
     });
 
     it('should redo an update to an ObservableList', () => {
         const updates = getUpdates("Bill");
         const cmd = new SaveCommand(list, updates);
-        const id = list.get(1)?.id;
+        cmd.execute();
+        cmd.undo();
+        cmd.redo();
+        expect(list.get(1)?.get("firstName")).toBe("Bill")
+    });
+
+    it('should redo an update to an ObservableList after sorting', () => {
+        const updates = getUpdates("Bill");
+        const id = list.get(TEST_RECORD_INDEX)?.id;
+        const cmd = new SaveCommand(list, updates);
         cmd.execute();
         list.sort((a, b) => Number(a.get("age")) - Number(b.get("age")));
         cmd.undo();
         cmd.redo();
-        const record = list.find((r: Record<Struct>) => r.id === id);
-        expect(list.findIndex((r: Record<Struct>) => r.id === id)).not.toBe(1);
+        const record = list.find((r: ListItem<Struct>) => r.id == id);
+        expect(list.findIndex((r: ListItem<Struct>) => r.id == id)).not.toBe(TEST_RECORD_INDEX);
         expect(record?.get("firstName")).toBe("Bill")
     });
 });

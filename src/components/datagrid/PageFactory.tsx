@@ -1,5 +1,5 @@
 import {type ReactElement, type RefObject, useEffect, useRef, useState, useContext} from "react";
-import {Record} from "../../model/ObservableList.ts";
+import {ListItem} from "../../model/ObservableList.ts";
 import type {Coordinates, Struct} from "../../types/types";
 import styles from "./DataGrid.module.css";
 import {Emitter, type Observable} from "../../model/Observable.ts";
@@ -12,13 +12,13 @@ type IntersectionResult = {
 };
 
 type PageFactoryProps<T extends Struct> = {
-    data: Record<T>[],
+    data: ListItem<T>[],
     pageSize: number,
     rowHeight: number,
     root?: RefObject<HTMLElement | undefined | null>,
     offset?: number,
     threshold?: number | number[],
-    rowFactory: (row: Record<T>, rowIndex: number) => ReactElement,
+    rowFactory: (row: ListItem<T>, rowIndex: number) => ReactElement,
 };
 
 /**
@@ -72,13 +72,13 @@ export default function PageFactory<T extends Struct>(props: PageFactoryProps<T>
 
 
 type PageProps<T extends Struct> = {
-    rows: Record<T>[],
+    rows: ListItem<T>[],
     rowHeight: number,
     pageSize: number,
     observer: IntersectionObserver,
     emitter: RefObject<Observable<IntersectionResult>>,
     pageIndex: number,
-    rowFactory: (row: Record<T>, rowIndex: number) => ReactElement,
+    rowFactory: (row: ListItem<T>, rowIndex: number) => ReactElement,
 };
 
 /**

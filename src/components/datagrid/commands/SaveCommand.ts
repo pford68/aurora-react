@@ -11,7 +11,6 @@ export default class SaveCommand<T extends Struct> implements Command {
     static readonly name: string = "Save";
     static readonly accelerator: string = "⌘+s";
     #updates: PartialUpdate<T>[];
-    // @ts-expect-error
     #list: ObservableList<T>; // TODO:  Will be needed in CORE-11.
 
 
@@ -27,9 +26,12 @@ export default class SaveCommand<T extends Struct> implements Command {
 
     undo(): boolean {
         this.#updates
-            .forEach(({record, previous}) => {
+            .forEach(({previous}) => {
                 if (previous != null) {
-                    record?.copy(previous);
+                    const currentIndex = this.#list.findIndex(item => item.id == previous.id);
+                    if (currentIndex != null && currentIndex > -1) {
+                        this.#list.insertAt(currentIndex, previous.getAll());
+                    }
                 }
             });
 
@@ -45,10 +47,10 @@ export default class SaveCommand<T extends Struct> implements Command {
 
         updates.forEach(({ record, value }) => {
             if (!record) return;
-            (Object.keys(value) as Array<keyof typeof value>).forEach(key => {
-                // TODO: List items will be immutable in CORE-11.
-                record.set(String(key), value[key]);
-            });
+            const currentIndex = this.#list.findIndex(item => item.id == record.id);
+            if (currentIndex != null && currentIndex > -1) {
+                this.#list.insertAt(currentIndex, record.merge(value));
+            }
         });
 
         return true;
