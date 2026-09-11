@@ -6,7 +6,7 @@ import {
     type DragEvent,
     useCallback,
 } from "react";
-import type {BiFunction, Command, Struct} from "../../types/types";
+import type {BiFunction, Struct} from "../../types/types";
 import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext";
 import type {DataTypes} from "../../types/types";
@@ -83,7 +83,7 @@ export type TableColumnProps<V = unknown> = Configuration<{
     cellFactory?: (props: TableColumnProps<V>, index: number, rowIndex: number, row: Record) => ReactElement,
     validator?: (value: string) => boolean,
     required?: boolean,
-    contextMenuItems?: Command[],
+    contextMenuItems?: ReactElement[],
     locale?: Intl.LocalesArgument,
     format?: string,
     editable?: boolean,

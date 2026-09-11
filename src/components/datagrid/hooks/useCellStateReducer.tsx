@@ -1,5 +1,5 @@
 import {type Dispatch, type RefObject, useContext, useReducer} from "react";
-import SaveCommand from "../../../commands/SaveCommand.ts";
+import SaveCommand from "../commands/SaveCommand.ts";
 import {GridContext} from "../GridContext.ts";
 import type {DTO} from "../../../model/dtos.ts";
 
@@ -68,8 +68,9 @@ export default function useCellStateReducer(props: useReducerProps): [CellFactor
                 if (items != null && (value != null || nullable)) {
                     const updatedValue = String(value).trim().length > 0 ? value : null;
                     const newDto = dto?.clone(updatedValue);
-                    const cmd = new SaveCommand(items);
-                    cmd.setParameter({index: rowIndex, value: {[String(name)]: newDto?.valueOf()}})
+                    const record = items.get(rowIndex);
+                    const update = {record, value: {[String(name)]: newDto?.valueOf()}};
+                    const cmd = new SaveCommand(items, [update]);
                     cmd.execute();
                     redoStack?.clear();
                     undoStack?.push(cmd);

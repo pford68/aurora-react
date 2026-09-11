@@ -1,4 +1,4 @@
-import type {ReactNode, RefObject} from "react";
+import type {RefObject} from "react";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 import ObservableList, {Record} from "../model/ObservableList.ts";
 
@@ -23,16 +23,15 @@ export type DataTypes =
     | "map"
     | "enum";
 
-export interface Command<T extends Struct = Struct> {
+export interface Command {
     execute(): boolean;
     undo(): boolean,
     redo(): boolean,
-    setParameter(param: T): void;
-    getParameters(): T[];
-    icon?: IconProp,
     name?: string,
-    accelerator?: ReactNode,
+    readonly icon?: IconProp,
+    readonly accelerator?: string,
 }
+
 
 interface ISelectionModel {
     getSelectedItem(): Record<Struct>,

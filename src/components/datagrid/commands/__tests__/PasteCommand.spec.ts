@@ -1,13 +1,21 @@
-import people from "../../../tests/fixtures/people.json";
-import Person from "../../../tests/models/Person.ts";
-import type {Struct} from "../../types/types.ts";
+import people from "../../../../../tests/fixtures/people.json";
+import Person from "../../../../../tests/models/Person.ts";
+import type {Struct} from "../../../../types/types.ts";
 import PasteCommand from "../PasteCommand.ts";
 import CopyCommand from "../CopyCommand.ts";
-import ObservableList from "../../model/ObservableList.ts";
+import ObservableList from "../../../../model/ObservableList.ts";
 
 describe("PasteCommand", () => {
     let list:ObservableList<Struct>;
     let colNames: string[];
+
+    const config = () => {
+        return {
+            rowIndex: 0,
+            colIndex: 1,
+            items: list,
+            columns: Object.keys(people[0])};
+    }
 
     beforeEach(() => {
         list = new ObservableList<Struct>(people.map(person => new Person(person)));
@@ -23,13 +31,12 @@ describe("PasteCommand", () => {
         const data = JSON.stringify(subItems);
         sessionStorage.setItem(
             CopyCommand.TOKEN,
-            `{"items": [{ "data": ${data}, "columnNames": ${JSON.stringify(colNames)} }]}`
+            `{ "payload": {"data": ${data}, "columnNames": ${JSON.stringify(colNames)}}}`
         );
     });
 
     it("should update the selected records", () => {
-        const cmd = new PasteCommand(list);
-        cmd.setParameter({rowIndex: 0, colIndex: 1, columnNames: Object.keys(people[0])});
+        const cmd = new PasteCommand(config());
         cmd.execute();
         let record = list.get(0);
         expect(record?.get("lastName")).toBe(false);
@@ -43,8 +50,7 @@ describe("PasteCommand", () => {
     });
 
     it("should not update the unselected records", () => {
-        const cmd = new PasteCommand(list);
-        cmd.setParameter({rowIndex: 0, colIndex: 1, columnNames: Object.keys(people[0])});
+        const cmd = new PasteCommand(config());
         cmd.execute();
         const record = list.get(2);
         expect(record?.get("lastName")).toBe("Seager");
@@ -53,8 +59,7 @@ describe("PasteCommand", () => {
     });
 
     it("should not update unselected columns in selected records", () => {
-        const cmd = new PasteCommand(list);
-        cmd.setParameter({rowIndex: 0, colIndex: 1, columnNames: Object.keys(people[0])});
+        const cmd = new PasteCommand(config());
         cmd.execute();
         const record = list.get(0);
         expect(record?.get("firstName")).toBe("Philip");

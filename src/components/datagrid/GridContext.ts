@@ -2,7 +2,7 @@ import {createContext, type Dispatch, type ReactElement, type RefObject} from "r
 import FocusModel from "./FocusModel";
 import SelectionModel from "./SelectionModel";
 import ObservableList from "../../model/ObservableList.ts";
-import type {Command, Struct} from "../../types/types";
+import type {Struct} from "../../types/types";
 import type {GridAction} from "./DataGrid";
 import {CommandStack} from "./../../util/CommandStack";
 import type {TableColumnProps} from "./TableColumn.tsx";
@@ -25,7 +25,7 @@ export type GridContextType = {
     undoStack?: CommandStack,
     redoStack?: CommandStack,
     gridRef?: RefObject<HTMLDivElement | null>,
-    contextMenuItems?: Command<Struct>[],
+    contextMenuItems?: ReactElement[],
 }
 export const initialGridContext: GridContextType = {
     columns: [],

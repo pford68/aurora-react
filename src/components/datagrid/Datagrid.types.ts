@@ -1,5 +1,5 @@
-import type {ComponentPropsWithoutRef, RefObject} from "react";
-import type {Command, Predicate, Struct} from "../../types/types.ts";
+import type {ComponentPropsWithoutRef, ReactElement, RefObject} from "react";
+import type {Predicate, Struct} from "../../types/types.ts";
 import type {Record} from "../../model/ObservableList.ts";
 import type {DTO, DTOprops} from "../../model/dtos.ts";
 
@@ -46,7 +46,7 @@ export type RendererProps<T = string | number | boolean, U extends Struct = Stru
     /** Whether text should wrap. */
     wrap?: boolean,
     /** Commands for the column's context menu. */
-    contextMenuItems?: Command[],
+    contextMenuItems?: ReactElement[],
     /**
      * Items for the column's DataLists.
      * Turns the cells in the column into autocomplete fields.

@@ -86,7 +86,6 @@ export type ListItemUpdate<T extends Struct> = {
     record: Record<T>,
 }
 export type PartialUpdate<T extends Struct> = {
-    index: number,
     value: T,
     record?: Record<T>,
     previous?: Record<T>,
