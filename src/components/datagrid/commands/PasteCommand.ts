@@ -56,10 +56,7 @@ export default class PasteCommand<T extends Struct> implements Command {
 
         const startRowIndex = this.#rowIndex;
         const startColumnIndex = this.#colIndex;
-        console.log(clipboardItems)
         const parsedItems = JSON.parse(clipboardItems);
-       // const update = updates.items.pop();
-        //if (update == null) return false;
 
         const {data, columnNames} = parsedItems.payload;
         data.forEach((item:T, index: number) => {
