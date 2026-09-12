@@ -1,5 +1,4 @@
 import people from "../../../../../tests/fixtures/people.json";
-import Person from "../../../../../tests/models/Person.ts";
 import type {Struct} from "../../../../types/types.ts";
 import PasteCommand from "../PasteCommand.ts";
 import CopyCommand from "../CopyCommand.ts";
@@ -18,7 +17,7 @@ describe("PasteCommand", () => {
     }
 
     beforeEach(() => {
-        list = new ObservableList<Struct>(people.map(person => new Person(person)));
+        list = new ObservableList<Struct>(people);
         const items = people.slice(4);
         const subItems = items.map(item => {
             return {
@@ -65,5 +64,40 @@ describe("PasteCommand", () => {
         expect(record?.get("firstName")).toBe("Philip");
         expect(record?.get("active")).toBe(true);
         expect(record?.get("age")).toBe(29);
+    });
+
+    it("should successfully undo paste operations", () => {
+        const cmd = new PasteCommand(config());
+        cmd.execute();
+        cmd.undo();
+        let record = list.get(0);
+        expect(record?.get("lastName")).toBe("Ford");
+        expect(record?.get("amount")).toBe(77.21);
+        expect(record?.get("lastUpdated")).toBe(1704401089);
+
+        record = list.get(1);
+        expect(record?.get("lastName")).toBe("Smith");
+        expect(record?.get("amount")).toBe(33.33);
+        expect(record?.get("lastUpdated")).toBe(1704401089);
+    });
+
+    it("should successfully undo paste operations even after sorting", () => {
+        const cmd = new PasteCommand(config());
+        const origialRecords = list.slice(0,2);
+        cmd.execute();
+        list.sort((a, b) => Number(a.get("age")) - Number(b.get("age")));
+        cmd.undo();
+
+        let currentIndex = list.findIndex(i => i.id == origialRecords[0].id);
+        let record = currentIndex != null ? list.get(currentIndex) : null
+        expect(record?.get("lastName")).toBe("Ford");
+        expect(record?.get("amount")).toBe(77.21);
+        expect(record?.get("lastUpdated")).toBe(1704401089);
+
+        currentIndex = list.findIndex(i => i.id == origialRecords[1].id);
+        record = currentIndex ? list.get(currentIndex) : null;
+        expect(record?.get("lastName")).toBe("Smith");
+        expect(record?.get("amount")).toBe(33.33);
+        expect(record?.get("lastUpdated")).toBe(1704401089);
     });
 })

@@ -1,6 +1,6 @@
 import type {Command, Struct} from "../../../types/types.ts";
 import CopyCommand, {type Clipboard} from "./CopyCommand.ts";
-import ObservableList, {Record} from "../../../model/ObservableList.ts";
+import ObservableList, {ListItem} from "../../../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 type PasteConfig<T extends Struct> = {
@@ -16,7 +16,7 @@ export default class PasteCommand<T extends Struct> implements Command {
     static readonly icon: IconProp = "paste";
     static readonly name: string = "Paste";
     static readonly accelerator: string = "⌘+v";
-    readonly #previous: {id: string, clone: Record<T>}[];
+    readonly #previous: ListItem<T>[];
     readonly #clipboard: Clipboard = sessionStorage;
     #rowIndex: number;
     #colIndex: number;
@@ -39,8 +39,10 @@ export default class PasteCommand<T extends Struct> implements Command {
 
     undo(): boolean {
         this.#previous.forEach((prevRecord) => {
-            const record = this.#items.find(record => record.id === prevRecord.id);
-            record?.copy(prevRecord.clone);
+            const currentIndex = this.#items.findIndex(record => record.id === prevRecord.id);
+            if (currentIndex != undefined && currentIndex !== -1) {
+                this.#items.insertAt(currentIndex, prevRecord.clone());
+            }
         });
 
         return true;
@@ -59,19 +61,23 @@ export default class PasteCommand<T extends Struct> implements Command {
         const parsedItems = JSON.parse(clipboardItems);
 
         const {data, columnNames} = parsedItems.payload;
-        data.forEach((item:T, index: number) => {
+        data.forEach((item: T, index: number) => {
             const recordIndex = startRowIndex + index;
             const record = this.#items.get(recordIndex);
-            if (doClone && record != null) this.#previous.push({id: record.id, clone: record.clone()});
+            if (record != null) {
+                if (doClone) this.#previous.push(record.clone());
 
-           let currentColIndex = startColumnIndex;
-           columnNames.forEach((copiedCol: string) => {
-               const destName = this.#columns[currentColIndex];
-               if (destName != null) {
-                    record?.set(destName, item[copiedCol]);
-               }
-               currentColIndex++;
-            });
+                let currentColIndex = startColumnIndex;
+                const updates: Record<string, unknown> = {};
+                columnNames.forEach((copiedCol: string) => {
+                    const destName = this.#columns[currentColIndex];
+                    if (destName != null) {
+                        updates[destName] = item[copiedCol];
+                    }
+                    currentColIndex++;
+                });
+                this.#items.insertAt(recordIndex, record.merge(updates as Partial<T>));
+            }
         });
         return true;
     }
