@@ -17,7 +17,7 @@ import {joinCss} from "./../../util/utils";
 import Pin from "./headers/Pin";
 import type {Configuration, RendererProps} from "./Datagrid.types.ts";
 import type {Newable} from "./typeInference.ts";
-import type {Record} from "../../model/ObservableList.ts";
+import type {ListItem} from "../../model/ObservableList.ts";
 
 /**
  * Extends ColumnConfigurableProps so that the GridCell can be configured from the TableColumn.
@@ -80,7 +80,7 @@ export type TableColumnProps<V = unknown> = Configuration<{
     title?: string,
     wrap?: boolean,
     width?: number,
-    cellFactory?: (props: TableColumnProps<V>, index: number, rowIndex: number, row: Record) => ReactElement,
+    cellFactory?: (props: TableColumnProps<V>, index: number, rowIndex: number, row: ListItem<V>) => ReactElement,
     validator?: (value: string) => boolean,
     required?: boolean,
     contextMenuItems?: ReactElement[],

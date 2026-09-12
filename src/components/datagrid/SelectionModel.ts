@@ -1,6 +1,6 @@
 import {Emitter} from "../../model/Observable.ts";
 import type {Coordinates, Struct} from "../../types/types";
-import ObservableList, {type Record} from "../../model/ObservableList.ts";
+import ObservableList, {type ListItem} from "../../model/ObservableList.ts";
 import {drawBox} from "./../../util/utils";
 
 export type SelectionChange = {
@@ -69,7 +69,7 @@ export default class SelectionModel extends Emitter<SelectionChange>{
     /**
      * Returns the data row associated with selected rowIndex.
      */
-    getSelectedItem(): Record<Struct> | undefined {
+    getSelectedItem(): ListItem<Struct> | undefined {
         const {rowIndex} = this.#selected[0];
         return this.#items.get(rowIndex);
     }
@@ -77,7 +77,7 @@ export default class SelectionModel extends Emitter<SelectionChange>{
     /**
      * Returns the data rows between the two selected row indices. (inclusive)
      */
-    getSelectedItems(): Record<Struct>[] {
+    getSelectedItems(): ListItem<Struct>[] {
         const edges = this.edges;
         if (edges == null) return [];
         const {top, bottom} = edges;

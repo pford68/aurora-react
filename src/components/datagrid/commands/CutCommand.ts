@@ -1,6 +1,6 @@
 import CopyCommand, {type CopyConfig} from "./CopyCommand.ts";
 import type {Struct} from "../../../types/types.ts";
-import ObservableList, {ListItem} from "../../../model/ObservableList.ts";
+import ObservableList, {type Entry} from "../../../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 
@@ -9,7 +9,7 @@ export default class CutCommand<T extends Struct> extends CopyCommand<T> {
     static readonly icon: IconProp = "cut";
     static readonly name: string = "Cut";
     static readonly accelerator: string = "⌘+x";
-    readonly #previous: ListItem<T>[];
+    readonly #previous: Entry<T>[];
     #list: ObservableList<T>;
 
     constructor(config: CopyConfig<T>, list: ObservableList<T>) {
@@ -25,10 +25,7 @@ export default class CutCommand<T extends Struct> extends CopyCommand<T> {
 
     undo(): boolean {
         this.#previous.forEach((prevRecord) => {
-            const currentIndex = this.#list.findIndex(item => item.id == prevRecord.id);
-            if (currentIndex != null && currentIndex > -1) {
-                this.#list.insertAt(currentIndex, prevRecord.clone());
-            }
+            this.#list.update(prevRecord, prevRecord.clone());
         });
 
         return true;
@@ -47,8 +44,7 @@ export default class CutCommand<T extends Struct> extends CopyCommand<T> {
             this.columns.forEach(name => {
                 nulls[name] = null;
             });
-            const currentIndex = this.selectedItems.findIndex(record => record.id == item.id);
-            this.#list.insertAt(currentIndex, item.merge(nulls as Partial<T>));
+            this.#list.update(item, item.merge(nulls as Partial<T>));
         });
 
         return true;

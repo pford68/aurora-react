@@ -6,8 +6,18 @@ type Identifiable = {
     id: string
 }
 
-type ItemState = Identifiable & {
+type Metadata = Identifiable & {
     deleted: boolean,
+}
+
+export interface Cloneable {
+    clone(): Cloneable;
+}
+
+export type Entry<T> = Cloneable & Metadata & {
+    get: (key: keyof T) => unknown,
+    getAll: () => T,
+    merge: (data: Partial<T>) => Entry<T>,
 }
 
 /**
@@ -33,17 +43,17 @@ export class ListItem<T> {
      */
     static from<T, U extends ListItem<T>>(original: ListItem<T>, updates?: T): U {
         const data = {...original.getAll(), ...(updates ?? {})};
-        const Constructor = original.constructor  as new (data: T, state?: ItemState) => U;
+        const Constructor = original.constructor  as new (data: T, state?: Metadata) => U;
         return new Constructor(data);
     }
 
     /**
      *
-     * @param {T} data The data contained in the ListItem
+     * @param {T | Entry<T>} data The data contained in the ListItem
      */
-    constructor(data: T | ListItem<T>) {
+    constructor(data: T | Entry<T>) {
         this.#data = data instanceof ListItem ? data.getAll() : data;
-        this.#deleted = (data as ItemState).deleted === true;
+        this.#deleted = (data as Metadata).deleted === true;
         this.#id = (data as Identifiable).id ?? uuid();
     }
 
@@ -76,7 +86,7 @@ export class ListItem<T> {
         this.#deleted = value;
     }
 
-    get state(): ItemState {
+    get metadata(): Metadata {
         return {id: this.id, deleted: this.deleted};
     }
 
@@ -95,15 +105,15 @@ export class ListItem<T> {
             clonedData = this.#data.clone();
         } else if (Object.isFrozen(this.#data) || Object.isSealed(this.#data)) {
             // If the object is frozen, a swallow or deep object spread creates a safe, mutable copy
-            clonedData = { ...this.#data, ...this.state};
+            clonedData = { ...this.#data, ...this.metadata};
         } else if (Object.getPrototypeOf(this.#data) === Object.prototype) {
             // If the data is a struct, perform a deep copy
-            clonedData = structuredClone({...this.#data, ...this.state});
+            clonedData = structuredClone({...this.#data, ...this.metadata});
         } else {
             // Custom class fallback
             const instance = this.#data as {constructor: new (args: Partial<T>) => T};
             const Constructor = instance.constructor;
-            clonedData = new Constructor({...this.#data, ...this.state});
+            clonedData = new Constructor({...this.#data, ...this.metadata});
         }
 
         return this.create(clonedData);
@@ -115,14 +125,13 @@ export class ListItem<T> {
      * @returns ListItem A new instance with the merged data.
      */
     merge(data: Partial<T>): this {
-        return this.create({...this.getAll(), ...data, ...this.state});
+        return this.create({...this.getAll(), ...data, ...this.metadata});
     }
 
 
     /**
      * A convenience method for creating new instances in a way that works with subclasses.
      * @param data
-     * @param {ItemState} [state]
      * @protected
      */
     protected create(data: T): this {
@@ -144,21 +153,22 @@ export class ListItem<T> {
 }
 
 
-export type ListChangeType = "added" | "modified" | "deleted";
+export type ListChangeType = "added" | "modified" | "deleted" | "inserted";
 export type ListChange<T> = {
     index: number,
     type: ListChangeType,
-    record?: ListItem<T>,
+    record?: Entry<T>,
 }
 export type ListItemUpdate<T> = {
     index: number,
-    record: ListItem<T>,
+    target: string | number | Entry<T>,
+    value: Partial<T> | Entry<T>,
 }
 export type PartialUpdate<T> = {
     index: number,
     value: Partial<T>,
-    record?: ListItem<T>,
-    previous?: ListItem<T>,
+    record?: Entry<T>,
+    previous?: Entry<T>,
 }
 
 
@@ -168,34 +178,102 @@ export type PartialUpdate<T> = {
  * @typeParam T The type of data contained in each Record in the list
  */
 export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
-    #data: ListItem<T>[];
+    /** Maintains the internal data. */
+    #registry = new Map<string, Entry<T>>();
+    /** For sorting */
+    #order: string[] = [];
+    #transformer: (data: T) => Entry<T>;
 
-    constructor(data: T[]) {
+    /**
+     * @typeParam T The data type of the data contained in the list.
+     * @param data {T[]} The raw initial data array
+     * @param [transformer] Mapper to modify or clean incoming data structures natively
+     */
+    constructor(data: T[] = [], transformer?: (data: T) => Entry<T>) {
         super();
-        this.#data = data.map(item => new ListItem(item));
+        this.#transformer = transformer ?? ((item: T) => {
+            return new ListItem(item)
+        });
+        for (const rawItem of data) {
+            this.add(rawItem);
+        }
     }
 
     get length(): number {
-        return this.#data
-            .filter(record => !record.deleted)
-            .length;
+        return this.#order.length;
     }
 
-    get(index: number): ListItem<T> | undefined {
-        return this.#data[index];
+
+    /**
+     * Gets an item by its order index, ID string, or instance footprint
+     */
+    get(target: number | string | Identifiable): Entry<T> | undefined {
+        if (typeof target === 'number') {
+            const id = this.#order[target];
+            return id ? this.#registry.get(id) : undefined;
+        }
+        return this.#registry.get(this.#resolveId(target));
     }
 
-    add(record: T): void {
-        this.#data[this.#data.length] = new ListItem(record);
+
+    getAll(): Entry<T>[] {
+        const result: Entry<T>[] = [];
+        for (const id of this.#order) {
+            const record = this.#registry.get(id)!;
+            if (!record.deleted) result.push(record);
+        }
+        return result;
     }
 
-    slice(startIndex: number, endIndex?: number): ListItem<T>[] {
-        return this.#data.slice(startIndex, endIndex);
+
+    add(rawData: T): void {
+        // Legit use of automatic transformer!
+        const item = this.#transformer(rawData);
+
+        this.#registry.set(item.id, item);
+        this.#order.push(item.id);
+
+        this.emit("dataChanged", [{
+            type: "added",
+            index: this.#order.length - 1,
+            record: item
+        }]);
     }
 
-    getAll(): ListItem<T>[] {
-        return this.filter(record => !record.deleted);
+
+    /**
+     * The primary method for updating/replacing items in a list.
+     *
+     * <p>Operates on only one item at a time.  To update multiple
+     * records at once, use batchUpdate().</p>
+     *
+     * @typeParam T  The data type of the items in the list.
+     * @param {string | Entry<T>} target The record to update
+     * @param {T | Entry<T>} payload The updates to the record
+     */
+    update(target: string | Entry<T>, payload: T | Entry<T>): boolean {
+        const id = this.#resolveId(target);
+        if (!this.#registry.has(id)) return false;
+
+        // If passing raw T data, run it through the transformer
+        const record = payload instanceof ListItem
+            ? payload
+            : this.#transformer(payload);
+
+        this.#registry.set(id, record);
+
+        const index = this.#order.indexOf(id);
+        this.emit("dataChanged", [{ type: "modified", index, record }]);
+        return true;
     }
+
+
+    slice(startIndex: number, endIndex?: number): Entry<T>[] {
+        return this.#order
+            .slice(startIndex, endIndex)
+            .map(id => this.#registry.get(id)!);
+    }
+
 
     /**
      * Replaces/inserts the specified Record at the specified index.  IF an item exists
@@ -204,74 +282,153 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
      *
      * @param index The index at which to insert the Record.
      * @param data The data to insert
-     */
-    insertAt(index: number, data: T | ListItem<T>): boolean {
+    insertAt(index: number, data: T): boolean {
         let record;
-        if (data instanceof ListItem) {
-            record = new ListItem(data);
-        } else {
-            record = new ListItem<T>(data);
-        }
+        record = this.#transformer(data);
         this.#data[index] = record;
         this.emit("dataChanged", [{type: "modified", index, record}]);
         return true;
     }
+     */
 
 
     /**
-     * Update multiple records at once.
+     * Updates multiple records at once.
      *
-     * @param updates An array of ListItemUpdates
+     * @typeParam T the data type of the items in the list.
+     * @param {ListItemUpdate[]} updates An array of ListItemUpdates
      */
     batchUpdate(updates: ListItemUpdate<T>[]): void {
-        const results = updates
-            .map(({index, record}) => {
-                this.#data[index] = record
-                const type:ListChangeType = "modified";
-                return {
-                    type,
-                    record,
-                    index,
-                };
+        if (!updates || updates.length === 0) return;
+
+        const results: ListChange<T>[] = [];
+
+        for (const { target, value } of updates) {
+            let id: string | undefined;
+            let index = -1;
+
+            // 1. Resolve the ID and Index polymorphically
+            if (typeof target === 'number') {
+                index = target;
+                id = this.#order[index];
+            } else {
+                id = typeof target === 'string' ? target : target.id;
+                index = this.#order.indexOf(id);
+            }
+
+            // Guard: If the item doesn't exist in the list, skip it
+            if (!id || index === -1 || !this.#registry.has(id)) {
+                continue;
+            }
+
+            // 2. Pass raw data through the transformer if it's not already a ListItem
+            const record = this.#transformer(value);
+
+            // 3. Update internal registry (The order array doesn't change for a modification)
+            this.#registry.set(id, record);
+
+            // 4. Queue up the change event data
+            results.push({
+                type: "modified",
+                index,
+                record
             });
+        }
+
+        // 5. Performance Win: Emit exactly ONE event for the entire batch
         if (results.length > 0) {
             this.emit("dataChanged", results);
         }
     }
 
-    deleteAt(index: number): boolean {
-        const record = this.#data[index];
-        if (record != undefined) {
+
+    insertBefore(pivotTarget: string | Entry<T>, rawData: T): boolean {
+        const pivotId = this.#resolveId(pivotTarget);
+        const targetIndex = this.#order.indexOf(pivotId);
+        if (targetIndex === -1) return false;
+
+        const record = this.#transformer(rawData);
+        this.#registry.set(record.id, record);
+        this.#order.splice(targetIndex, 0, record.id);
+
+        this.emit("dataChanged", [{ type: "inserted", index: targetIndex, record }]);
+        return true;
+    }
+
+    /**
+     * Polymorphic soft delete
+     */
+    delete(target: string | Entry<T>): boolean {
+        const id = this.#resolveId(target);
+        const record = this.#registry.get(id);
+
+        if (record && !record.deleted) {
             record.deleted = true;
-            this.emit("dataChanged", [{type: "deleted", index}]);
+            const index = this.#order.indexOf(id);
+            this.emit("dataChanged", [{ type: "deleted", index }]);
             return true;
         }
         return false;
     }
 
-    insertBefore(index: number, data: T): void {
-        this.#data = [
-            ...this.#data.slice(0, index),
-            new ListItem(data),
-            ...this.#data.slice(index)
-        ];
+    sort(comparator: BiFunction<Entry<T>, Entry<T>, number>): void {
+        this.#order.sort((a, b) => {
+            return comparator(this.#registry.get(a)!, this.#registry.get(b)!);
+        });
     }
 
-    sort(comparator: BiFunction<ListItem<T>, ListItem<T>, number>): void {
-        this.#data.sort(comparator);
+
+    /**
+     * Returns the first record that matches the criteria,or undefined if no match is found.
+     *
+     * @param {Function} criteria A find function taking an Entry as input
+     * @returns {Entry | undefined} The first matching record or undefined
+     */
+    find(criteria: (item: Entry<T>) => boolean): Entry<T> | undefined {
+        for (const id of this.#order) {
+            const record = this.#registry.get(id)!;
+            if (criteria(record)) return record;
+        }
+        return undefined;
     }
 
-    find(criteria: Predicate<ListItem<T>>): ListItem<T> | undefined {
-        return this.#data.find(criteria);
+    /**
+     * Returns the index of first record that matches the criteria,or -1
+     * if no match is found.
+     *
+     * @param {Function} criteria A find function taking an Entry as input
+     * @returns {number} The index of the first matching record or -1
+     */
+    findIndex(criteria: (item: Entry<T>) => boolean): number {
+        for (let i = 0; i < this.#order.length; i++) {
+            const record = this.#registry.get(this.#order[i])!;
+            if (criteria(record)) return i;
+        }
+        return -1; // Correct native fallback instead of undefined
     }
 
-    findIndex(criteria: Predicate<ListItem<T>>): number | undefined {
-        return this.#data.findIndex(criteria);
+
+    filter(criteria: Predicate<Entry<T>>): Entry<T>[] {
+        const result: Entry<T>[] = [];
+
+        for (const id of this.#order) {
+            const record = this.#registry.get(id)!;
+            // Apply the criteria function to the ListItem wrapper
+            if (criteria(record)) {
+                result.push(record);
+            }
+        }
+
+        return result;
     }
 
-    filter(criteria: Predicate<ListItem<T>>): ListItem<T>[] {
-        return this.#data.filter(criteria);
+    /**
+     * Helper to normalize any incoming item or string into a strict ID
+     */
+    #resolveId(target: string | Identifiable): string {
+        return typeof target === 'string' ? target : target.id;
     }
+
 }
 
 
