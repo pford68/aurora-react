@@ -1,6 +1,6 @@
 import type {Command, Struct} from "../../../types/types.ts";
 import CopyCommand, {type Clipboard} from "./CopyCommand.ts";
-import ObservableList, {ListItem} from "../../../model/ObservableList.ts";
+import ObservableList, {type Cloneable, type Entry} from "../../../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 type PasteConfig<T extends Struct> = {
@@ -16,7 +16,7 @@ export default class PasteCommand<T extends Struct> implements Command {
     static readonly icon: IconProp = "paste";
     static readonly name: string = "Paste";
     static readonly accelerator: string = "⌘+v";
-    readonly #previous: ListItem<T>[];
+    readonly #previous: Entry<T>[];
     readonly #clipboard: Clipboard = sessionStorage;
     #rowIndex: number;
     #colIndex: number;
@@ -39,10 +39,7 @@ export default class PasteCommand<T extends Struct> implements Command {
 
     undo(): boolean {
         this.#previous.forEach((prevRecord) => {
-            const currentIndex = this.#items.findIndex(record => record.id === prevRecord.id);
-            if (currentIndex != undefined && currentIndex !== -1) {
-                this.#items.insertAt(currentIndex, prevRecord.clone());
-            }
+            this.#items.update(prevRecord, prevRecord.clone());
         });
 
         return true;
@@ -76,7 +73,7 @@ export default class PasteCommand<T extends Struct> implements Command {
                     }
                     currentColIndex++;
                 });
-                this.#items.insertAt(recordIndex, record.merge(updates as Partial<T>));
+                this.#items.update(record, record.merge(updates as Partial<T>));
             }
         });
         return true;

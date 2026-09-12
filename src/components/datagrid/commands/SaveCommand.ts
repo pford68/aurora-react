@@ -26,12 +26,9 @@ export default class SaveCommand<T extends Struct> implements Command {
 
     undo(): boolean {
         this.#updates
-            .forEach(({previous}) => {
-                if (previous != null) {
-                    const currentIndex = this.#list.findIndex(item => item.id == previous.id);
-                    if (currentIndex != null && currentIndex > -1) {
-                        this.#list.insertAt(currentIndex, previous.getAll());
-                    }
+            .forEach(({previous, record}) => {
+                if (previous != null && record != null) {
+                    this.#list.update(record, previous.getAll());
                 }
             });
 
@@ -49,7 +46,7 @@ export default class SaveCommand<T extends Struct> implements Command {
             if (!record) return;
             const currentIndex = this.#list.findIndex(item => item.id == record.id);
             if (currentIndex != null && currentIndex > -1) {
-                this.#list.insertAt(currentIndex, record.merge(value));
+                this.#list.update(record, record.merge(value));
             }
         });
 

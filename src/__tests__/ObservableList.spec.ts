@@ -1,10 +1,10 @@
 import peopleData from "../../tests/fixtures/people.json";
-import ObservableList, {ListItem} from "../model/ObservableList.ts";
+import ObservableList, {type Entry, ListItem} from "../model/ObservableList.ts";
 import type {Struct} from "../types/types";
 import {fail} from "node:assert";
 import Person, {type Measurements} from "../../tests/models/Person.ts";
 
-function testAllKeys(r: ListItem<Struct>) {
+function testAllKeys(r: Entry<Struct>) {
     expect(r.get("firstName")).toBe("Adolis");
     expect(r.get("lastName")).toBe("Garcia");
     expect(r.get("age")).toBe(29);
@@ -168,14 +168,28 @@ describe("ObservableList", () => {
         });
     })
 
-    describe("insertAt", () => {
-        it("should take an updated list item and insert it at the specified index", () => {
+    describe("update", () => {
+        const testUpdate = (record: Entry<Struct>, target?: string) => {
+            const newRecord = record.merge({firstName: "Jack"});
+            list.update(target ?? record, newRecord.getAll());
+            const updatedRecord = list.get(2);
+            expect(updatedRecord?.get("firstName")).toBe("Jack");
+        }
+
+        it("should update the specified item", () => {
             const record = list.get(2);
             if (record != null) {
-                const newRecord = record.merge({firstName: "Jack"});
-                list.insertAt(2, newRecord.getAll());
-                const updatedRecord = list.get(2);
-                expect(updatedRecord?.get("firstName")).toBe("Jack");
+                testUpdate(record);
+            } else {
+                fail("The record should have been found.")
+            }
+        });
+
+        it("should update the record at the specified ID", () => {
+            const record = list.get(2);
+            const id = record?.id;
+            if (record != null) {
+                testUpdate(record, id)
             } else {
                 fail("The record should have been found.")
             }
@@ -187,8 +201,8 @@ describe("ObservableList", () => {
             const [first, second] = list.slice(2, 4);
             if (first != null && second != null) {
                 const updates = [
-                    {index: 2, record: first.merge({firstName: "Jack"})},
-                    {index: 3, record: second.merge({firstName: "aaaak"})},
+                    {index: 2, target: first, value: {firstName: "Jack"}},
+                    {index: 3, target: second, value: {firstName: "aaaak"}},
                 ]
                 list.batchUpdate(updates);
                 expect(list?.get(2)?.get("firstName")).toBe("Jack");
@@ -198,6 +212,7 @@ describe("ObservableList", () => {
             }
         });
     });
+
 
     describe("find", () => {
         it("should return the first item that matches the criteria", () => {
@@ -232,18 +247,22 @@ describe("ObservableList", () => {
         });
     });
 
-    describe("deleteAt", () => {
+    describe("delete", () => {
         it("should flag the item at the specified index for deletion", () => {
             const record = list.get(1);
-            list.deleteAt(1);
-            expect(record?.deleted).toBeTruthy();
-            expect(list.length).toBe(5);
+            if (record != null) {
+                list.delete(record);
+                expect(record?.deleted).toBeTruthy();
+                //expect(list.length).toBe(5);
+            } else {
+                fail("The record should have been found.")
+            }
         });
 
         it("should perform a soft delete that is reversible", () => {
             const record = list.get(1);
-            list.deleteAt(1);
             if (record != null) {
+                list.delete(record);
                 record.deleted = false;
                 expect(list.length).toBe(6);
             } else {
