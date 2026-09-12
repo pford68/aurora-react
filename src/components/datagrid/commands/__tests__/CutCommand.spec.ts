@@ -2,12 +2,12 @@ import people from "../../../../../tests/fixtures/people.json";
 import CutCommand from "../CutCommand.ts";
 import CopyCommand from "../CopyCommand.ts";
 import {expect} from "vitest";
-import ObservableList, {ListItem} from "../../../../model/ObservableList.ts";
+import ObservableList, {type Entry} from "../../../../model/ObservableList.ts";
 import type {Struct} from "../../../../types/types.ts";
 
 describe("CutCommand", () => {
     let list: ObservableList<Struct>;
-    let selectedItems: ListItem<Struct>[];
+    let selectedItems: Entry<Struct>[];
 
     beforeEach(() => {
         list = new ObservableList<Struct>(people);

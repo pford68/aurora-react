@@ -123,7 +123,7 @@ export class FocusMode implements CellState {
                             columns: selectedNames
                         }
                         const cmd = doCut
-                            ? new CutCommand(copyConfig)
+                            ? new CutCommand(copyConfig, items)
                             : new CopyCommand(copyConfig);
                         const result = cmd.execute();
                         if (doCut && result) {

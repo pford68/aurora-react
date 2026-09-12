@@ -1,6 +1,6 @@
 import type {BiFunction, Command, Struct} from "../../../types/types.ts";
 import {v4 as uuid} from "uuid";
-import {ListItem} from "../../../model/ObservableList.ts";
+import {type Entry} from "../../../model/ObservableList.ts";
 import {isTextSelected} from "../../../util/utils.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
@@ -9,7 +9,7 @@ export type Clipboard = {
 }
 
 export type CopyConfig<T extends Struct> = {
-    selectedItems: ListItem<T>[],
+    selectedItems: Entry<T>[],
     columns: string[],
     clipboard?: Clipboard,
 }
@@ -23,7 +23,7 @@ export default class CopyCommand<T extends Struct> implements Command {
     static readonly icon: IconProp = "copy";
     static readonly name: string = "Copy";
     static readonly accelerator: string = "⌘+c";
-    #selectedItems: ListItem<T>[];
+    #selectedItems: Entry<T>[];
     #values: {[key:string]: unknown}[];
     #clipboard: Clipboard = sessionStorage;
     #columns: string[];
@@ -62,7 +62,7 @@ export default class CopyCommand<T extends Struct> implements Command {
         return this.#values;
     }
 
-    get selectedItems(): ListItem<T>[] {
+    get selectedItems(): Entry<T>[] {
         return this.#selectedItems;
     }
 

@@ -1,6 +1,6 @@
 import type {Command, Struct} from "../../../types/types.ts";
 import CopyCommand, {type Clipboard} from "./CopyCommand.ts";
-import ObservableList, {type Cloneable, type Entry} from "../../../model/ObservableList.ts";
+import ObservableList, {type Entry} from "../../../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 type PasteConfig<T extends Struct> = {
@@ -39,7 +39,7 @@ export default class PasteCommand<T extends Struct> implements Command {
 
     undo(): boolean {
         this.#previous.forEach((prevRecord) => {
-            this.#items.update(prevRecord, prevRecord.clone());
+            this.#items.update(prevRecord, prevRecord.clone() as Entry<T>);
         });
 
         return true;
@@ -62,7 +62,7 @@ export default class PasteCommand<T extends Struct> implements Command {
             const recordIndex = startRowIndex + index;
             const record = this.#items.get(recordIndex);
             if (record != null) {
-                if (doClone) this.#previous.push(record.clone());
+                if (doClone) this.#previous.push(record.clone() as Entry<T>);
 
                 let currentColIndex = startColumnIndex;
                 const updates: Record<string, unknown> = {};

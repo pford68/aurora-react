@@ -1,5 +1,5 @@
 import type {Command, Struct} from "../../../types/types.ts";
-import ObservableList, {type PartialUpdate} from "../../../model/ObservableList.ts";
+import ObservableList, {type Entry, type PartialUpdate} from "../../../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 
@@ -11,13 +11,13 @@ export default class SaveCommand<T extends Struct> implements Command {
     static readonly name: string = "Save";
     static readonly accelerator: string = "⌘+s";
     #updates: PartialUpdate<T>[];
-    #list: ObservableList<T>; // TODO:  Will be needed in CORE-11.
+    #list: ObservableList<T>;
 
 
     constructor(list: ObservableList<T>, updates: PartialUpdate<T>[]) {
         this.#list = list;
         this.#updates =  updates;
-        this.#updates.forEach(item => item.previous = item.record?.clone())
+        this.#updates.forEach(item => item.previous = item.record?.clone() as Entry<T>)
     }
 
     redo(): boolean {
@@ -28,7 +28,7 @@ export default class SaveCommand<T extends Struct> implements Command {
         this.#updates
             .forEach(({previous, record}) => {
                 if (previous != null && record != null) {
-                    this.#list.update(record, previous.getAll());
+                    this.#list.update(record, previous);
                 }
             });
 
@@ -44,10 +44,7 @@ export default class SaveCommand<T extends Struct> implements Command {
 
         updates.forEach(({ record, value }) => {
             if (!record) return;
-            const currentIndex = this.#list.findIndex(item => item.id == record.id);
-            if (currentIndex != null && currentIndex > -1) {
-                this.#list.update(record, record.merge(value));
-            }
+            this.#list.update(record, record.merge(value));
         });
 
         return true;

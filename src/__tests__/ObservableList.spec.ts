@@ -174,6 +174,7 @@ describe("ObservableList", () => {
             list.update(target ?? record, newRecord.getAll());
             const updatedRecord = list.get(2);
             expect(updatedRecord?.get("firstName")).toBe("Jack");
+            expect(updatedRecord?.get("lastName")).toBe("Seager");
         }
 
         it("should update the specified item", () => {

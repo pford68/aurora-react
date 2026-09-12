@@ -25,7 +25,7 @@ export default class CutCommand<T extends Struct> extends CopyCommand<T> {
 
     undo(): boolean {
         this.#previous.forEach((prevRecord) => {
-            this.#list.update(prevRecord, prevRecord.clone());
+            this.#list.update(prevRecord, prevRecord.clone() as Entry<T>);
         });
 
         return true;
@@ -38,7 +38,7 @@ export default class CutCommand<T extends Struct> extends CopyCommand<T> {
 
     #execute(doClone: boolean): boolean {
         this.selectedItems.forEach(item => {
-            if (doClone) this.#previous.push(item.clone());
+            if (doClone) this.#previous.push(item.clone() as Entry<T>);
 
             const nulls:Record<string, unknown | null> = {}
             this.columns.forEach(name => {

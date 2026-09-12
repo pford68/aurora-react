@@ -162,7 +162,7 @@ export type ListChange<T> = {
 export type ListItemUpdate<T> = {
     index: number,
     target: string | number | Entry<T>,
-    value: Partial<T> | Entry<T>,
+    value: T | Entry<T>,
 }
 export type PartialUpdate<T> = {
     index: number,
@@ -182,17 +182,17 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
     #registry = new Map<string, Entry<T>>();
     /** For sorting */
     #order: string[] = [];
-    #transformer: (data: T) => Entry<T>;
+    #transformer: (data: T ) => Entry<T>;
 
     /**
      * @typeParam T The data type of the data contained in the list.
      * @param data {T[]} The raw initial data array
-     * @param [transformer] Mapper to modify or clean incoming data structures natively
+     * @param [transformer] Mapper to modify/clean incoming data structures as they are added to the list.
      */
     constructor(data: T[] = [], transformer?: (data: T) => Entry<T>) {
         super();
         this.#transformer = transformer ?? ((item: T) => {
-            return new ListItem(item)
+            return new ListItem(item) as Entry<T>;
         });
         for (const rawItem of data) {
             this.add(rawItem);
@@ -255,11 +255,7 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
         const id = this.#resolveId(target);
         if (!this.#registry.has(id)) return false;
 
-        // If passing raw T data, run it through the transformer
-        const record = payload instanceof ListItem
-            ? payload
-            : this.#transformer(payload);
-
+        const record = this.#isEntry(payload) ? payload : this.#transformer(payload);
         this.#registry.set(id, record);
 
         const index = this.#order.indexOf(id);
@@ -274,22 +270,6 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
             .map(id => this.#registry.get(id)!);
     }
 
-
-    /**
-     * Replaces/inserts the specified Record at the specified index.  IF an item exists
-     * at the specified index, it is replaced.  To insert an item in the list without
-     * replacing the existing item (shifting subsequent items down), use insertBefore().
-     *
-     * @param index The index at which to insert the Record.
-     * @param data The data to insert
-    insertAt(index: number, data: T): boolean {
-        let record;
-        record = this.#transformer(data);
-        this.#data[index] = record;
-        this.emit("dataChanged", [{type: "modified", index, record}]);
-        return true;
-    }
-     */
 
 
     /**
@@ -322,7 +302,7 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
             }
 
             // 2. Pass raw data through the transformer if it's not already a ListItem
-            const record = this.#transformer(value);
+            const record = this.#isEntry(value) ? value : this.#transformer(value);
 
             // 3. Update internal registry (The order array doesn't change for a modification)
             this.#registry.set(id, record);
@@ -429,8 +409,9 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
         return typeof target === 'string' ? target : target.id;
     }
 
+    #isEntry(that: T | Entry<T>): that is Entry<T> {
+        return that instanceof ListItem;
+    }
+
 }
-
-
-
 
