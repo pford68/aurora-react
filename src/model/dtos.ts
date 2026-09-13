@@ -7,7 +7,9 @@ import {toISODateString} from "../util/utils.ts";
 export interface DTO<T = string | number | boolean | undefined> {
     [Symbol.toPrimitive](hint: "string" | "number" | "boolean" | "default"): string | number | boolean;
     toJSON(): { [key: string]: T  | undefined};
-    clone(value: T | null): DTO
+    clone(value: T | null): DTO;
+    valueOf(): T | undefined;
+    value: T | undefined;
     readonly formType: string;
 }
 
@@ -25,27 +27,12 @@ export type DTOprops = {
  * @typeParam T - the data type of the value contained in the DTO
  */
 export abstract class AbstractDTO<T> implements DTO<T> {
-    #value: T | undefined;
-    #formType: string;
-
-    protected constructor(value?: T, options?: DTOprops) {
-        this.#value = value;
-        this.#formType = options?.formType ?? "string";
-    }
+    protected constructor() {}
     abstract [Symbol.toPrimitive](hint: "string" | "number" | "boolean" | "default"): string | number | boolean;
     abstract clone(value: T): DTO;
-
-    get value(): T | undefined {
-        return this.#value;
-    }
-
-    get formType(): string {
-        return this.#formType;
-    }
-
-    protected get format(): string | undefined {
-        return undefined;
-    };
+    abstract get value(): T | undefined;
+    abstract valueOf(): T | undefined;
+    abstract get formType(): string;
 
     toJSON(): {[key:string]: T | undefined} {
         return {value: this.value};
@@ -63,8 +50,8 @@ export class DateDTO extends AbstractDTO<number> {
     };
     #formType = "date";
 
-    constructor(value: number, options?: DTOprops) {
-        super(value, options);
+    constructor(value: unknown, options?: DTOprops) {
+        super();
         this.#value = Number(value);
         if (options != null) {
             const {locale} = options;
@@ -103,6 +90,14 @@ export class DateDTO extends AbstractDTO<number> {
     get value(): number {
         return this.#value;
     }
+
+    valueOf(): number {
+        return this.#value;
+    }
+
+    get formType(): string {
+        return this.#formType;
+    }
 }
 
 
@@ -116,7 +111,7 @@ export class DateTimeDTO extends DateDTO {
         minute: '2-digit'
     };
 
-    constructor(value: number, options?: DTOprops) {
+    constructor(value: unknown, options?: DTOprops) {
         super(value, options);
         if (options != null) {
             const {format, formType} = options;
@@ -139,6 +134,7 @@ export class DateTimeDTO extends DateDTO {
                 return value;
         }
     }
+
 }
 
 export class NumberDTO extends AbstractDTO<number> {
@@ -146,8 +142,8 @@ export class NumberDTO extends AbstractDTO<number> {
     #scale: number = 2;
     #formType: string = "number";
 
-    constructor(value?: number, options?: DTOprops) {
-        super(value, options);
+    constructor(value?: unknown, options?: DTOprops) {
+        super();
         this.#value = Number(value);
         if (options != null) {
             const {scale} = options
@@ -180,6 +176,14 @@ export class NumberDTO extends AbstractDTO<number> {
     get value(): number {
         return this.#value;
     }
+
+    valueOf(): number {
+        return this.#value;
+    }
+
+    get formType(): string {
+        return this.#formType;
+    }
 }
 
 
@@ -188,7 +192,7 @@ export class CurrencyDTO extends NumberDTO{
     #format: string = "USD";
     #locale: Intl.LocalesArgument = "en-US";
 
-    constructor(value?: number, options?: DTOprops) {
+    constructor(value?: unknown, options?: DTOprops) {
         super(value, options);
     }
 
@@ -215,6 +219,14 @@ export class CurrencyDTO extends NumberDTO{
                 return value;
         }
     }
+
+    clone(value: number): DTO {
+        const config = {
+            formType: this.formType as "number",
+            scale: this.#scale,
+        }
+        return new CurrencyDTO(value, config);
+    }
 }
 
 
@@ -222,9 +234,9 @@ export class StringDTO extends AbstractDTO<string> {
     #value: string = "";
     #formType: string = "text";
 
-    constructor(value?: string, options?: DTOprops) {
-        super(value, options);
-        if (value != null) this.#value = value;
+    constructor(value?: unknown, options?: DTOprops) {
+        super();
+        if (value != null) this.#value = String(value);
         if (options != null) {
             const {formType} = options
             this.#formType = formType ?? this.formType;
@@ -250,14 +262,27 @@ export class StringDTO extends AbstractDTO<string> {
         }
         return new StringDTO(value, config);
     }
+
+    get formType(): string {
+        return this.#formType;
+    }
+
+    get value(): string {
+        return this.#value;
+    }
+
+    valueOf(): string {
+        return this.#value;
+    }
 }
+
 
 export class BooleanDTO extends AbstractDTO<boolean> {
     #value: boolean;
     #formType: string = "text";
 
-    constructor(value?: boolean, options?: DTOprops) {
-        super(value, options);
+    constructor(value?: unknown, options?: DTOprops) {
+        super();
         this.#value = String(value) === "true";
         if (options != null) {
             const {formType} = options;
@@ -284,6 +309,18 @@ export class BooleanDTO extends AbstractDTO<boolean> {
             formType: this.#formType as "checkbox" | "switch" | "text",
         }
         return new BooleanDTO(value, config);
+    }
+
+    get formType(): string {
+        return this.#formType;
+    }
+
+    get value(): boolean | undefined {
+       return this.#value;
+    }
+
+    valueOf(): boolean | undefined {
+        return this.#value;
     }
 }
 

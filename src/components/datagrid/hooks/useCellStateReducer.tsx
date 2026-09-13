@@ -19,7 +19,7 @@ export type CellFactoryAction = {
         | "clear"
         | "undo"
         | "redo"
-    payload?: DTO<any>,
+    payload?: DTO<unknown>,
 }
 
 
@@ -32,13 +32,9 @@ type useReducerProps = {
     name: string,
 }
 
-function checkable(renderType: string) {
-    return renderType === "checkbox" || renderType === "switch";
-}
-
-function findValue(node: HTMLInputElement | null, dto?:DTO) {
-    let value = node ?node.value : null;
-    if (node && dto != null && checkable(dto?.formType)) {
+function findValue(node: HTMLInputElement | null) {
+    let value = node ? node.value : null;
+    if (node instanceof HTMLInputElement && (node.type === "checkbox" || node.type === "radio")) {
         value = String(node.checked);
     }
     return value;
@@ -64,12 +60,12 @@ export default function useCellStateReducer(props: useReducerProps): [CellFactor
             case "deactivate": { // Sends to focused mode and flushes changes.
                 const {name} = ref.current ?? {};
                 const dto = action.payload;
-                let value = findValue(ref.current, dto);
+                let value = findValue(ref.current);
                 if (items != null && (value != null || nullable)) {
                     const updatedValue = String(value).trim().length > 0 ? value : null;
                     const newDto = dto?.clone(updatedValue);
                     const record = items.get(rowIndex);
-                    const update = {record, value: {[String(name)]: newDto?.valueOf()}};
+                    const update = {record, value: {[String(name)]: newDto}};
                     const cmd = new SaveCommand(items, [update]);
                     cmd.execute();
                     redoStack?.clear();

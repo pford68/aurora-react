@@ -2,7 +2,6 @@ import {AbstractDTO, BooleanDTO, DateDTO, NumberDTO, StringDTO} from "../../src/
 import type {Measurements} from "./Person.ts";
 
 
-
 export default class PersonDTO {
     firstName: StringDTO;
     lastName: StringDTO;
@@ -28,21 +27,26 @@ export class MeasurementsDTO extends AbstractDTO<number>{
     #height: number;
     #weight: number;
 
-    constructor(value:Measurements) {
+    constructor(value:unknown) {
         super()
-        this.#height = value?.height ?? 0;
-        this.#weight = value?.weight ?? 0;
+        const v = value as Measurements;
+        this.#height = v?.height ?? 0;
+        this.#weight = v?.weight ?? 0;
     }
 
     toString(): string {
         return String(this.valueOf());
     }
 
-    valueOf(): number {
+    get value(): number {
         return this.#height;
     }
 
-    toJSON(): { [p: string]: number } {
+    valueOf(): number {
+        return this.value;
+    }
+
+    toJSON(): { [p: string]: number | undefined} {
         return super.toJSON();
     }
 
@@ -55,5 +59,14 @@ export class MeasurementsDTO extends AbstractDTO<number>{
 
     get formType(): string {
         return "number";
+    }
+
+    [Symbol.toPrimitive](hint: "string" | "number" | "boolean" | "default"): string | number | boolean {
+        switch (hint) {
+            case "number":
+                return this.#height;
+            default:
+                return String(this.#height);
+        };
     }
 }

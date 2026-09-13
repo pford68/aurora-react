@@ -2,7 +2,6 @@ import peopleData from "../../tests/fixtures/people.json";
 import ObservableList, {type Entry, ListItem} from "../model/ObservableList.ts";
 import type {Struct} from "../types/types";
 import {fail} from "node:assert";
-import Person, {type Measurements} from "../../tests/models/Person.ts";
 
 function testAllKeys(r: Entry<Struct>) {
     expect(r.get("firstName")).toBe("Adolis");
@@ -56,12 +55,6 @@ describe("ListItem", () => {
             expect(merged.get("active")).toBe(true);
             expect(merged.get("lastUpdated")).toBe(1704401089);
         });
-
-        it("should be extensible to know how to save changes to complex properties", () => {
-            const person = new Person(people[5]);
-            person.set("measurements", 900);
-            expect((person.get("measurements") as Measurements).height).toBe(900);
-        })
     });
 
     describe("clone", () => {

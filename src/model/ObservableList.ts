@@ -14,8 +14,9 @@ export interface Cloneable {
     clone(): Cloneable;
 }
 
+type ValueOf<T> = T[keyof T];
 export type Entry<T> = Cloneable & Metadata & {
-    get: (key: keyof T) => unknown,
+    get: (key: keyof T) => ValueOf<T>,
     getAll: () => T,
     merge: (data: Partial<T>) => Entry<T>,
 }
@@ -165,7 +166,7 @@ export type ListItemUpdate<T> = {
     value: T | Entry<T>,
 }
 export type PartialUpdate<T> = {
-    index: number,
+    index?: number,
     value: Partial<T>,
     record?: Entry<T>,
     previous?: Entry<T>,
