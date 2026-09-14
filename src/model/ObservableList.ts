@@ -2,28 +2,66 @@ import {Emitter} from "./Observable.ts";
 import type {BiFunction, Predicate, Struct} from "../types/types.ts";
 import {v4 as uuid} from "uuid";
 
+interface Identifiable  {
+    id: string
+}
+
+interface Metadata extends Identifiable {
+    deleted: boolean;
+}
+
+type ValueOf<T> = T[keyof T];
+export interface Entry<T = Struct>  extends Metadata{
+    get(key: keyof T): ValueOf<T>,
+    getAll(): T,
+    merge(data: Partial<T>): Entry<T>;
+    clone(): Entry<T>;
+}
+
+
 
 /**
- * The base class for data rows in the table model.
+ * Allows associating metadata with data, without enriching/altering the data.
  *
+ * <p>This class exists to associated metadata with list items:
+ * missing IDs, status (e.g., deleted), etc.  Otherwise, it would
+ * not be necessary. </p>
+ *
+ * @param {T} data The object to wrap.
  * @typeParam T The type of data contained in the Record
  */
-export class Record<T extends Struct = Struct> {
+export class ListItem<T> {
     #data: T;
     /** Whether the record has been marked for deletion */
     #deleted: boolean = false;
     readonly #id: string;
 
-    constructor(data: T) {
-        this.#data = data;
-        this.#id = uuid();
+    /**
+     * Creates a new copy of the specified item, only with modifications to the copy.
+     * @param original
+     * @param updates
+     */
+    static from<T, U extends ListItem<T>>(original: ListItem<T>, updates?: T): U {
+        const data = {...original.getAll(), ...(updates ?? {})};
+        const Constructor = original.constructor  as new (data: T, state?: Metadata) => U;
+        return new Constructor(data);
+    }
+
+    /**
+     *
+     * @param {T | Entry<T>} data The data contained in the ListItem
+     */
+    constructor(data: T | Entry<T>) {
+        this.#data = data instanceof ListItem ? data.getAll() : data;
+        this.#deleted = (data as Metadata).deleted === true;
+        this.#id = (data as Identifiable).id ?? uuid();
     }
 
     getAll(): T {
-        return this.#data;
+        return {...this.#data};
     }
 
-    get(key: string): unknown {
+    get(key: keyof T): unknown {
         return this.#data[key];
     }
 
@@ -34,15 +72,6 @@ export class Record<T extends Struct = Struct> {
 
 
     /**
-     * Sets a new value at the specified key, which does not need to exist beforehand.
-     * @param key
-     * @param value
-     */
-    set(key: string, value: unknown): void {
-        this.#data = {...this.#data,  [key]: value};
-    }
-
-    /**
      * @returns {boolean} Whether the record has been marked for deletion.
      */
     get deleted(): boolean {
@@ -51,166 +80,340 @@ export class Record<T extends Struct = Struct> {
 
     /**
      * If the value is true, it Marks the record for deletion.
-     * @param value {boolean} Whether to mark the record for the deletion
+     * @param {boolean} value  Whether to mark the record for the deletion
      */
     set deleted(value: boolean) {
         this.#deleted = value;
     }
 
-    update(partial: T): void {
-        this.#data = {...this.#data, ...partial};
+    get metadata(): Metadata {
+        return {id: this.id, deleted: this.deleted};
     }
 
     toString(): string {
         return JSON.stringify(this.#data);
     }
 
-    clone(): Record<T> {
-        return new Record(structuredClone(this.getAll()));
+
+    /**
+     * Makes a deep copy of this instance.
+     */
+    clone(): this {
+        let clonedData: T;
+
+        if (this.#isClonable(this.#data)) {
+            clonedData = this.#data.clone();
+        } else if (Object.isFrozen(this.#data) || Object.isSealed(this.#data)) {
+            // If the object is frozen, a swallow or deep object spread creates a safe, mutable copy
+            clonedData = { ...this.#data, ...this.metadata};
+        } else if (Object.getPrototypeOf(this.#data) === Object.prototype) {
+            // If the data is a struct, perform a deep copy
+            clonedData = structuredClone({...this.#data, ...this.metadata});
+        } else {
+            // Custom class fallback
+            const instance = this.#data as {constructor: new (args: Partial<T>) => T};
+            const Constructor = instance.constructor;
+            clonedData = new Constructor({...this.#data, ...this.metadata});
+        }
+
+        return this.create(clonedData);
     }
 
-    copy(that: Record<T>): void {
-        this.update(that.getAll());
+    /**
+     * Merges new data with this instance's data and returns a new instance.
+     * @param data
+     * @returns ListItem A new instance with the merged data.
+     */
+    merge(data: Partial<T>): this {
+        return this.create({...this.getAll(), ...data, ...this.metadata});
+    }
+
+
+    /**
+     * A convenience method for creating new instances in a way that works with subclasses.
+     * @param data
+     * @protected
+     */
+    protected create(data: T): this {
+        const Constructor = this.constructor  as new (data: T) => this;
+        return new Constructor(data);
+    }
+
+    /**
+     * Structural type guard for custom cloning
+     */
+    #isClonable(value: unknown): value is { clone(): T } {
+        return (
+            typeof value === 'object' &&
+            value !== null &&
+            'clone' in value &&
+            typeof (value as Record<string, unknown>).clone === 'function'
+        );
     }
 }
 
 
-export type ListChangeType = "added" | "modified" | "deleted";
-export type ListChange<T extends Struct> = {
+export type ListChangeType = "added" | "modified" | "deleted" | "inserted";
+export type ListChange<T> = {
     index: number,
     type: ListChangeType,
-    record?: Record<T>,
+    record?: Entry<T>,
 }
-export type ListItemUpdate<T extends Struct> = {
+export type ListItemUpdate<T> = {
     index: number,
-    record: Record<T>,
+    target: string | number | Entry<T>,
+    value: T | Entry<T>,
 }
-export type PartialUpdate<T extends Struct> = {
-    value: T,
-    record?: Record<T>,
-    previous?: Record<T>,
+export type PartialUpdate<T> = {
+    index?: number,
+    value: Partial<T>,
+    record?: Entry<T>,
+    previous?: Entry<T>,
 }
 
+function defaultTransformer<T>(item: T){
+    return new ListItem(item) as unknown as Entry<T>;
+}
 
 /**
  * An array-like list that notifies listeners when its underlying data has changed.
  *
- * @typeParam T The type of data contained in each Record in the list
+ * @typeParam T The type of data contained in each Entry in the list
  */
-export default class ObservableList<T extends Struct> extends Emitter<ListChange<Struct>[]> {
-    #data: Record<T>[];
+export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
+    /** Maintains the internal data. */
+    #registry = new Map<string, Entry<T>>();
+    /** For sorting */
+    #order: string[] = [];
+    #transformer: (data: T ) => Entry<T>;
 
-    constructor(data: Record<T>[]) {
+    /**
+     * @typeParam T The data type of the data contained in the list.
+     * @param data {T[]} The raw initial data array
+     * @param [transformer] Mapper to modify/clean incoming data structures as they are added to the list.
+     */
+    constructor(data: T[] = [], transformer?: (data: T) => Entry<T>) {
         super();
-        this.#data = data;
+        this.#transformer = transformer ?? defaultTransformer;
+
+        for (const rawItem of data) {
+            this.add(rawItem);
+        }
     }
 
     get length(): number {
-        return this.#data
-            .filter(record => !record.deleted)
-            .length;
+        return this.#order.length;
     }
 
-    get(index: number): Record<T> | undefined {
-        return this.#data[index];
-    }
-
-    add(record: Record<T>): void {
-        this.#data[this.#data.length] = record;
-    }
-
-    slice(startIndex: number, endIndex?: number): Record<T>[] {
-        return this.#data.slice(startIndex, endIndex);
-    }
-
-    getAll(): Record<T>[] {
-        return this.filter(record => !record.deleted);
-    }
 
     /**
-     * Inserts/replaces the specified Record at the specified index.  The Record can be
-     * an updated version of the original.  Use this when you have an Record and want to
-     * re-insert it to notify listeners that the list has been updated.
-     *
-     * @param index The index at which to insert the Record.
-     * @param record The Record to insert
+     * Gets an item by its order index, ID string, or instance footprint
      */
-    insertAt(index: number, record: Record<T>): boolean {
-        this.#data[index] = record;
-        this.emit("dataChanged", [{type: "modified", index, record}]);
+    get(target: number | string | Identifiable): Entry<T> | undefined {
+        if (typeof target === 'number') {
+            const id = this.#order[target];
+            return id ? this.#registry.get(id) : undefined;
+        }
+        return this.#registry.get(this.#resolveId(target));
+    }
+
+
+    getAll(): Entry<T>[] {
+        const result: Entry<T>[] = [];
+        for (const id of this.#order) {
+            const record = this.#registry.get(id)!;
+            if (!record.deleted) result.push(record);
+        }
+        return result;
+    }
+
+
+    add(rawData: T): void {
+        // Legit use of automatic transformer!
+        const item = this.#transformer(rawData);
+
+        this.#registry.set(item.id, item);
+        this.#order.push(item.id);
+
+        this.emit("dataChanged", [{
+            type: "added",
+            index: this.#order.length - 1,
+            record: item
+        }]);
+    }
+
+
+    /**
+     * The primary method for updating/replacing items in a list.
+     *
+     * <p>Operates on only one item at a time.  To update multiple
+     * records at once, use batchUpdate().</p>
+     *
+     * @typeParam T  The data type of the items in the list.
+     * @param {string | Entry<T>} target The record to update
+     * @param {T | Entry<T>} payload The updates to the record
+     */
+    update(target: string | Entry<T>, payload: T | Entry<T>): boolean {
+        const id = this.#resolveId(target);
+        if (!this.#registry.has(id)) return false;
+
+        const record = this.#isEntry(payload) ? payload : this.#transformer(payload);
+        this.#registry.set(id, record);
+
+        const index = this.#order.indexOf(id);
+        this.emit("dataChanged", [{ type: "modified", index, record }]);
         return true;
     }
 
-    /**
-     * Updates the record at the specified index.  Use this when you have
-     * data to mix in, but don't have the Record itself.
-     *
-     * @param index
-     * @param data
-     */
-    updateAt(index: number, data: T): boolean {
-        const record = this.#data[index];
-        record.update(data)
-        this.emit("dataChanged", [{type: "modified", index, record}]);
-        return true;
+
+    slice(startIndex: number, endIndex?: number): Entry<T>[] {
+        return this.#order
+            .slice(startIndex, endIndex)
+            .map(id => this.#registry.get(id)!);
     }
 
+
+
     /**
-     * Update multiple records at once.
+     * Updates multiple records at once.
      *
-     * @param updates An array of ListItemUpdates
+     * @typeParam T the data type of the items in the list.
+     * @param {ListItemUpdate[]} updates An array of ListItemUpdates
      */
     batchUpdate(updates: ListItemUpdate<T>[]): void {
-        const results = updates
-            .map(({index, record}) => {
-                this.#data[index] = record
-                const type:ListChangeType = "modified";
-                return {
-                    type,
-                    record,
-                    index,
-                };
+        if (!updates || updates.length === 0) return;
+
+        const results: ListChange<T>[] = [];
+
+        for (const { target, value } of updates) {
+            let id: string | undefined;
+            let index = -1;
+
+            // 1. Resolve the ID and Index polymorphically
+            if (typeof target === 'number') {
+                index = target;
+                id = this.#order[index];
+            } else {
+                id = typeof target === 'string' ? target : target.id;
+                index = this.#order.indexOf(id);
+            }
+
+            // Guard: If the item doesn't exist in the list, skip it
+            if (!id || index === -1 || !this.#registry.has(id)) {
+                continue;
+            }
+
+            // 2. Pass raw data through the transformer if it's not already a ListItem
+            const record = this.#isEntry(value) ? value : this.#transformer(value);
+
+            // 3. Update internal registry (The order array doesn't change for a modification)
+            this.#registry.set(id, record);
+
+            // 4. Queue up the change event data
+            results.push({
+                type: "modified",
+                index,
+                record
             });
+        }
+
+        // 5. Performance Win: Emit exactly ONE event for the entire batch
         if (results.length > 0) {
             this.emit("dataChanged", results);
         }
     }
 
-    deleteAt(index: number): boolean {
-        const record = this.#data[index];
-        if (record != undefined) {
+
+    insertBefore(pivotTarget: string | Entry<T>, rawData: T): boolean {
+        const pivotId = this.#resolveId(pivotTarget);
+        const targetIndex = this.#order.indexOf(pivotId);
+        if (targetIndex === -1) return false;
+
+        const record = this.#transformer(rawData);
+        this.#registry.set(record.id, record);
+        this.#order.splice(targetIndex, 0, record.id);
+
+        this.emit("dataChanged", [{ type: "inserted", index: targetIndex, record }]);
+        return true;
+    }
+
+    /**
+     * Polymorphic soft delete
+     */
+    delete(target: string | Entry<T>): boolean {
+        const id = this.#resolveId(target);
+        const record = this.#registry.get(id);
+
+        if (record && !record.deleted) {
             record.deleted = true;
-            this.emit("dataChanged", [{type: "deleted", index}]);
+            const index = this.#order.indexOf(id);
+            this.emit("dataChanged", [{ type: "deleted", index }]);
             return true;
         }
         return false;
     }
 
-    insertBefore(index: number, record: Record<T>): void {
-        this.#data = [
-            ...this.#data.slice(0, index),
-            record,
-            ...this.#data.slice(index)
-        ];
+    sort(comparator: BiFunction<Entry<T>, Entry<T>, number>): void {
+        this.#order.sort((a, b) => {
+            return comparator(this.#registry.get(a)!, this.#registry.get(b)!);
+        });
     }
 
-    sort(comparator: BiFunction<Record<T>, Record<T>, number>): void {
-        this.#data.sort(comparator);
+
+    /**
+     * Returns the first record that matches the criteria,or undefined if no match is found.
+     *
+     * @param {Function} criteria A find function taking an Entry as input
+     * @returns {Entry | undefined} The first matching record or undefined
+     */
+    find(criteria: (item: Entry<T>) => boolean): Entry<T> | undefined {
+        for (const id of this.#order) {
+            const record = this.#registry.get(id)!;
+            if (criteria(record)) return record;
+        }
+        return undefined;
     }
 
-    find(criteria: Predicate<Record<T>>): Record<T> | undefined {
-        return this.#data.find(criteria);
+    /**
+     * Returns the index of first record that matches the criteria,or -1
+     * if no match is found.
+     *
+     * @param {Function} criteria A find function taking an Entry as input
+     * @returns {number} The index of the first matching record or -1
+     */
+    findIndex(criteria: (item: Entry<T>) => boolean): number {
+        for (let i = 0; i < this.#order.length; i++) {
+            const record = this.#registry.get(this.#order[i])!;
+            if (criteria(record)) return i;
+        }
+        return -1; // Correct native fallback instead of undefined
     }
 
-    findIndex(criteria: Predicate<Record<T>>): number | undefined {
-        return this.#data.findIndex(criteria);
+
+    filter(criteria: Predicate<Entry<T>>): Entry<T>[] {
+        const result: Entry<T>[] = [];
+
+        for (const id of this.#order) {
+            const record = this.#registry.get(id)!;
+            // Apply the criteria function to the ListItem wrapper
+            if (criteria(record)) {
+                result.push(record);
+            }
+        }
+
+        return result;
     }
 
-    filter(criteria: Predicate<Record<T>>): Record<T>[] {
-        return this.#data.filter(criteria);
+    /**
+     * Helper to normalize any incoming item or string into a strict ID
+     */
+    #resolveId(target: string | Identifiable): string {
+        return typeof target === 'string' ? target : target.id;
     }
+
+    #isEntry(that: T | Entry<T>): that is Entry<T> {
+        return that instanceof ListItem;
+    }
+
 }
-
-
-
 

@@ -2,16 +2,19 @@ import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
 import DataGrid from "./DataGrid.tsx";
 import TableColumn from "./TableColumn.tsx";
-import ObservableList, {Record} from "../../model/ObservableList.ts";
+import ObservableList, {type Entry, ListItem} from "../../model/ObservableList.ts";
 import {useRef} from "react";
-import Person, {type Measurements} from "../../../tests/models/Person.ts";
+import {type Measurements} from "../../../tests/models/Person.ts";
 import people from "../../../tests/fixtures/people.json";
 import airlineSafety from "../../../tests/fixtures/airline_safety.json";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 import StatefulInput from "../forms/StatefulInput.tsx";
-import {AbstractDTO} from "../../model/dtos.ts";
 import type {RendererProps} from "./Datagrid.types.ts";
 import MenuItem from "../overlays/MenuItem.tsx";
+import type {Struct} from "../../types/types.ts";
+import {BooleanDTO, CurrencyDTO, DateDTO, type DTO, NumberDTO, StringDTO} from "../../model/dtos.ts";
+import {MeasurementsDTO} from "../../../tests/models/PersonDTO.ts";
+import {getDecoratorInstance} from "./typeInference.ts";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {
@@ -38,40 +41,6 @@ const meta: Meta<PropsAndArgs> = {
 export default meta;
 
 type Story = StoryObj<PropsAndArgs>;
-
-class MeasurementsDTO extends AbstractDTO<number>{
-    #height: number;
-    #weight: number;
-
-    constructor(value:Measurements) {
-        super()
-        this.#height = value?.height ?? 0;
-        this.#weight = value?.weight ?? 0;
-    }
-
-    toString(): string {
-        return String(this.valueOf());
-    }
-
-    valueOf(): number {
-        return this.#height;
-    }
-
-    toJSON(): { [p: string]: number } {
-        return super.toJSON();
-    }
-
-    clone(value: Measurements | number): AbstractDTO<number> {
-        if (typeof value === "object") {
-            return new MeasurementsDTO(value)
-        }
-        return new MeasurementsDTO({height: value, weight: this.#weight});
-    }
-
-    get renderType(): string {
-        return "number";
-    }
-}
 
 
 const log = {
@@ -129,12 +98,11 @@ const defaultRenderer = (args: PropsAndArgs) => {
             <TableColumn name="lastName" text="Last Name" required />
             <TableColumn type="currency" name="amount" text="Amount" />
             <TableColumn type="number" name="age" text="Age" />
-            <TableColumn type="boolean" name="active" text="Active" renderType="checkbox" />
+            <TableColumn type="boolean" name="active" text="Active" formType="checkbox" />
             <TableColumn type="date" name="lastUpdated" text="Last Updated" width={100} />
             <TableColumn
                 name="measurements"
                 text="Height"
-                decorator={MeasurementsDTO}
                 renderer={(props: RendererProps) => {
                     const measurements = props.value;
                     return (
@@ -177,9 +145,35 @@ const airlineSafetyRenderer = (args: PropsAndArgs) => {
 };
 
 
+const peopleTransformer = (person: Struct) => {
+    const data = {
+        firstName: new StringDTO(person["firstName"]),
+        lastName: new StringDTO(person["lastName"]),
+        amount: new CurrencyDTO(person["amount"]),
+        age: new NumberDTO(person["age"]),
+        active: new BooleanDTO(person["active"], {formType: "checkbox"}),
+        lastUpdated: new DateDTO(person["lastUpdated"]),
+        measurements: new MeasurementsDTO(person["measurements"])
+    }
+    return new ListItem(data);
+}
+
+
+function airlineSafetyTransformer<T>(item: T){
+    const data: Record<string, DTO<string | number | boolean>> = {};
+
+    for (const key in item) {
+        if (Object.prototype.hasOwnProperty.call(item, key)) {
+            const itemKey = key as keyof T;
+            data[key] = getDecoratorInstance(item[itemKey] as string | number | boolean);
+        }
+    }
+    return new ListItem(data) as unknown as Entry<T>;
+}
+
 export const Primary: Story = {
     args: {
-        data: new ObservableList(people.map((item => new Person(item)))),
+        data: new ObservableList(people, peopleTransformer),
         sortColumn: "lastName",
     },
     render: defaultRenderer,
@@ -188,7 +182,7 @@ export const Primary: Story = {
 
 export const AirlineSafety: Story = {
     args: {
-        data: new ObservableList(airlineSafety.map(item => new Record(item))),
+        data: new ObservableList(airlineSafety, airlineSafetyTransformer),
         showRowCount: false,
     },
     render: airlineSafetyRenderer,

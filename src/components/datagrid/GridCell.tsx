@@ -19,14 +19,9 @@ import useCellStateReducer from "./hooks/useCellStateReducer.tsx";
 import usePreviousState from "./hooks/usePreviousState.tsx";
 import {PageContext} from "./PageContext.ts";
 import ContextMenu from "../overlays/ContextMenu.tsx";
-import type {Record} from "../../model/ObservableList.ts";
-import {AbstractDTO, type DTO, type DTOprops} from "../../model/dtos.ts";
-import {getDecoratorByType, type Newable} from "./typeInference.ts";
+import {type DTO} from "../../model/dtos.ts";
+import type {DataGridEntry} from "./Datagrid.types.ts";
 
-function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type?: string, newable?: Newable<T, V>, props?: DTOprops): DTO<T> {
-    const decorator = newable ?? getDecoratorByType(value, type);
-    return new decorator(value, props);
-}
 
 /**
  * CellFactoryProps does <strong>not</strong> extend BaseRendererProps. While
@@ -36,12 +31,11 @@ function getDecoratorInstance<T, V extends AbstractDTO<T>>(value: T, type?: stri
  *
  * @param V the type of data contained in a DTO
  */
-export type GridCellProps<V> = Configuration<{
+export type GridCellProps<V = string | number | boolean> = Configuration<{
     renderer: ComponentType<RendererProps>,
-    row: Record,
+    row: DataGridEntry<V>,
     rowIndex: number,
-    colIndex: number,
-    decorator?: DTO<V> | Newable<any, any>,
+    colIndex: number
 }>
 
 /**
@@ -50,7 +44,7 @@ export type GridCellProps<V> = Configuration<{
  * @param props
  * @constructor
  */
-export default function GridCell<V extends string | number | boolean>(props: GridCellProps<V>): ReactElement {
+export default function GridCell(props: GridCellProps): ReactElement {
     // ================================= Declarations
     const {
         name,
@@ -62,9 +56,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         editable = true,
         readOnly = false,
         type = "string",
-        locale,
         format,
-        renderType,
         onBlur,
         onFocus,
         onKeyDown: onKyDownProp,
@@ -72,13 +64,13 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         wrap = false,
         width,
         contextMenuItems,
-        decorator: decoratorProp,
     } = props;
     const gridContext = useContext(GridContext);
     const {
         columnWidths,
         columnSizing,
         pinned,
+        items,
     } = gridContext;
     const selectionModel = gridContext.selectionModel?.current;
     const focusModel = gridContext.focusModel?.current;
@@ -96,17 +88,9 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
     const [selected, setSelected] = useState(() => {
         return  selectionModel?.isContained(rowIndex, colIndex) ?? false;
     });
-    const value = (row.get(name) as V);
-    const dto = typeof decoratorProp === "object"
-        ? decoratorProp
-        : getDecoratorInstance(value, type, decoratorProp, {locale, renderType, format});
-
-    if (dto === undefined) {
-        throw new Error(`DTO not found: props = ${name}, ${value}`);
-    }
-
+    const value = items?.get(row.id)?.get(name) as DTO<string | number | boolean>;
     const focusMode = new FocusMode(gridContext);
-    const editMode = new EditMode(dto);
+    const editMode = new EditMode(value);
 
     //==================================================== Effects
     /*
@@ -149,7 +133,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
                 ref.current?.focus();
             } else if (previousActiveState.current === true) {
                 // When we click on another cell, the currently active cell should deactivate.
-                dispatch({type: "deactivate", payload: dto});
+                dispatch({type: "deactivate", payload: value});
             }
         }
         const onSelectionChanged = () => {
@@ -207,7 +191,6 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         // Handle double-clicks vs. single-clicks
         switch (detail) {
             case 2:
-                //if (state.active) return;
                 dispatch?.({type: "activate"});
                 break;
             default:
@@ -218,9 +201,7 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
                } else /* if (!state.active)*/ {
                     focusModel?.focus(rowIndex, colIndex);
                     selectionModel?.reset(rowIndex, colIndex);
-                }/* else {
-                    e.stopPropagation();
-                }*/
+                }
                 // this is the single-click/active use cas.  The cell is active. I see no need to allow propagation.
                 e.stopPropagation();
         }
@@ -281,8 +262,8 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         editable,
         ref:rendererRef,
         readOnly,
-        value: dto,
-        type: dto.renderType,
+        value,
+        type: value?.formType,
         format,
         onBlur,
         onFocus,
@@ -290,7 +271,6 @@ export default function GridCell<V extends string | number | boolean>(props: Gri
         onKeyDown: onKyDownProp,
         className: rendererClass,
         active: state.active,
-        scale: typeof value === "number" ? props.scale : undefined,
     }
 
     return (

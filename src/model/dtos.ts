@@ -5,23 +5,19 @@ import {toISODateString} from "../util/utils.ts";
  * @typeParam T - the data type of the value contained in the DTO
  */
 export interface DTO<T = string | number | boolean | undefined> {
-    /** The string to represent the value when it renders */
-    toString(): string;
-
-    valueOf(): T;
-
-    toJSON(): { [key: string]: T };
-
-    clone(value: T | null): DTO
-
-    readonly renderType: string;
+    [Symbol.toPrimitive](hint: "string" | "number" | "boolean" | "default"): string | number | boolean;
+    toJSON(): { [key: string]: T  | undefined};
+    clone(value: T | null): DTO;
+    valueOf(): T | undefined;
+    value: T | undefined;
+    readonly formType: string;
 }
 
 export type DTOprops = {
     format?: string | Intl.DateTimeFormatOptions,
     locale?: Intl.LocalesArgument,
     /** The type value to send to HTML input elements. */
-    renderType?: "text" | "number" | "date" | "password"
+    formType?: "text" | "number" | "date" | "password"
         | "tel" | "email" | "checkbox" | "switch" | "radio"
         | "color" | "file" | "range" | "search",
     scale?: number,
@@ -31,18 +27,15 @@ export type DTOprops = {
  * @typeParam T - the data type of the value contained in the DTO
  */
 export abstract class AbstractDTO<T> implements DTO<T> {
-    protected get format(): string | undefined {
-        return undefined;
-    };
-
-    protected constructor(){};
-    abstract toString(): string;
-    abstract valueOf(): T;
+    protected constructor() {}
+    abstract [Symbol.toPrimitive](hint: "string" | "number" | "boolean" | "default"): string | number | boolean;
     abstract clone(value: T): DTO;
-    abstract readonly renderType: string;
+    abstract get value(): T | undefined;
+    abstract valueOf(): T | undefined;
+    abstract get formType(): string;
 
-    toJSON(): {[key:string]: T} {
-        return {value: this.valueOf()};
+    toJSON(): {[key:string]: T | undefined} {
+        return {value: this.value};
     }
 }
 
@@ -55,9 +48,9 @@ export class DateDTO extends AbstractDTO<number> {
         month: '2-digit',
         day: '2-digit',
     };
-    #renderType = "date";
+    #formType = "date";
 
-    constructor(value: number, options?: DTOprops) {
+    constructor(value: unknown, options?: DTOprops) {
         super();
         this.#value = Number(value);
         if (options != null) {
@@ -66,15 +59,19 @@ export class DateDTO extends AbstractDTO<number> {
         }
     }
 
-    toString(): string {
-        const v = this.valueOf();
-        return this.#locale === undefined
-            ? toISODateString(v)
-            : new Date(v).toLocaleString(this.#locale, this.#format);
-    }
+    [Symbol.toPrimitive](hint: string | number | boolean | "default"): string | number | boolean {
+        const value = this.#value;
 
-    valueOf(): number {
-        return this.#value;
+        switch (hint) {
+            case "string":
+                return this.#locale === undefined
+                    ? toISODateString(value)
+                    : new Date(value).toLocaleString(this.#locale, this.#format);
+            case "number":
+            case "default":
+            default:
+                return value;
+        }
     }
 
     clone(value: number): DTO {
@@ -83,7 +80,7 @@ export class DateDTO extends AbstractDTO<number> {
             v = Date.parse(String(value));
         }
         const config = {
-            renderType: this.#renderType as "date",
+            formType: this.#formType as "date",
             locale: this.#locale,
             format: this.#format,
         }
@@ -94,16 +91,18 @@ export class DateDTO extends AbstractDTO<number> {
         return this.#value;
     }
 
-    get renderType(): string {
-        return this.#renderType;
+    valueOf(): number {
+        return this.#value;
+    }
+
+    get formType(): string {
+        return this.#formType;
     }
 }
 
 
 export class DateTimeDTO extends DateDTO {
-
-    #renderType: string = "datetime-local";
-
+    #formType: string = "datetime-local";
     #format: Intl.DateTimeFormatOptions = {
         year: 'numeric',   // Forces full 4-digit year (e.g., 2026)
         month: '2-digit',
@@ -112,32 +111,38 @@ export class DateTimeDTO extends DateDTO {
         minute: '2-digit'
     };
 
-    constructor(value: number, options?: DTOprops) {
+    constructor(value: unknown, options?: DTOprops) {
         super(value, options);
         if (options != null) {
-            const {format, renderType} = options;
+            const {format, formType} = options;
             if (typeof format !== "string") {
                 this.#format = format ?? this.#format;
             }
-            this.#renderType = renderType ?? this.#renderType;
+            this.#formType = formType ?? this.#formType;
         }
     }
 
-    toString(): string {
-        return new Date(this.valueOf()).toISOString();
+    [Symbol.toPrimitive](hint: string | number | boolean | "default"): string | number | boolean {
+        const value = this.value;
+
+        switch (hint) {
+            case "string":
+                return new Date(value).toISOString();
+            case "number":
+            case "default":
+            default:
+                return value;
+        }
     }
 
-    get renderType(): string {
-        return this.#renderType;
-    }
 }
 
 export class NumberDTO extends AbstractDTO<number> {
-    #value: number;
+    #value: number = Number.NaN;
     #scale: number = 2;
-    #renderType: string = "number";
+    #formType: string = "number";
 
-    constructor(value: number, options?: DTOprops) {
+    constructor(value?: unknown, options?: DTOprops) {
         super();
         this.#value = Number(value);
         if (options != null) {
@@ -146,25 +151,38 @@ export class NumberDTO extends AbstractDTO<number> {
         }
     }
 
-    toString(): string {
-        const v =  this.valueOf().toFixed(this.#scale);
-        return v.toLocaleString();
-    }
+    [Symbol.toPrimitive](hint: "string" | "number" | "boolean" | "default"): string | number | boolean {
+        const value = this.#value;
 
-    valueOf(): number {
-        return Number(this.#value);
+        switch (hint) {
+            case "string":
+                const v =  value.toFixed(this.#scale);
+                return v.toLocaleString();
+            case "number":
+            case "default":
+            default:
+                return value;
+        }
     }
 
     clone(value: number): DTO {
         const config = {
-            renderType: this.#renderType as "number",
+            formType: this.#formType as "number",
             scale: this.#scale,
         }
         return new NumberDTO(value, config);
     }
 
-    get renderType(): string {
-        return this.#renderType;
+    get value(): number {
+        return this.#value;
+    }
+
+    valueOf(): number {
+        return this.#value;
+    }
+
+    get formType(): string {
+        return this.#formType;
     }
 }
 
@@ -174,13 +192,34 @@ export class CurrencyDTO extends NumberDTO{
     #format: string = "USD";
     #locale: Intl.LocalesArgument = "en-US";
 
-    toString(): string {
-        return `${this.valueOf().toLocaleString(this.#locale, {
-            style: "currency",
-            currency: this.#format,
-            maximumFractionDigits: this.#scale,
-            minimumFractionDigits: this.#scale,
-        })}`;
+    constructor(value?: unknown, options?: DTOprops) {
+        super(value, options);
+    }
+
+    [Symbol.toPrimitive](hint: "string" | "number" | "boolean" | "default"): string | number | boolean {
+        const value = !isNaN(this.value)  ? this.value : 0;
+
+        switch (hint) {
+            case "string":
+                return `${value.toLocaleString(this.#locale, {
+                    style: "currency",
+                    currency: this.#format,
+                    maximumFractionDigits: this.#scale,
+                    minimumFractionDigits: this.#scale,
+                })}`;
+            case "number":
+            case "default":
+            default:
+                return value;
+        }
+    }
+
+    clone(value: number): DTO {
+        const config = {
+            formType: this.formType as "number",
+            scale: this.#scale,
+        }
+        return new CurrencyDTO(value, config);
     }
 
     valueOf(): number {
@@ -192,67 +231,95 @@ export class CurrencyDTO extends NumberDTO{
 
 export class StringDTO extends AbstractDTO<string> {
     #value: string = "";
-    #renderType: string = "text";
+    #formType: string = "text";
 
-    constructor(value: string, options?: DTOprops) {
+    constructor(value?: unknown, options?: DTOprops) {
         super();
-        if (value != null) this.#value = value;
+        if (value != null) this.#value = String(value);
         if (options != null) {
-            const {renderType} = options
-            this.#renderType = renderType ?? this.renderType;
+            const {formType} = options
+            this.#formType = formType ?? this.formType;
         }
     }
 
-    toString(): string {
-        return this.valueOf();
+    [Symbol.toPrimitive](hint: string | number | boolean | "default"): string | number | boolean {
+        const value = this.#value;
+
+        switch (hint) {
+            case "string":
+                return value;
+            case "number":
+            case "default":
+            default:
+                return value;
+        }
+    }
+
+    clone(value: string): DTO {
+        const config = {
+            formType: this.#formType as "text",
+        }
+        return new StringDTO(value, config);
+    }
+
+    get formType(): string {
+        return this.#formType;
+    }
+
+    get value(): string {
+        return this.#value;
     }
 
     valueOf(): string {
         return this.#value;
     }
-
-    clone(value: string): DTO {
-        const config = {
-            renderType: this.#renderType as "text",
-        }
-        return new StringDTO(value, config);
-    }
-
-    get renderType(): string {
-        return this.#renderType;
-    }
 }
+
 
 export class BooleanDTO extends AbstractDTO<boolean> {
     #value: boolean;
-    #renderType: string = "text";
+    #formType: string = "text";
 
-    constructor(value: boolean, options?: DTOprops) {
+    constructor(value?: unknown, options?: DTOprops) {
         super();
         this.#value = String(value) === "true";
         if (options != null) {
-            const {renderType} = options;
-            this.#renderType = renderType ?? this.renderType;
+            const {formType} = options;
+            this.#formType = formType ?? this.formType;
         }
     }
 
-    toString(): string {
-        return `${this.valueOf()}`;
-    }
+    [Symbol.toPrimitive](hint: string | number | boolean | "default"): string | number | boolean {
+        const value = this.#value;
 
-    valueOf(): boolean {
-        return Boolean(this.#value);
+        switch (hint) {
+            case "string":
+                return `${this.value}`;
+            case "number":
+                return value === true ? 1 : 0;
+            case "default":
+            default:
+                return value;
+        }
     }
 
     clone(value: boolean): DTO {
         const config = {
-            renderType: this.#renderType as "checkbox" | "switch" | "text",
+            formType: this.#formType as "checkbox" | "switch" | "text",
         }
         return new BooleanDTO(value, config);
     }
 
-    get renderType(): string {
-        return this.#renderType;
+    get formType(): string {
+        return this.#formType;
+    }
+
+    get value(): boolean | undefined {
+       return this.#value;
+    }
+
+    valueOf(): boolean | undefined {
+        return this.#value;
     }
 }
 

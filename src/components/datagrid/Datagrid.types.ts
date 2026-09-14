@@ -1,6 +1,6 @@
 import type {ComponentPropsWithoutRef, ReactElement, RefObject} from "react";
 import type {Predicate, Struct} from "../../types/types.ts";
-import type {Record} from "../../model/ObservableList.ts";
+import type {Entry} from "../../model/ObservableList.ts";
 import type {DTO, DTOprops} from "../../model/dtos.ts";
 
 
@@ -12,13 +12,13 @@ export type EnhancedPanelProps<T> = Omit<ComponentPropsWithoutRef<'div'>, keyof 
  * @typeParam T - the type of the field value passed to the render
  * @typeParam U - the type of the data row, the object contained in a row of data
  */
-export type RendererProps<T = string | number | boolean, U extends Struct = Struct> = EnhancedInputProps<{
+export type RendererProps<T = string | number | boolean | DTO<number | string | boolean>, U extends Struct = Struct> = EnhancedInputProps<{
     /**
      * Boolean for whether the value should be rendered in an editable node (e.g. input)
      * or within a readonly DIV.
      */
     active?: boolean,
-    value?: DTO<T>,
+    value?: T,
     /** The name of a property used to supply the value. */
     name: string,
     className?: string,
@@ -39,10 +39,7 @@ export type RendererProps<T = string | number | boolean, U extends Struct = Stru
     /**
      * The entire data row, needed for things like compound field values.
      */
-    row?: Record<U>,
-    /** Used by numeric renderers */
-    scale?: number,
-    locale?: Intl.LocalesArgument,
+    row?: Entry<U>,
     /** Whether text should wrap. */
     wrap?: boolean,
     /** Commands for the column's context menu. */
@@ -50,6 +47,7 @@ export type RendererProps<T = string | number | boolean, U extends Struct = Stru
     /**
      * Items for the column's DataLists.
      * Turns the cells in the column into autocomplete fields.
+     * @deprecated
      */
     listItems?: string[],
     /**
@@ -65,5 +63,9 @@ export type RendererProps<T = string | number | boolean, U extends Struct = Stru
 
 export type Configuration<T> = EnhancedPanelProps<T> & DTOprops & Omit<RendererProps, keyof T> & T;
 export type EnhancedInputProps<T> = Omit<ComponentPropsWithoutRef<'input'>, keyof T> & T;
+
+export type DataGridEntry<V = string | number | boolean> = Entry<Record<string, DTO<V>>> & {
+    [key: string]: unknown;
+};
 
 

@@ -1,24 +1,24 @@
 import {type ReactElement, type RefObject, useEffect, useRef, useState, useContext} from "react";
-import {Record} from "../../model/ObservableList.ts";
-import type {Coordinates, Struct} from "../../types/types";
+import type {Coordinates} from "../../types/types";
 import styles from "./DataGrid.module.css";
 import {Emitter, type Observable} from "../../model/Observable.ts";
 import {PageContext} from "./PageContext";
 import {GridContext} from "./GridContext";
 import type {SelectionChange} from "./SelectionModel";
+import type {DataGridEntry} from "./Datagrid.types.ts";
 
 type IntersectionResult = {
     visiblePages: Set<number>,
 };
 
-type PageFactoryProps<T extends Struct> = {
-    data: Record<T>[],
+type PageFactoryProps<T = string | number | boolean> = {
+    data: DataGridEntry<T>[],
     pageSize: number,
     rowHeight: number,
     root?: RefObject<HTMLElement | undefined | null>,
     offset?: number,
     threshold?: number | number[],
-    rowFactory: (row: Record<T>, rowIndex: number) => ReactElement,
+    rowFactory: (row: DataGridEntry<T>, rowIndex: number) => ReactElement,
 };
 
 /**
@@ -29,7 +29,7 @@ type PageFactoryProps<T extends Struct> = {
  * @param props
  * @constructor
  */
-export default function PageFactory<T extends Struct>(props: PageFactoryProps<T>): ReactElement[] {
+export default function PageFactory(props: PageFactoryProps): ReactElement[] {
     const {
         data,
         rowHeight,
@@ -71,14 +71,14 @@ export default function PageFactory<T extends Struct>(props: PageFactoryProps<T>
 }
 
 
-type PageProps<T extends Struct> = {
-    rows: Record<T>[],
+type PageProps<T = number | string | boolean> = {
+    rows: DataGridEntry<T>[],
     rowHeight: number,
     pageSize: number,
     observer: IntersectionObserver,
     emitter: RefObject<Observable<IntersectionResult>>,
     pageIndex: number,
-    rowFactory: (row: Record<T>, rowIndex: number) => ReactElement,
+    rowFactory: (row: DataGridEntry<T>, rowIndex: number) => ReactElement,
 };
 
 /**
@@ -87,7 +87,7 @@ type PageProps<T extends Struct> = {
  * @param props
  * @constructor
  */
-function Page<T extends Struct>(props: PageProps<T>): ReactElement {
+function Page(props: PageProps): ReactElement {
     const {
         rows,
         rowHeight,

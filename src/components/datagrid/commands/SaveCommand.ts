@@ -1,5 +1,5 @@
 import type {Command, Struct} from "../../../types/types.ts";
-import ObservableList, {type PartialUpdate} from "../../../model/ObservableList.ts";
+import ObservableList, {type Entry, type PartialUpdate} from "../../../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 
@@ -11,14 +11,13 @@ export default class SaveCommand<T extends Struct> implements Command {
     static readonly name: string = "Save";
     static readonly accelerator: string = "⌘+s";
     #updates: PartialUpdate<T>[];
-    // @ts-expect-error
-    #list: ObservableList<T>; // TODO:  Will be needed in CORE-11.
+    #list: ObservableList<T>;
 
 
     constructor(list: ObservableList<T>, updates: PartialUpdate<T>[]) {
         this.#list = list;
         this.#updates =  updates;
-        this.#updates.forEach(item => item.previous = item.record?.clone())
+        this.#updates.forEach(item => item.previous = item.record?.clone() as Entry<T>)
     }
 
     redo(): boolean {
@@ -27,9 +26,9 @@ export default class SaveCommand<T extends Struct> implements Command {
 
     undo(): boolean {
         this.#updates
-            .forEach(({record, previous}) => {
-                if (previous != null) {
-                    record?.copy(previous);
+            .forEach(({previous, record}) => {
+                if (previous != null && record != null) {
+                    this.#list.update(record, previous);
                 }
             });
 
@@ -45,10 +44,7 @@ export default class SaveCommand<T extends Struct> implements Command {
 
         updates.forEach(({ record, value }) => {
             if (!record) return;
-            (Object.keys(value) as Array<keyof typeof value>).forEach(key => {
-                // TODO: List items will be immutable in CORE-11.
-                record.set(String(key), value[key]);
-            });
+            this.#list.update(record, record.merge(value));
         });
 
         return true;

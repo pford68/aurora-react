@@ -11,8 +11,7 @@ export default function withPlaceholder(WrappedComponent:ComponentType<RendererP
         const {className, active = false, placeholder = "NULL", value, validator} = props;
         const baseClassName = joinCss(styles.renderer, styles.text, className);
 
-        const valueOf = value?.valueOf();
-        if (isEmpty(valueOf) && !active) {
+        if (isEmpty(value) && !active) {
             return (
                 <Text
                     value={placeholder}

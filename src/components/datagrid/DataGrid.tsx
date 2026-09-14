@@ -1,6 +1,12 @@
-import {type ReactElement, type KeyboardEvent, useReducer, useRef, useEffect} from "react";
+import {
+    type ReactElement,
+    type KeyboardEvent,
+    useReducer,
+    useRef,
+    useEffect
+} from "react";
 import PageFactory from "./PageFactory";
-import ObservableList, {Record} from "../../model/ObservableList.ts";
+import ObservableList, {type Entry} from "../../model/ObservableList.ts";
 import type {Struct} from "../../types/types";
 import styles from "./DataGrid.module.css";
 import {joinCss} from "./../../util/utils";
@@ -19,7 +25,7 @@ import StatefulInput from "../forms/StatefulInput.tsx";
 import withPlaceholder from "./withPlaceholder.tsx";
 import withReadonlyMode from "./withReadonlyMode.tsx";
 import Toggle from "../forms/Toggle.tsx";
-import type {RendererProps} from "./Datagrid.types.ts";
+import type {DataGridEntry, RendererProps} from "./Datagrid.types.ts";
 
 
 // ==================================== Private
@@ -90,23 +96,19 @@ function reducer(state: GridState, action: GridAction): GridState {
 
 
 function defaultCellRenderer(props: RendererProps) {
-    const {value, ref} = props;
-    if (typeof value?.valueOf() === "boolean") {
-        return <Toggle {...props} value={value}/>
+    const {value:dto, ref} = props;
+    if (typeof dto?.valueOf() === "boolean") {
+        return <Toggle {...props} value={dto?.valueOf()}/>
     }
-    return <StatefulInput {...props} value={value?.valueOf()} ref={ref}/>
+    return <StatefulInput {...props} value={dto?.valueOf()} ref={ref}/>
 }
 
 
-function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, index: number, rowIndex: number, row: Record<T>){
+function cellFactoryProvider(columnConfig: TableColumnProps, index: number, rowIndex: number, row: DataGridEntry<string | number | boolean>){
     const {
         renderer = defaultCellRenderer,
-        cellFactory,
     } = columnConfig;
 
-    if (cellFactory != null) {
-        return (() => cellFactory(columnConfig, index, rowIndex, row))();
-    }
 
     //======================================= Default cell factory
     return (
@@ -122,7 +124,7 @@ function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, i
 }
 
 
-function defaultRowFactory<T extends Struct>(row: Record<T>, rowIndex: number) {
+function defaultRowFactory(row: DataGridEntry<string | number | boolean>, rowIndex: number) {
     return (
         <GridRow
             key={rowIndex}
@@ -200,7 +202,7 @@ export type DataGridProps = {
     resizable?: boolean,
     border?: boolean,
     contained?: boolean,
-    rowFactory?: (row: Record<Struct>, rowIndex: number) => ReactElement,
+    rowFactory?: (row: DataGridEntry<string | number | boolean>, rowIndex: number) => ReactElement,
 };
 
 
@@ -258,6 +260,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
         border = true,
         contained = true,
         rowFactory,
+        sortColumn,
     } = props;
 
     const containerRef = useRef<HTMLDivElement>(null)
@@ -279,7 +282,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
     const rowCount = data.length;
     const selectionModel = useRef(new SelectionModel(data));
     const focusModel = useRef(new FocusModel(rowCount, visibleColumns.length));
-    const initSortColumn = props.sortColumn ?? visibleColumns[0].props.name;
+    const initSortColumn = sortColumn ?? visibleColumns[0]?.props.name;
     const initialGridState: GridState = {
         sortColumns: [initSortColumn],
         sortDirection: SORT_DIRECTION_ASC,
@@ -331,7 +334,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
     }
 
     //====================================== Rendering
-    const wrappedComparator = (a: Record<Struct>, b: Record<Struct>): number => {
+    const wrappedComparator = (a: Entry<Struct>, b: Entry<Struct>): number => {
         const sortColumn = visibleColumns
             .find(col => col.props.name === state.sortColumns[0]);
         if (sortColumn == null) return 0;

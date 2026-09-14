@@ -1,18 +1,21 @@
 import CopyCommand, {type CopyConfig} from "./CopyCommand.ts";
 import type {Struct} from "../../../types/types.ts";
-import {Record} from "../../../model/ObservableList.ts";
+import ObservableList, {type Entry} from "../../../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
+
 
 export default class CutCommand<T extends Struct> extends CopyCommand<T> {
 
     static readonly icon: IconProp = "cut";
     static readonly name: string = "Cut";
     static readonly accelerator: string = "⌘+x";
-    readonly #previous: {id: string, clone: Record<T>}[];
+    readonly #previous: Entry<T>[];
+    #list: ObservableList<T>;
 
-    constructor(config: CopyConfig<T>) {
+    constructor(config: CopyConfig<T>, list: ObservableList<T>) {
         super(config);
         this.#previous = [];
+        this.#list = list;
     }
 
     redo(): boolean {
@@ -22,8 +25,7 @@ export default class CutCommand<T extends Struct> extends CopyCommand<T> {
 
     undo(): boolean {
         this.#previous.forEach((prevRecord) => {
-            const record = this.selectedItems.find(record => record.id === prevRecord.id);
-            record?.copy(prevRecord.clone);
+            this.#list.update(prevRecord, prevRecord.clone() as Entry<T>);
         });
 
         return true;
@@ -36,12 +38,15 @@ export default class CutCommand<T extends Struct> extends CopyCommand<T> {
 
     #execute(doClone: boolean): boolean {
         this.selectedItems.forEach(item => {
-            if (doClone) this.#previous.push({id: item.id, clone: item.clone()});
+            if (doClone) this.#previous.push(item.clone() as Entry<T>);
 
+            const nulls:Record<string, unknown | null> = {}
             this.columns.forEach(name => {
-                item.set(name, null);
-            })
+                nulls[name] = null;
+            });
+            this.#list.update(item, item.merge(nulls as Partial<T>));
         });
+
         return true;
     }
 
