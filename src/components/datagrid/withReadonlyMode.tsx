@@ -12,7 +12,6 @@ export default function withReadonlyMode(WrappedComponent:ComponentType<Renderer
         const baseClassName = joinCss(styles.renderer, styles.text, className);
 
         if (!active) {
-            console.log(value)
             return <Text value={String(value)} className={baseClassName} validator={validator}/>;
         }
 

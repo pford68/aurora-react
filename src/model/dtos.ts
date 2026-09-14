@@ -197,13 +197,10 @@ export class CurrencyDTO extends NumberDTO{
     }
 
     [Symbol.toPrimitive](hint: "string" | "number" | "boolean" | "default"): string | number | boolean {
-        const value = this.value;
+        const value = !isNaN(this.value)  ? this.value : 0;
 
         switch (hint) {
             case "string":
-                if (isNaN(value)){
-                    return "$0.00";
-                }
                 return `${value.toLocaleString(this.#locale, {
                     style: "currency",
                     currency: this.#format,
@@ -213,9 +210,6 @@ export class CurrencyDTO extends NumberDTO{
             case "number":
             case "default":
             default:
-                if (isNaN(value)){
-                    return 0;
-                }
                 return value;
         }
     }
@@ -226,6 +220,11 @@ export class CurrencyDTO extends NumberDTO{
             scale: this.#scale,
         }
         return new CurrencyDTO(value, config);
+    }
+
+    valueOf(): number {
+        const value = super.valueOf();
+        return !isNaN(value) ? value : 0;
     }
 }
 

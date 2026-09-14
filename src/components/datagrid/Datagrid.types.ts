@@ -64,9 +64,8 @@ export type RendererProps<T = string | number | boolean | DTO<number | string | 
 export type Configuration<T> = EnhancedPanelProps<T> & DTOprops & Omit<RendererProps, keyof T> & T;
 export type EnhancedInputProps<T> = Omit<ComponentPropsWithoutRef<'input'>, keyof T> & T;
 
-type DTOEntry<V> = Omit<Entry<V>, keyof V> & V;
-export type DataGridEntry<V> = DTOEntry<{
-    get: (name: string) => DTO<V>
-}>
+export type DataGridEntry<V = string | number | boolean> = Entry<Record<string, DTO<V>>> & {
+    [key: string]: unknown;
+};
 
 

@@ -60,7 +60,7 @@ export default function useCellStateReducer(props: useReducerProps): [CellFactor
             case "deactivate": { // Sends to focused mode and flushes changes.
                 const {name} = ref.current ?? {};
                 const dto = action.payload;
-                let value = findValue(ref.current);
+                const value = findValue(ref.current);
                 if (items != null && (value != null || nullable)) {
                     const updatedValue = String(value).trim().length > 0 ? value : null;
                     const newDto = dto?.clone(updatedValue);

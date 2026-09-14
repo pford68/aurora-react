@@ -1,5 +1,5 @@
 import {type ReactElement, type RefObject, useEffect, useRef, useState, useContext} from "react";
-import type {Coordinates, Struct} from "../../types/types";
+import type {Coordinates} from "../../types/types";
 import styles from "./DataGrid.module.css";
 import {Emitter, type Observable} from "../../model/Observable.ts";
 import {PageContext} from "./PageContext";
@@ -11,7 +11,7 @@ type IntersectionResult = {
     visiblePages: Set<number>,
 };
 
-type PageFactoryProps<T extends Struct> = {
+type PageFactoryProps<T = string | number | boolean> = {
     data: DataGridEntry<T>[],
     pageSize: number,
     rowHeight: number,
@@ -29,7 +29,7 @@ type PageFactoryProps<T extends Struct> = {
  * @param props
  * @constructor
  */
-export default function PageFactory<T extends Struct>(props: PageFactoryProps<T>): ReactElement[] {
+export default function PageFactory(props: PageFactoryProps): ReactElement[] {
     const {
         data,
         rowHeight,
@@ -71,7 +71,7 @@ export default function PageFactory<T extends Struct>(props: PageFactoryProps<T>
 }
 
 
-type PageProps<T extends Struct> = {
+type PageProps<T = number | string | boolean> = {
     rows: DataGridEntry<T>[],
     rowHeight: number,
     pageSize: number,
@@ -87,7 +87,7 @@ type PageProps<T extends Struct> = {
  * @param props
  * @constructor
  */
-function Page<T extends Struct>(props: PageProps<T>): ReactElement {
+function Page(props: PageProps): ReactElement {
     const {
         rows,
         rowHeight,

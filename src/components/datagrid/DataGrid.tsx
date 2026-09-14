@@ -104,7 +104,7 @@ function defaultCellRenderer(props: RendererProps) {
 }
 
 
-function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, index: number, rowIndex: number, row: DataGridEntry<T>){
+function cellFactoryProvider(columnConfig: TableColumnProps, index: number, rowIndex: number, row: DataGridEntry<string | number | boolean>){
     const {
         renderer = defaultCellRenderer,
     } = columnConfig;
@@ -124,7 +124,7 @@ function cellFactoryProvider<T extends Struct>(columnConfig: TableColumnProps, i
 }
 
 
-function defaultRowFactory<T extends Struct>(row: DataGridEntry<T>, rowIndex: number) {
+function defaultRowFactory(row: DataGridEntry<string | number | boolean>, rowIndex: number) {
     return (
         <GridRow
             key={rowIndex}
@@ -202,7 +202,7 @@ export type DataGridProps = {
     resizable?: boolean,
     border?: boolean,
     contained?: boolean,
-    rowFactory?: (row: DataGridEntry<Struct>, rowIndex: number) => ReactElement,
+    rowFactory?: (row: DataGridEntry<string | number | boolean>, rowIndex: number) => ReactElement,
 };
 
 
@@ -260,6 +260,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
         border = true,
         contained = true,
         rowFactory,
+        sortColumn,
     } = props;
 
     const containerRef = useRef<HTMLDivElement>(null)
@@ -281,7 +282,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
     const rowCount = data.length;
     const selectionModel = useRef(new SelectionModel(data));
     const focusModel = useRef(new FocusModel(rowCount, visibleColumns.length));
-    const initSortColumn = props.sortColumn ?? visibleColumns[0].props.name;
+    const initSortColumn = sortColumn ?? visibleColumns[0]?.props.name;
     const initialGridState: GridState = {
         sortColumns: [initSortColumn],
         sortDirection: SORT_DIRECTION_ASC,

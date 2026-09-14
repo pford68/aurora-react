@@ -77,7 +77,7 @@ export type TableColumnProps<V = unknown> = Configuration<{
     onResize?: (colName: string, delta: number) => void,
     wrap?: boolean,
     width?: number,
-    cellFactory?: (props: TableColumnProps<V>, index: number, rowIndex: number, row: DataGridEntry<V>) => ReactElement,
+    cellFactory?: (props: TableColumnProps<V>, index: number, rowIndex: number, row: DataGridEntry<string | boolean | number>) => ReactElement,
     validator?: (value: string) => boolean,
     required?: boolean,
     contextMenuItems?: ReactElement[],

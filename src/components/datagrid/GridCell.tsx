@@ -9,7 +9,7 @@ import {
     useCallback,
     type ComponentType,
 } from "react";
-import type {Coordinates, Struct} from "../../types/types.ts";
+import type {Coordinates} from "../../types/types.ts";
 import {GridContext} from "./GridContext.ts";
 import {joinCss} from "../../util/utils.ts";
 import styles from "./DataGrid.module.css";
@@ -20,7 +20,6 @@ import usePreviousState from "./hooks/usePreviousState.tsx";
 import {PageContext} from "./PageContext.ts";
 import ContextMenu from "../overlays/ContextMenu.tsx";
 import {type DTO} from "../../model/dtos.ts";
-import {type Newable} from "./typeInference.ts";
 import type {DataGridEntry} from "./Datagrid.types.ts";
 
 
@@ -32,12 +31,11 @@ import type {DataGridEntry} from "./Datagrid.types.ts";
  *
  * @param V the type of data contained in a DTO
  */
-export type GridCellProps<V> = Configuration<{
+export type GridCellProps<V = string | number | boolean> = Configuration<{
     renderer: ComponentType<RendererProps>,
     row: DataGridEntry<V>,
     rowIndex: number,
-    colIndex: number,
-    decorator?: DTO<V> | Newable<any, any>,
+    colIndex: number
 }>
 
 /**
@@ -46,7 +44,7 @@ export type GridCellProps<V> = Configuration<{
  * @param props
  * @constructor
  */
-export default function GridCell<V extends Struct>(props: GridCellProps<V>): ReactElement {
+export default function GridCell(props: GridCellProps): ReactElement {
     // ================================= Declarations
     const {
         name,
@@ -90,7 +88,7 @@ export default function GridCell<V extends Struct>(props: GridCellProps<V>): Rea
     const [selected, setSelected] = useState(() => {
         return  selectionModel?.isContained(rowIndex, colIndex) ?? false;
     });
-    const value = items?.get(row.id)?.get(name) as DTO<V>;
+    const value = items?.get(row.id)?.get(name) as DTO<string | number | boolean>;
     const focusMode = new FocusMode(gridContext);
     const editMode = new EditMode(value);
 

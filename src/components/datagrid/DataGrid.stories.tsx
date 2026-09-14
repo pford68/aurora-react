@@ -2,7 +2,7 @@ import * as React from "react";
 import type {Meta, StoryObj} from "@storybook/react-vite";
 import DataGrid from "./DataGrid.tsx";
 import TableColumn from "./TableColumn.tsx";
-import ObservableList, {ListItem} from "../../model/ObservableList.ts";
+import ObservableList, {type Entry, ListItem} from "../../model/ObservableList.ts";
 import {useRef} from "react";
 import {type Measurements} from "../../../tests/models/Person.ts";
 import people from "../../../tests/fixtures/people.json";
@@ -12,8 +12,9 @@ import StatefulInput from "../forms/StatefulInput.tsx";
 import type {RendererProps} from "./Datagrid.types.ts";
 import MenuItem from "../overlays/MenuItem.tsx";
 import type {Struct} from "../../types/types.ts";
-import {BooleanDTO, CurrencyDTO, DateDTO, NumberDTO, StringDTO} from "../../model/dtos.ts";
+import {BooleanDTO, CurrencyDTO, DateDTO, type DTO, NumberDTO, StringDTO} from "../../model/dtos.ts";
 import {MeasurementsDTO} from "../../../tests/models/PersonDTO.ts";
+import {getDecoratorInstance} from "./typeInference.ts";
 
 
 type PropsAndArgs = React.ComponentProps<typeof DataGrid> & {
@@ -157,6 +158,19 @@ const peopleTransformer = (person: Struct) => {
     return new ListItem(data);
 }
 
+
+function airlineSafetyTransformer<T>(item: T){
+    const data: Record<string, DTO<string | number | boolean>> = {};
+
+    for (const key in item) {
+        if (Object.prototype.hasOwnProperty.call(item, key)) {
+            const itemKey = key as keyof T;
+            data[key] = getDecoratorInstance(item[itemKey] as string | number | boolean);
+        }
+    }
+    return new ListItem(data) as unknown as Entry<T>;
+}
+
 export const Primary: Story = {
     args: {
         data: new ObservableList(people, peopleTransformer),
@@ -168,7 +182,7 @@ export const Primary: Story = {
 
 export const AirlineSafety: Story = {
     args: {
-        data: new ObservableList(airlineSafety),
+        data: new ObservableList(airlineSafety, airlineSafetyTransformer),
         showRowCount: false,
     },
     render: airlineSafetyRenderer,

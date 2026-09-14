@@ -1,25 +1,24 @@
 import {Emitter} from "./Observable.ts";
-import type {BiFunction, Predicate} from "../types/types.ts";
+import type {BiFunction, Predicate, Struct} from "../types/types.ts";
 import {v4 as uuid} from "uuid";
 
-type Identifiable = {
+interface Identifiable  {
     id: string
 }
 
-type Metadata = Identifiable & {
-    deleted: boolean,
-}
-
-export interface Cloneable {
-    clone(): Cloneable;
+interface Metadata extends Identifiable {
+    deleted: boolean;
 }
 
 type ValueOf<T> = T[keyof T];
-export type Entry<T> = Cloneable & Metadata & {
-    get: (key: keyof T) => ValueOf<T>,
-    getAll: () => T,
-    merge: (data: Partial<T>) => Entry<T>,
+export interface Entry<T = Struct>  extends Metadata{
+    get(key: keyof T): ValueOf<T>,
+    getAll(): T,
+    merge(data: Partial<T>): Entry<T>;
+    clone(): Entry<T>;
 }
+
+
 
 /**
  * Allows associating metadata with data, without enriching/altering the data.
@@ -59,7 +58,7 @@ export class ListItem<T> {
     }
 
     getAll(): T {
-        return this.#data;
+        return {...this.#data};
     }
 
     get(key: keyof T): unknown {
@@ -172,11 +171,14 @@ export type PartialUpdate<T> = {
     previous?: Entry<T>,
 }
 
+function defaultTransformer<T>(item: T){
+    return new ListItem(item) as unknown as Entry<T>;
+}
 
 /**
  * An array-like list that notifies listeners when its underlying data has changed.
  *
- * @typeParam T The type of data contained in each Record in the list
+ * @typeParam T The type of data contained in each Entry in the list
  */
 export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
     /** Maintains the internal data. */
@@ -192,9 +194,8 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
      */
     constructor(data: T[] = [], transformer?: (data: T) => Entry<T>) {
         super();
-        this.#transformer = transformer ?? ((item: T) => {
-            return new ListItem(item) as Entry<T>;
-        });
+        this.#transformer = transformer ?? defaultTransformer;
+
         for (const rawItem of data) {
             this.add(rawItem);
         }
