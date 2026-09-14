@@ -9,8 +9,9 @@ export type Predicate<T> = (value:T) => boolean;
 export type Supplier<T> = () => T;
 export type Adapter<T, R> = (value:T) => R;
 export type BiFunction<T, U, R> = (value1:T, value2:U) => R;
-export type Struct = {[key:string]: unknown};
+export type Struct = Record<string | number | symbol, unknown>;
 export type Coordinates = {rowIndex: number, colIndex: number};
+/** @deprecated */
 export type DataTypes =
     | "string"
     | "number"
@@ -22,6 +23,8 @@ export type DataTypes =
     | "array"
     | "map"
     | "enum";
+export type Primitive = string | number | boolean | bigint | symbol | null | undefined;
+export type Collection = Map<unknown, unknown> | Set<unknown> | unknown[];
 
 export interface Command {
     execute(): boolean;
