@@ -1,26 +1,24 @@
 import {
-    type ReactElement,
-    type MouseEvent,
+    type ComponentType,
     type KeyboardEvent,
+    type MouseEvent,
+    type ReactElement,
     useContext,
     useEffect,
     useRef,
     useState,
-    useCallback,
-    type ComponentType,
 } from "react";
 import type {Coordinates} from "../../types/types.ts";
 import {GridContext} from "./GridContext.ts";
 import {joinCss} from "../../util/utils.ts";
 import styles from "./DataGrid.module.css";
-import type {Configuration, RendererProps} from "./Datagrid.types.ts";
+import type {Configuration, DataGridEntry, RendererProps} from "./Datagrid.types.ts";
 import {EditMode, FocusMode} from "./cellStates.ts";
 import useCellStateReducer from "./hooks/useCellStateReducer.tsx";
 import usePreviousState from "./hooks/usePreviousState.tsx";
 import {PageContext} from "./PageContext.ts";
 import ContextMenu from "../overlays/ContextMenu.tsx";
 import {type DTO} from "../../model/dtos.ts";
-import type {DataGridEntry} from "./Datagrid.types.ts";
 
 
 /**
@@ -183,7 +181,7 @@ export default function GridCell(props: GridCellProps): ReactElement {
 
 
     // ====================================== Event handlers
-    const onClick = useCallback((e: MouseEvent) => {
+    const onClick = (e: MouseEvent) => {
         const {detail} = e;
         // If the state is active, we just want to be able to click and type normally.
         if (state.active) return;
@@ -205,32 +203,16 @@ export default function GridCell(props: GridCellProps): ReactElement {
                 // this is the single-click/active use cas.  The cell is active. I see no need to allow propagation.
                 e.stopPropagation();
         }
-    }, [
-        state,
-        dispatch,
-        selectionModel,
-        focusModel
-    ]);
+    };
 
 
-    const onKeyDown = useCallback(
-        (e: KeyboardEvent) => {
+    const onKeyDown = (e: KeyboardEvent) => {
             state.active
                 ? editMode?.onKeyDown(e, dispatch)
                 : focusMode?.onKeyDown(e, dispatch);
-        },
-        [
-            state,
-            editMode,
-            focusMode,
-            dispatch
-        ],
-    );
+        };
 
-    const onFocusWithin = useCallback(
-        () => focusModel?.sync(rowIndex, colIndex),
-        [focusModel, rowIndex, colIndex],
-    );
+    const onFocusWithin =  () => focusModel?.sync(rowIndex, colIndex);
 
 
 

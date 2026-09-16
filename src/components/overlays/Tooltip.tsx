@@ -1,4 +1,4 @@
-import {type ReactElement, type ReactNode, type MouseEvent, useState, useCallback, useRef} from "react";
+import {type ReactElement, type ReactNode, type MouseEvent, useState, useRef} from "react";
 import Overlay from "./Overlay.tsx";
 import styles from "./overlays.module.css";
 import useNormalizedPosition from "../../hooks/useNormalizedPosition.tsx";
@@ -29,8 +29,7 @@ export default function Tooltip(props: TooltipProps): ReactElement {
 
     const contentRef = useRef<HTMLDivElement | null>(null)
 
-    const onMouseover = useCallback(
-        (e: MouseEvent) => {
+    const onMouseover = (e: MouseEvent) => {
             setState(() => {
                 return {
                     visible: true,
@@ -38,20 +37,15 @@ export default function Tooltip(props: TooltipProps): ReactElement {
                     left: e.clientX,
                 }
             })
-        },
-        [setState],
-    );
+        };
 
-    const onMouseout = useCallback(
-        (e: MouseEvent) => {
+    const onMouseout = (e: MouseEvent) => {
             setState({
                 visible: false,
                 top: e.clientY,
                 left: e.clientX,
             })
-        },
-        [setState],
-    );
+        };
 
     const {left, top} = state;
     useNormalizedPosition(contentRef, {left, top}, {left:offsetLeft, top:offsetTop});

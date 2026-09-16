@@ -1,11 +1,4 @@
-import {
-    type ReactElement,
-    useContext,
-    useEffect,
-    useRef,
-    type DragEvent,
-    useCallback,
-} from "react";
+import {type ReactElement, useContext, useEffect, useRef, type DragEvent,} from "react";
 import type {BiFunction, Struct} from "../../types/types";
 import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext";
@@ -167,8 +160,7 @@ export default function TableColumn<T extends Struct>(props: TableColumnProps<T>
 
 
     // =========================================== Event handlers
-    const updatePin = useCallback(
-        () => {
+    const updatePin = () => {
             const pushed = !pinned.has(name)
             const el = ref.current;
             if (el != null && pushed) {
@@ -176,9 +168,7 @@ export default function TableColumn<T extends Struct>(props: TableColumnProps<T>
             } else if (el != null && !pushed) {
                 gridDispatch?.({type: "unpin", payload: {name}});
             }
-        },
-        [pinned, gridDispatch, ref.current],
-    );
+        };
 
 
     const onSortClicked = () => {
@@ -210,13 +200,10 @@ export default function TableColumn<T extends Struct>(props: TableColumnProps<T>
         }
     }
 
-    const clear = useCallback(
-        () => {
+    const clear = () => {
             focusModel?.clear();
             selectionModel?.clearSelections();
-        },
-        [focusModel, selectionModel],
-    );
+        };
 
     // ===================================== Rendering
     return  (
