@@ -6,7 +6,7 @@ import {toISODateString} from "../util/utils.ts";
  */
 export interface DTO<T = string | number | boolean | undefined> {
     [Symbol.toPrimitive](hint: "string" | "number" | "boolean" | "default"): string | number | boolean;
-    toJSON(): { [key: string]: T  | undefined};
+    toJSON(): T | undefined;
     clone(value: T | null): DTO;
     valueOf(): T | undefined;
     value: T | undefined;
@@ -34,8 +34,13 @@ export abstract class AbstractDTO<T> implements DTO<T> {
     abstract valueOf(): T | undefined;
     abstract get formType(): string;
 
-    toJSON(): {[key:string]: T | undefined} {
-        return {value: this.value};
+    toJSON(): T | undefined{
+        return this.value;
+    }
+
+    protected create(value?: T, config?: DTOprops): this {
+        const Constructor = this.constructor as new (value?: unknown, options?: DTOprops) => this;
+        return new Constructor(value, config);
     }
 }
 
@@ -79,12 +84,14 @@ export class DateDTO extends AbstractDTO<number> {
         if (isNaN(Number(value))) {
             v = Date.parse(String(value));
         }
+
         const config = {
             formType: this.#formType as "date",
             locale: this.#locale,
             format: this.#format,
         }
-        return new DateDTO(v, config);
+
+        return this.create(v, config);
     }
 
     get value(): number {
@@ -169,8 +176,8 @@ export class NumberDTO extends AbstractDTO<number> {
         const config = {
             formType: this.#formType as "number",
             scale: this.#scale,
-        }
-        return new NumberDTO(value, config);
+        };
+        return this.create(value, config);
     }
 
     get value(): number {
@@ -212,14 +219,6 @@ export class CurrencyDTO extends NumberDTO{
             default:
                 return value;
         }
-    }
-
-    clone(value: number): DTO {
-        const config = {
-            formType: this.formType as "number",
-            scale: this.#scale,
-        }
-        return new CurrencyDTO(value, config);
     }
 
     valueOf(): number {

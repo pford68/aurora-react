@@ -1,6 +1,6 @@
-import peopleData from "../../tests/fixtures/people.json";
-import ObservableList, {type Entry, ListItem} from "../model/ObservableList.ts";
-import type {Struct} from "../types/types";
+import peopleData from "../../../tests/fixtures/people.json";
+import ObservableList, {type Entry, ListItem} from "../ObservableList.ts";
+import type {Struct} from "../../types/types.ts";
 import {fail} from "node:assert";
 
 function testAllKeys(r: Entry<Struct>) {

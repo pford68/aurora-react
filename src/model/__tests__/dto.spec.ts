@@ -1,4 +1,4 @@
-import {BooleanDTO, CurrencyDTO, DateDTO, DateTimeDTO, NumberDTO} from "./dtos.ts";
+import {BooleanDTO, CurrencyDTO, DateDTO, DateTimeDTO, NumberDTO} from "../dtos.ts";
 
 describe("DateDTO", () => {
     describe("String coercion", () => {

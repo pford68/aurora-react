@@ -1,6 +1,7 @@
 import type {Command, Struct} from "../../../types/types.ts";
 import ObservableList, {type Entry, type PartialUpdate} from "../../../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
+import undoable from "../../../decorators/undoable.ts";
 
 
 /**
@@ -17,7 +18,7 @@ export default class SaveCommand<T extends Struct> implements Command {
     constructor(list: ObservableList<T>, updates: PartialUpdate<T>[]) {
         this.#list = list;
         this.#updates =  updates;
-        this.#updates.forEach(item => item.previous = item.record?.clone() as Entry<T>)
+        this.#updates.forEach(item => item.previous = item.record as Entry<T>)
     }
 
     redo(): boolean {
@@ -35,6 +36,7 @@ export default class SaveCommand<T extends Struct> implements Command {
         return true;
     }
 
+    @undoable
     execute(): boolean {
         const updates = this.#updates;
         if (updates.length === 0) {

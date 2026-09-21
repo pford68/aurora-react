@@ -34,6 +34,11 @@ describe("PasteCommand", () => {
         );
     });
 
+    afterEach(() => {
+        sessionStorage.removeItem(CopyCommand.TOKEN);
+    })
+
+
     it("should update the selected records", () => {
         const cmd = new PasteCommand(config());
         cmd.execute();
@@ -83,18 +88,19 @@ describe("PasteCommand", () => {
 
     it("should successfully undo paste operations even after sorting", () => {
         const cmd = new PasteCommand(config());
-        const origialRecords = list.slice(0,2);
+        const originalRecords = list.slice(0,2);
+
         cmd.execute();
         list.sort((a, b) => Number(a.get("age")) - Number(b.get("age")));
         cmd.undo();
 
-        let currentIndex = list.findIndex(i => i.id == origialRecords[0].id);
+        let currentIndex = list.findIndex(i => i.id == originalRecords[0].id);
         let record = currentIndex != null ? list.get(currentIndex) : null
         expect(record?.get("lastName")).toBe("Ford");
         expect(record?.get("amount")).toBe(77.21);
         expect(record?.get("lastUpdated")).toBe(1704401089);
 
-        currentIndex = list.findIndex(i => i.id == origialRecords[1].id);
+        currentIndex = list.findIndex(i => i.id == originalRecords[1].id);
         record = currentIndex ? list.get(currentIndex) : null;
         expect(record?.get("lastName")).toBe("Smith");
         expect(record?.get("amount")).toBe(33.33);

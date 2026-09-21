@@ -205,6 +205,10 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
         return this.#order.length;
     }
 
+    get transformer(): (data: T ) => Entry<T> {
+        return this.#transformer;
+    }
+
 
     /**
      * Gets an item by its order index, ID string, or instance footprint
@@ -289,7 +293,7 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
             let id: string | undefined;
             let index = -1;
 
-            // 1. Resolve the ID and Index polymorphically
+            // Resolve the id and index polymorphically
             if (typeof target === 'number') {
                 index = target;
                 id = this.#order[index];
@@ -298,18 +302,18 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
                 index = this.#order.indexOf(id);
             }
 
-            // Guard: If the item doesn't exist in the list, skip it
+            // If the item doesn't exist in the list, skip it
             if (!id || index === -1 || !this.#registry.has(id)) {
                 continue;
             }
 
-            // 2. Pass raw data through the transformer if it's not already a ListItem
+            // Pass raw data through the transformer if it's not already a ListItem
             const record = this.#isEntry(value) ? value : this.#transformer(value);
 
-            // 3. Update internal registry (The order array doesn't change for a modification)
+            // Update internal registry (The order array doesn't change for a modification)
             this.#registry.set(id, record);
 
-            // 4. Queue up the change event data
+            // Queue the change event data
             results.push({
                 type: "modified",
                 index,
@@ -317,7 +321,7 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
             });
         }
 
-        // 5. Performance Win: Emit exactly ONE event for the entire batch
+        // For performance, emit exactly one event for the entire batch.
         if (results.length > 0) {
             this.emit("dataChanged", results);
         }
