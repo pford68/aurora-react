@@ -3,7 +3,6 @@ import {v4 as uuid} from "uuid";
 import {type Entry} from "../../../model/ObservableList.ts";
 import {isTextSelected} from "../../../util/utils.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
-import undoable from "../../../decorators/undoable.ts";
 
 export type Clipboard = {
     setItem: BiFunction<string, string, void>
@@ -52,7 +51,6 @@ export default class CopyCommand<T extends Struct> implements Command {
         });
     }
 
-    @undoable
     execute(): boolean {
         const payload:CopyPayload = {payload: { data: this.#values, columnNames: this.#columns }};
         this.#clipboard.setItem(CopyCommand.TOKEN, this.#serializer(payload));

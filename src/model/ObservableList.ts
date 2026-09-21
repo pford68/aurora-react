@@ -1,6 +1,7 @@
 import {Emitter} from "./Observable.ts";
 import type {BiFunction, Predicate, Struct} from "../types/types.ts";
 import {v4 as uuid} from "uuid";
+import {isPlainObject, isPrimitive} from "../util/validations.ts";
 
 interface Identifiable  {
     id: string
@@ -50,11 +51,12 @@ export class ListItem<T> {
     /**
      *
      * @param {T | Entry<T>} data The data contained in the ListItem
+     * @param [metadata] {Metadata}
      */
-    constructor(data: T | Entry<T>) {
+    constructor(data: T | Entry<T>, metadata?: Metadata) {
         this.#data = data instanceof ListItem ? data.getAll() : data;
-        this.#deleted = (data as Metadata).deleted === true;
-        this.#id = (data as Identifiable).id ?? uuid();
+        this.#deleted = metadata?.deleted === true;
+        this.#id = metadata?.id ?? uuid();
     }
 
     getAll(): T {
@@ -99,24 +101,31 @@ export class ListItem<T> {
      * Makes a deep copy of this instance.
      */
     clone(): this {
-        let clonedData: T;
+        const clonedData = this.#clone(this.#data);
+        return this.create(clonedData, this.metadata);
+    }
 
-        if (this.#isClonable(this.#data)) {
-            clonedData = this.#data.clone();
-        } else if (Object.isFrozen(this.#data) || Object.isSealed(this.#data)) {
+    #clone(data: T): T | {} {
+        if (this.#isClonable(data)) {
+            return data.clone();
+        } else if (Object.isFrozen(data) || Object.isSealed(data)) {
             // If the object is frozen, a swallow or deep object spread creates a safe, mutable copy
-            clonedData = { ...this.#data, ...this.metadata};
-        } else if (Object.getPrototypeOf(this.#data) === Object.prototype) {
-            // If the data is a struct, perform a deep copy
-            clonedData = structuredClone({...this.#data, ...this.metadata});
+            return { ...data};
+        } else if (isPlainObject(data)) {
+            // If the data is a struct, perform a deep copy.
+            const clonedData = structuredClone(data);
+            for (let key in clonedData) {
+                if (typeof clonedData[key] === 'object' && Object.keys(clonedData[key]).length === 0) {
+                    clonedData[key] = data[key].clone(data[key].valueOf());
+                }
+            }
+            return clonedData;
         } else {
             // Custom class fallback
-            const instance = this.#data as {constructor: new (args: Partial<T>) => T};
+            const instance = this.#data as {constructor: new (args: Partial<T>, metadata?: Metadata) => T};
             const Constructor = instance.constructor;
-            clonedData = new Constructor({...this.#data, ...this.metadata});
+            return new Constructor({...data});
         }
-
-        return this.create(clonedData);
     }
 
     /**
@@ -125,18 +134,19 @@ export class ListItem<T> {
      * @returns ListItem A new instance with the merged data.
      */
     merge(data: Partial<T>): this {
-        return this.create({...this.getAll(), ...data, ...this.metadata});
+        return this.create({...this.getAll(), ...data}, this.metadata);
     }
 
 
     /**
      * A convenience method for creating new instances in a way that works with subclasses.
-     * @param data
+     * @param data {T}
+     * @param [metadata] {Metadata}
      * @protected
      */
-    protected create(data: T): this {
-        const Constructor = this.constructor  as new (data: T) => this;
-        return new Constructor(data);
+    protected create(data: T, metadata?: Metadata): this {
+        const Constructor = this.constructor  as new (data: T, metadata?: Metadata) => this;
+        return new Constructor(data, metadata);
     }
 
     /**

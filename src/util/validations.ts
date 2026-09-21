@@ -42,3 +42,7 @@ export function isPlainObject(value: unknown): value is Struct {
 export function isCollection(value: unknown): value is Collection {
     return value instanceof Map || value instanceof Set || Array.isArray(value);
 }
+
+export function isPrimitive(value: unknown): boolean {
+    return Object(value) !== value;
+}

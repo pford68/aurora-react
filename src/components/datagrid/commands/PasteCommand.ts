@@ -47,7 +47,7 @@ export default class PasteCommand<T extends Struct> implements Command {
 
     undo(): boolean {
         this.#previous.forEach(prevRecord => {
-            this.#items.update(prevRecord.id, prevRecord.getAll());
+            this.#items.update(prevRecord, prevRecord.clone());
         });
 
         return true;

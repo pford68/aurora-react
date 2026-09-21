@@ -119,6 +119,7 @@ function cellFactoryProvider(columnConfig: TableColumnProps, index: number, rowI
 
 
 function defaultRowFactory(row: DataGridEntry<string | number | boolean>, rowIndex: number) {
+    console.log(row)
     return (
         <GridRow
             key={rowIndex}

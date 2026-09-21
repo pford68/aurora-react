@@ -2,6 +2,8 @@ import peopleData from "../../../tests/fixtures/people.json";
 import ObservableList, {type Entry, ListItem} from "../ObservableList.ts";
 import type {Struct} from "../../types/types.ts";
 import {fail} from "node:assert";
+import PersonDTO, {MeasurementsDTO} from "../../../tests/models/PersonDTO.ts";
+import {BooleanDTO, CurrencyDTO, DateDTO, NumberDTO, StringDTO} from "../dtos.ts";
 
 function testAllKeys(r: Entry<Struct>) {
     expect(r.get("firstName")).toBe("Adolis");
@@ -66,7 +68,40 @@ describe("ListItem", () => {
         it("should copy the id from the original item", () => {
             const clone = record.clone();
             expect(clone.id).toEqual(record.id);
-        })
+        });
+
+        it("should work with custom class instances", () => {
+            const instance = new ListItem(new PersonDTO(people[5]))
+            const clone = instance.clone();
+            expect(clone.get("firstName")?.valueOf()).toBe("Adolis");
+            expect(clone.get("lastName")?.valueOf()).toBe("Garcia");
+            expect(clone.get("amount")?.valueOf()).toBeNaN()
+            expect(clone.get("active")?.valueOf()).toBeTruthy();
+            expect(clone.get("age")?.valueOf()).toBe(29);
+            expect(clone.id).toEqual(instance.id);
+        });
+
+        it("should work with structs containing custom class instances", () => {
+            const transformer = (data: Struct) => {
+                return {
+                    firstName: new StringDTO(data["firstName"]),
+                    lastName: new StringDTO(data["lastName"]),
+                    amount: new CurrencyDTO(data["amount"]),
+                    age: new NumberDTO(data["age"]),
+                    lastUpdated: new DateDTO(data["lastUpdated"]),
+                    active: new BooleanDTO(data["active"]),
+                    measurements: new MeasurementsDTO(data["measurements"]),
+                }
+            }
+            const instance = new ListItem(transformer(people[5]));
+            const clone = instance.clone();
+            expect(clone.get("firstName")?.valueOf()).toBe("Adolis");
+            expect(clone.get("lastName")?.valueOf()).toBe("Garcia");
+            expect(clone.get("amount")?.valueOf()).toBe(0);
+            expect(clone.get("active")?.valueOf()).toBeTruthy();
+            expect(clone.get("age")?.valueOf()).toBe(29);
+            expect(clone.id).toEqual(instance.id);
+        });
     });
 
     describe("from", () => {
