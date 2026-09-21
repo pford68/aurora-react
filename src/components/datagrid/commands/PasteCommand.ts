@@ -79,7 +79,6 @@ export default class PasteCommand<T extends Struct> implements Command {
                 columnNames?.forEach((copiedCol: string) => {
                     const destName = this.#columns[currentColIndex];
                     const newValue = item[copiedCol];
-                    console.log(newValue)
                     if (destName != null) {
                         // Transform each value to the expected type for the column.
                         // We are passing a partial T to the transformer, so we cast it to T.

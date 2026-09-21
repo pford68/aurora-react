@@ -3,12 +3,11 @@ import type {GridContextType} from "./GridContext.ts";
 import CopyCommand from "./commands/CopyCommand.ts";
 import PasteCommand from "./commands/PasteCommand.ts";
 import CutCommand from "./commands/CutCommand.ts";
-import type {CellFactoryAction} from "./hooks/useCellStateReducer.tsx";
-
+import type {CellActivationAction} from "./hooks/useCellStateReducer.tsx";
 import type {DTO} from "../../model/dtos.ts";
 
 interface CellState {
-    onKeyDown: (e: KeyboardEvent, dispatch: Dispatch<CellFactoryAction>) => void;
+    onKeyDown: (e: KeyboardEvent, dispatch: Dispatch<CellActivationAction>) => void;
 }
 
 
@@ -23,11 +22,11 @@ export class FocusMode implements CellState {
         this.#context = ctx;
     }
 
-    onKeyDown = (e: KeyboardEvent, dispatch: Dispatch<CellFactoryAction>) => {
+    onKeyDown = (e: KeyboardEvent, dispatch: Dispatch<CellActivationAction>) => {
         const pattern = /^\w$/;
         const {key} = e;
         const ctrlKey = e.ctrlKey || e.metaKey;
-        const {items, columns, gridDispatch,undoStack,} = this.#context;
+        const {items, columns, gridDispatch,} = this.#context;
         const selectionModel = this.#context.selectionModel?.current;
         const focusModel = this.#context.focusModel?.current;
         const focusedCell = focusModel?.focused;
@@ -120,14 +119,13 @@ export class FocusMode implements CellState {
                         });
                         const copyConfig = {
                             selectedItems,
-                            columns: selectedNames
+                            columns: selectedNames,
                         }
                         const cmd = doCut
                             ? new CutCommand(copyConfig, items)
                             : new CopyCommand(copyConfig);
                         const result = cmd.execute();
                         if (doCut && result) {
-                            undoStack?.push(cmd);
                             gridDispatch?.({type: "update"});
                         }
                     }
@@ -143,12 +141,11 @@ export class FocusMode implements CellState {
                             items,
                             rowIndex: top,
                             colIndex: left,
-                            columns: columnNames
+                            columns: columnNames,
                         }
                         const cmd = new PasteCommand(pasteConfig);
                         const result = cmd.execute();
                         if (result) {
-                            undoStack?.push(cmd);
                             gridDispatch?.({type: "update"});
                         }
                     }
@@ -177,7 +174,7 @@ export class EditMode implements CellState {
         this.#dto = dto;
     }
 
-    onKeyDown = (e: KeyboardEvent, dispatch: Dispatch<CellFactoryAction>) => {
+    onKeyDown = (e: KeyboardEvent, dispatch: Dispatch<CellActivationAction>) => {
         switch (e.key) {
             case "Escape":
                 e.preventDefault();

@@ -94,14 +94,12 @@ describe("PasteCommand", () => {
         list.sort((a, b) => Number(a.get("age")) - Number(b.get("age")));
         cmd.undo();
 
-        let currentIndex = list.findIndex(i => i.id == originalRecords[0].id);
-        let record = currentIndex != null ? list.get(currentIndex) : null
+        let record = list.get(originalRecords[0].id);
         expect(record?.get("lastName")).toBe("Ford");
         expect(record?.get("amount")).toBe(77.21);
         expect(record?.get("lastUpdated")).toBe(1704401089);
 
-        currentIndex = list.findIndex(i => i.id == originalRecords[1].id);
-        record = currentIndex ? list.get(currentIndex) : null;
+        record = list.get(originalRecords[1].id);
         expect(record?.get("lastName")).toBe("Smith");
         expect(record?.get("amount")).toBe(33.33);
         expect(record?.get("lastUpdated")).toBe(1704401089);
