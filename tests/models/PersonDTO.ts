@@ -1,5 +1,6 @@
-import {AbstractDTO, BooleanDTO, DateDTO, NumberDTO, StringDTO} from "../../src/model/dtos.ts";
+import {AbstractDTO, BooleanDTO, DateDTO, NumberDTO, StringDTO} from "../../src";
 import type {Measurements} from "./Person.ts";
+import type {Primitive} from "../../src";
 
 
 export default class PersonDTO {
@@ -46,7 +47,7 @@ export class MeasurementsDTO extends AbstractDTO<number>{
         return this.value;
     }
 
-    toJSON(): { [p: string]: number | undefined} {
+    toJSON(): Primitive {
         return super.toJSON();
     }
 

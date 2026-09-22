@@ -1,4 +1,5 @@
 import {toISODateString} from "../util/utils.ts";
+import type {Primitive} from "../types/types.ts";
 
 
 /**
@@ -6,10 +7,11 @@ import {toISODateString} from "../util/utils.ts";
  */
 export interface DTO<T = string | number | boolean | undefined> {
     [Symbol.toPrimitive](hint: "string" | "number" | "boolean" | "default"): string | number | boolean;
-    toJSON(): T | undefined;
+
+    toJSON(): Primitive;
     clone(value: T | null): DTO;
     valueOf(): T | undefined;
-    value: T | undefined;
+    value: Primitive;
     readonly formType: string;
 }
 
@@ -30,11 +32,11 @@ export abstract class AbstractDTO<T> implements DTO<T> {
     protected constructor() {}
     abstract [Symbol.toPrimitive](hint: "string" | "number" | "boolean" | "default"): string | number | boolean;
     abstract clone(value: T): DTO;
-    abstract get value(): T | undefined;
+    abstract get value(): Primitive;
     abstract valueOf(): T | undefined;
     abstract get formType(): string;
 
-    toJSON(): T | undefined{
+    toJSON(): Primitive {
         return this.value;
     }
 

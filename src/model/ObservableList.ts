@@ -1,7 +1,8 @@
 import {Emitter} from "./Observable.ts";
 import type {BiFunction, Predicate, Struct} from "../types/types.ts";
 import {v4 as uuid} from "uuid";
-import {isPlainObject, isPrimitive} from "../util/validations.ts";
+import {isPlainObject} from "../util/validations.ts";
+import {structuredCloneWithInstances} from "../util/utils.ts";
 
 interface Identifiable  {
     id: string
@@ -12,7 +13,7 @@ interface Metadata extends Identifiable {
 }
 
 type ValueOf<T> = T[keyof T];
-export interface Entry<T = Struct>  extends Metadata{
+export interface Entry<T = Struct>  extends Metadata {
     get(key: keyof T): ValueOf<T>,
     getAll(): T,
     merge(data: Partial<T>): Entry<T>;
@@ -105,21 +106,14 @@ export class ListItem<T> {
         return this.create(clonedData, this.metadata);
     }
 
-    #clone(data: T): T | {} {
+    #clone(data: T): T {
         if (this.#isClonable(data)) {
             return data.clone();
         } else if (Object.isFrozen(data) || Object.isSealed(data)) {
             // If the object is frozen, a swallow or deep object spread creates a safe, mutable copy
             return { ...data};
         } else if (isPlainObject(data)) {
-            // If the data is a struct, perform a deep copy.
-            const clonedData = structuredClone(data);
-            for (let key in clonedData) {
-                if (typeof clonedData[key] === 'object' && Object.keys(clonedData[key]).length === 0) {
-                    clonedData[key] = data[key].clone(data[key].valueOf());
-                }
-            }
-            return clonedData;
+            return structuredCloneWithInstances(data) as T;
         } else {
             // Custom class fallback
             const instance = this.#data as {constructor: new (args: Partial<T>, metadata?: Metadata) => T};

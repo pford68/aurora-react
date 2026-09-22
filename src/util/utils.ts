@@ -50,3 +50,41 @@ export function isValidTimestamp(value: number) {
     return !Number.isNaN(new Date(value).getTime());
 }
 
+/**
+ * Like structuredClone, but can handle values that are custom class instances.
+ * @param data
+ */
+export function structuredCloneWithInstances(data: Record<string, unknown>): Record<string, unknown> {
+    const clonedData = structuredClone(data);
+    const updates:Record<string, unknown> = {};
+
+    interface Cloneable<T = unknown> {
+        valueOf(): T;
+        clone(value: T): this;
+    }
+
+    for (const key in clonedData) {
+        if (Object.prototype.hasOwnProperty.call(clonedData, key)) {
+            const item = clonedData[key];
+
+            /*
+            Replace cloned properties that ended up as empty objects.
+            Such properties had custom instance for values in the original object.
+             */
+            if (item !== null && typeof item === 'object' && Object.keys(item).length === 0) {
+                const originalItem = data[key] as Cloneable;
+
+                if (
+                    originalItem &&
+                    typeof originalItem.clone === 'function' &&
+                    typeof originalItem.valueOf === 'function'
+                ) {
+                    updates[key] = originalItem.clone(originalItem.valueOf());
+                }
+            }
+        }
+    }
+
+    return {...clonedData, ...updates};
+}
+
