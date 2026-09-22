@@ -168,9 +168,9 @@ export class FocusMode implements CellState {
  */
 export class EditMode implements CellState {
 
-    #dto: DTO<any>;
+    #dto: DTO<unknown>;
 
-    constructor(dto: DTO<any>) {
+    constructor(dto: DTO<unknown>) {
         this.#dto = dto;
     }
 

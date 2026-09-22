@@ -164,9 +164,10 @@ export class NumberDTO extends AbstractDTO<number> {
         const value = this.#value;
 
         switch (hint) {
-            case "string":
-                const v =  value.toFixed(this.#scale);
+            case "string": {
+                const v = value.toFixed(this.#scale);
                 return v.toLocaleString();
+            }
             case "number":
             case "default":
             default:

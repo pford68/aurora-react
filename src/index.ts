@@ -11,7 +11,6 @@ export * from './components/datagrid/commands/CutCommand.ts';
 export * from './components/datagrid/commands/PasteCommand.ts';
 export * from './components/datagrid/commands/SaveCommand.ts';
 export * from "./hooks/useNormalizedPosition.tsx";
-export * from "./hooks/useInView.tsx";
 export * from "./util/utils.ts";
 export * from "./util/layout.tsx";
 export * from "./util/constants.ts";

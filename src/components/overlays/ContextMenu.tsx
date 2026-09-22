@@ -53,16 +53,17 @@ export default function ContextMenu(props: ContextMenuProps): ReactElement {
             }));
         }
 
-        if (targetRef.current != null) {
-            targetRef.current.addEventListener("contextmenu", onContextMenu);
+        const target = targetRef.current;
+        if (target != null) {
+            target.addEventListener("contextmenu", onContextMenu);
         }
 
         return () => {
-            if (targetRef.current != null) {
-                targetRef.current.removeEventListener("contextmenu", onContextMenu)
+            if (target != null) {
+                target.removeEventListener("contextmenu", onContextMenu)
             }
         }
-    }, []);
+    }, [targetRef]);
 
     if (state.visible) {
         return (
