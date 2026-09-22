@@ -12,12 +12,16 @@ export type CopyConfig<T extends Struct> = {
     selectedItems: Entry<T>[],
     columns: string[],
     clipboard?: Clipboard,
+    serializer?: (value: CopyPayload) => string,
 }
 
 export type CopyPayload = {
     payload: { data: {[key: string]: unknown}[], columnNames?: string[] }
 }
 
+function defaultSerializer(payload: CopyPayload): string {
+    return JSON.stringify(payload);
+}
 
 export default class CopyCommand<T extends Struct> implements Command {
     static readonly icon: IconProp = "copy";
@@ -27,14 +31,17 @@ export default class CopyCommand<T extends Struct> implements Command {
     #values: {[key:string]: unknown}[];
     #clipboard: Clipboard = sessionStorage;
     #columns: string[];
+    #serializer: (value: CopyPayload) => string;
     static TOKEN: string = uuid();
 
     constructor(config: CopyConfig<T>) {
-        const {selectedItems, clipboard, columns} = config;
+        const {selectedItems, clipboard, columns, serializer} = config;
         this.#clipboard = clipboard ?? this.#clipboard;
         this.#selectedItems = selectedItems;
         this.#columns = columns;
         this.#values = [];
+        this.#serializer = serializer ?? defaultSerializer;
+
         selectedItems.forEach(record => {
             const data: {[key:string]: unknown} = {};
             columns.forEach(name => {
@@ -46,7 +53,7 @@ export default class CopyCommand<T extends Struct> implements Command {
 
     execute(): boolean {
         const payload:CopyPayload = {payload: { data: this.#values, columnNames: this.#columns }};
-        this.#clipboard.setItem(CopyCommand.TOKEN, JSON.stringify(payload));
+        this.#clipboard.setItem(CopyCommand.TOKEN, this.#serializer(payload));
         return true;
     }
 

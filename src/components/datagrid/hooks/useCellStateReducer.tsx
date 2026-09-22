@@ -4,13 +4,13 @@ import {GridContext} from "../GridContext.ts";
 import type {DTO} from "../../../model/dtos.ts";
 
 
-export type CellFactoryState = {
+export type CellActivationState = {
     active: boolean,
     valid: boolean,
     task?: string,
 };
 
-export type CellFactoryAction = {
+export type CellActivationAction = {
     type: "activate"
         | "deactivate"
         | "discard"
@@ -41,18 +41,16 @@ function findValue(node: HTMLInputElement | null) {
 }
 
 
-export default function useCellStateReducer(props: useReducerProps): [CellFactoryState, Dispatch<CellFactoryAction>] {
+export default function useCellStateReducer(props: useReducerProps): [CellActivationState, Dispatch<CellActivationAction>] {
 
     const {ref, rowIndex} = props;
     const gridContext = useContext(GridContext);
     const {
         items,
-        undoStack,
-        redoStack,
         nullable,
     } = gridContext;
 
-    const reducer = (state: CellFactoryState, action: CellFactoryAction) => {
+    const reducer = (state: CellActivationState, action: CellActivationAction) => {
         switch (action.type) {
             case "activate":
             case "clear":
@@ -68,8 +66,6 @@ export default function useCellStateReducer(props: useReducerProps): [CellFactor
                     const update = {record, value: {[String(name)]: newDto}};
                     const cmd = new SaveCommand(items, [update]);
                     cmd.execute();
-                    redoStack?.clear();
-                    undoStack?.push(cmd);
                 }
                 return {...state, active: false};
             }
@@ -87,6 +83,6 @@ export default function useCellStateReducer(props: useReducerProps): [CellFactor
         }
     }
 
-    const initState: CellFactoryState = {active: false, valid: true};
+    const initState: CellActivationState = {active: false, valid: true};
     return useReducer(reducer, initState);
 }

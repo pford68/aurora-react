@@ -2,6 +2,7 @@ import CopyCommand, {type CopyConfig} from "./CopyCommand.ts";
 import type {Struct} from "../../../types/types.ts";
 import ObservableList, {type Entry} from "../../../model/ObservableList.ts";
 import type {IconProp} from "@fortawesome/fontawesome-svg-core";
+import undoable from "../../../decorators/undoable.ts";
 
 
 export default class CutCommand<T extends Struct> extends CopyCommand<T> {
@@ -31,6 +32,7 @@ export default class CutCommand<T extends Struct> extends CopyCommand<T> {
         return true;
     }
 
+    @undoable
     execute(): boolean {
         super.execute();
         return this.#execute(true);

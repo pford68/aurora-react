@@ -1,6 +1,8 @@
 import {Emitter} from "./Observable.ts";
 import type {BiFunction, Predicate, Struct} from "../types/types.ts";
 import {v4 as uuid} from "uuid";
+import {isPlainObject} from "../util/validations.ts";
+import {structuredCloneWithInstances} from "../util/utils.ts";
 
 interface Identifiable  {
     id: string
@@ -11,7 +13,7 @@ interface Metadata extends Identifiable {
 }
 
 type ValueOf<T> = T[keyof T];
-export interface Entry<T = Struct>  extends Metadata{
+export interface Entry<T = Struct>  extends Metadata {
     get(key: keyof T): ValueOf<T>,
     getAll(): T,
     merge(data: Partial<T>): Entry<T>;
@@ -50,11 +52,12 @@ export class ListItem<T> {
     /**
      *
      * @param {T | Entry<T>} data The data contained in the ListItem
+     * @param [metadata] {Metadata}
      */
-    constructor(data: T | Entry<T>) {
+    constructor(data: T | Entry<T>, metadata?: Metadata) {
         this.#data = data instanceof ListItem ? data.getAll() : data;
-        this.#deleted = (data as Metadata).deleted === true;
-        this.#id = (data as Identifiable).id ?? uuid();
+        this.#deleted = metadata?.deleted === true;
+        this.#id = metadata?.id ?? uuid();
     }
 
     getAll(): T {
@@ -99,24 +102,24 @@ export class ListItem<T> {
      * Makes a deep copy of this instance.
      */
     clone(): this {
-        let clonedData: T;
+        const clonedData = this.#clone(this.#data);
+        return this.create(clonedData, this.metadata);
+    }
 
-        if (this.#isClonable(this.#data)) {
-            clonedData = this.#data.clone();
-        } else if (Object.isFrozen(this.#data) || Object.isSealed(this.#data)) {
+    #clone(data: T): T {
+        if (this.#isClonable(data)) {
+            return data.clone();
+        } else if (Object.isFrozen(data) || Object.isSealed(data)) {
             // If the object is frozen, a swallow or deep object spread creates a safe, mutable copy
-            clonedData = { ...this.#data, ...this.metadata};
-        } else if (Object.getPrototypeOf(this.#data) === Object.prototype) {
-            // If the data is a struct, perform a deep copy
-            clonedData = structuredClone({...this.#data, ...this.metadata});
+            return { ...data};
+        } else if (isPlainObject(data)) {
+            return structuredCloneWithInstances(data) as T;
         } else {
             // Custom class fallback
-            const instance = this.#data as {constructor: new (args: Partial<T>) => T};
+            const instance = this.#data as {constructor: new (args: Partial<T>, metadata?: Metadata) => T};
             const Constructor = instance.constructor;
-            clonedData = new Constructor({...this.#data, ...this.metadata});
+            return new Constructor({...data});
         }
-
-        return this.create(clonedData);
     }
 
     /**
@@ -125,18 +128,19 @@ export class ListItem<T> {
      * @returns ListItem A new instance with the merged data.
      */
     merge(data: Partial<T>): this {
-        return this.create({...this.getAll(), ...data, ...this.metadata});
+        return this.create({...this.getAll(), ...data}, this.metadata);
     }
 
 
     /**
      * A convenience method for creating new instances in a way that works with subclasses.
-     * @param data
+     * @param data {T}
+     * @param [metadata] {Metadata}
      * @protected
      */
-    protected create(data: T): this {
-        const Constructor = this.constructor  as new (data: T) => this;
-        return new Constructor(data);
+    protected create(data: T, metadata?: Metadata): this {
+        const Constructor = this.constructor  as new (data: T, metadata?: Metadata) => this;
+        return new Constructor(data, metadata);
     }
 
     /**
@@ -203,6 +207,10 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
 
     get length(): number {
         return this.#order.length;
+    }
+
+    get transformer(): (data: T ) => Entry<T> {
+        return this.#transformer;
     }
 
 
@@ -289,7 +297,7 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
             let id: string | undefined;
             let index = -1;
 
-            // 1. Resolve the ID and Index polymorphically
+            // Resolve the id and index polymorphically
             if (typeof target === 'number') {
                 index = target;
                 id = this.#order[index];
@@ -298,18 +306,18 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
                 index = this.#order.indexOf(id);
             }
 
-            // Guard: If the item doesn't exist in the list, skip it
+            // If the item doesn't exist in the list, skip it
             if (!id || index === -1 || !this.#registry.has(id)) {
                 continue;
             }
 
-            // 2. Pass raw data through the transformer if it's not already a ListItem
+            // Pass raw data through the transformer if it's not already a ListItem
             const record = this.#isEntry(value) ? value : this.#transformer(value);
 
-            // 3. Update internal registry (The order array doesn't change for a modification)
+            // Update internal registry (The order array doesn't change for a modification)
             this.#registry.set(id, record);
 
-            // 4. Queue up the change event data
+            // Queue the change event data
             results.push({
                 type: "modified",
                 index,
@@ -317,7 +325,7 @@ export default class ObservableList<T> extends Emitter<ListChange<T>[]> {
             });
         }
 
-        // 5. Performance Win: Emit exactly ONE event for the entire batch
+        // For performance, emit exactly one event for the entire batch.
         if (results.length > 0) {
             this.emit("dataChanged", results);
         }

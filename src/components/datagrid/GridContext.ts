@@ -4,7 +4,6 @@ import SelectionModel from "./SelectionModel";
 import ObservableList from "../../model/ObservableList.ts";
 import type {Struct} from "../../types/types";
 import type {GridAction} from "./DataGrid";
-import {CommandStack} from "./../../util/CommandStack";
 import type {TableColumnProps} from "./TableColumn.tsx";
 
 export type GridContextType = {
@@ -22,8 +21,7 @@ export type GridContextType = {
     selectionModel?: RefObject<SelectionModel>,
     stickyHeaders?: boolean,
     nullable?: boolean,
-    undoStack?: CommandStack,
-    redoStack?: CommandStack,
+    undoStack?: number,
     gridRef?: RefObject<HTMLDivElement | null>,
     contextMenuItems?: ReactElement[],
 }

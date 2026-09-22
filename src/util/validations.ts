@@ -24,15 +24,25 @@ export function isIterable(value: unknown): value is Iterable<unknown> {
 }
 
 export function isPlainObject(value: unknown): value is Struct {
-    return (
-        typeof value === "object" &&
-        value !== null &&
-        !Array.isArray(value) &&
-        !(value instanceof Map) &&
-        !(value instanceof Set)
-    );
+    if (typeof value !== 'object' || value === null) {
+        return false;
+    }
+
+    const proto = Object.getPrototypeOf(value);
+
+    // 2. Objects created with Object.create(null) are plain
+    if (proto === null) {
+        return true;
+    }
+
+    // 3. Plain objects inherit directly from Object.prototype
+    return proto === Object.prototype;
 }
 
 export function isCollection(value: unknown): value is Collection {
     return value instanceof Map || value instanceof Set || Array.isArray(value);
+}
+
+export function isPrimitive(value: unknown): boolean {
+    return Object(value) !== value;
 }

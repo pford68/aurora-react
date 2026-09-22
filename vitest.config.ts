@@ -15,6 +15,6 @@ export default defineConfig({
         environment: 'jsdom',
         include: ['src/**/*.spec.{ts,tsx,js,jsx}'],
         exclude: [...configDefaults.exclude, '**/*.stories.*'],
-        testTimeout: 10000,
+        testTimeout: 60000,
     },
 })

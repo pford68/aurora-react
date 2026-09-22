@@ -15,7 +15,6 @@ import FocusModel from "./FocusModel";
 import SelectionModel from "./SelectionModel";
 import {SORT_DIRECTION_ASC} from "./constants";
 import ColumnStyle from "./ColumnStyle";
-import {CommandStack} from "../../util/CommandStack";
 import {useStorageClipboard} from "../../hooks/useStorageClipboard.tsx";
 import TableColumn, {type TableColumnProps} from "./TableColumn";
 import ContextMenu from "../overlays/ContextMenu.tsx";
@@ -26,6 +25,7 @@ import withPlaceholder from "./withPlaceholder.tsx";
 import withReadonlyMode from "./withReadonlyMode.tsx";
 import Toggle from "../forms/Toggle.tsx";
 import type {DataGridEntry, RendererProps} from "./Datagrid.types.ts";
+import stackManager from "../../util/StackManager.ts";
 
 
 // ==================================== Private
@@ -50,20 +50,14 @@ function reducer(state: GridState, action: GridAction): GridState {
             }
             return {...state, sortDirection: String(payload.value)};
         case 'undo': {
-            const undoStack = state.undoStack.clone();
-            const redoStack = state.redoStack.clone();
-            const cmd = undoStack?.pop();
-            cmd?.undo();
-            if (cmd != null) redoStack.push(cmd);
-            return {...state, undoStack, redoStack};
+            stackManager.undo();
+            const undoStack = 0 ? 0 : state.undoStack - 1;
+            return {...state, undoStack};
         }
         case 'redo': {
-            const undoStack = state.undoStack.clone();
-            const redoStack = state.redoStack.clone();
-            const cmd = redoStack?.pop();
-            cmd?.redo();
-            if (cmd != null) undoStack.push(cmd);
-            return {...state, undoStack, redoStack};
+            stackManager.redo();
+            const undoStack = state.undoStack + 1;
+            return {...state, undoStack};
         }
         case "pin": {
             const {payload} = action;
@@ -209,8 +203,7 @@ export type DataGridProps = {
 export type GridState = {
     sortColumns: string[],
     sortDirection: string,
-    undoStack: CommandStack,
-    redoStack: CommandStack,
+    undoStack: number,
     pinned: Set<string>,
     lastUpdated: number,
     fitContainer: boolean,
@@ -286,8 +279,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
     const initialGridState: GridState = {
         sortColumns: [initSortColumn],
         sortDirection: SORT_DIRECTION_ASC,
-        undoStack: new CommandStack(),
-        redoStack: new CommandStack(),
+        undoStack: 0,
         pinned: new Set<string>(),
         lastUpdated: new Date().getTime(),
         fitContainer: false,
