@@ -4,7 +4,6 @@ import CopyCommand from "./commands/CopyCommand.ts";
 import PasteCommand from "./commands/PasteCommand.ts";
 import CutCommand from "./commands/CutCommand.ts";
 import type {CellActivationAction} from "./hooks/useCellStateReducer.tsx";
-import type {DTO} from "../../model/dtos.ts";
 
 interface CellState {
     onKeyDown: (e: KeyboardEvent, dispatch: Dispatch<CellActivationAction>) => void;
@@ -33,7 +32,7 @@ export class FocusMode implements CellState {
         if (focusedCell == null || focusModel ==  null || selectionModel == null || items == null) return;
 
         const rowCount = items?.length;
-        const columnNames = columns.map(col => col.props.name);
+        const columnNames = columns.map(col => col.name);
 
         switch (key) {
             case "ArrowLeft": {
@@ -168,10 +167,10 @@ export class FocusMode implements CellState {
  */
 export class EditMode implements CellState {
 
-    #dto: DTO<unknown>;
+    onDeactivate: () => void;
 
-    constructor(dto: DTO<unknown>) {
-        this.#dto = dto;
+    constructor(onDeactivate: () => void) {
+        this.onDeactivate = onDeactivate;
     }
 
     onKeyDown = (e: KeyboardEvent, dispatch: Dispatch<CellActivationAction>) => {
@@ -184,7 +183,8 @@ export class EditMode implements CellState {
             case "Enter":
                 e.preventDefault();
                 e.stopPropagation();
-                dispatch({type: "deactivate", payload: this.#dto});
+                this.onDeactivate();
+                dispatch({type: "deactivate"});
                 break;
             case "Copy":
             case "c":

@@ -8,7 +8,7 @@ import type {TableColumnProps} from "./TableColumn.tsx";
 
 export type GridContextType = {
     items: ObservableList<Struct> | undefined,
-    columns: ReactElement<TableColumnProps>[],
+    columns: TableColumnProps[],
     sortColumns: string[],
     sortDirection: string,
     alternateRows: boolean,

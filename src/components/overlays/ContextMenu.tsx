@@ -18,11 +18,12 @@ export default function ContextMenu(props: ContextMenuProps): ReactElement {
         className,
     } = props;
     const [state, setState] = useState({visible: false, top: 0, left:0 });
-    //const eventTarget = useRef<HTMLElement | null>(null);
-    //const gridContext = useContext(GridContext);
 
     useEffect(() => {
-        const onBodyClick = () => setState({...state, visible: false});
+        const onBodyClick = () => {
+            setState(prev => ({ ...prev, visible: false }));
+        };
+
         document.body?.addEventListener("click", onBodyClick);
         return () => {
             document.body?.removeEventListener("click", onBodyClick);
@@ -34,15 +35,6 @@ export default function ContextMenu(props: ContextMenuProps): ReactElement {
         const onContextMenu = (e: MouseEvent):void => {
             e.preventDefault();
             e.stopPropagation();  // Allows nested menus
-
-            /*
-            if (e.target instanceof HTMLElement) {
-                eventTarget.current = e.target;
-                const focused = gridContext.focusModel?.current?.focused;
-                if (focused != null) {
-                    gridContext.selectionModel?.current?.reset(focused?.rowIndex, focused?.colIndex);
-                }
-            }*/
 
             setState((prev => {
                 return {
