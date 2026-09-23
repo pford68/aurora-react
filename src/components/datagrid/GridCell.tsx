@@ -1,13 +1,4 @@
-import {
-    type ComponentType,
-    type KeyboardEvent,
-    type MouseEvent,
-    type ReactElement,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
-} from "react";
+import {type ComponentType, type KeyboardEvent, type MouseEvent, type ReactElement, use, useEffect, useRef, useState} from "react";
 import type {Coordinates} from "../../types/types.ts";
 import {GridContext} from "./GridContext.ts";
 import {joinCss} from "../../util/utils.ts";
@@ -63,16 +54,11 @@ export default function GridCell(props: GridCellProps): ReactElement {
         width,
         contextMenuItems,
     } = props;
-    const gridContext = useContext(GridContext);
-    const {
-        columnWidths,
-        columnSizing,
-        pinned,
-        items,
-    } = gridContext;
+    const gridContext = use(GridContext);
+    const {columnWidths, columnSizing, pinned, items} = gridContext;
     const selectionModel = gridContext.selectionModel?.current;
     const focusModel = gridContext.focusModel?.current;
-    const pageContext = useContext(PageContext);
+    const pageContext = use(PageContext);
     const ref = useRef<HTMLDivElement>(null);
     const rendererRef = useRef<HTMLInputElement>(null);
 
@@ -95,8 +81,10 @@ export default function GridCell(props: GridCellProps): ReactElement {
     Handles auto-sizing by first-page column content.
      */
     useEffect(() => {
-        if (width == null && ref.current != null) {
-            const parent = ref.current.parentElement;
+        const targetNode = ref.current;
+
+        if (width == null && targetNode != null) {
+            const parent = targetNode.parentElement;
             const contextWidth = columnWidths.get(name);
             if (parent != null && pageContext.page === 0) {
                 const width = parent.getBoundingClientRect().width;
@@ -109,10 +97,10 @@ export default function GridCell(props: GridCellProps): ReactElement {
                 parent.style.width = `${columnWidths.get(name)}px`;
             }
         }
+
         return () => {
-            const node = ref.current?.parentElement;
-            if (node != null) {
-                node.style.width = "unset";
+            if (targetNode != null) {
+                targetNode.style.width = "unset";
             }
         }
     }, [

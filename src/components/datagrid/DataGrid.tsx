@@ -1,10 +1,4 @@
-import {
-    type ReactElement,
-    type KeyboardEvent,
-    useReducer,
-    useRef,
-    useEffect
-} from "react";
+import {type ReactElement, type KeyboardEvent, useReducer, useRef, useEffect} from "react";
 import PageFactory from "./PageFactory";
 import ObservableList, {type Entry} from "../../model/ObservableList.ts";
 import type {Struct} from "../../types/types";
@@ -51,13 +45,12 @@ function reducer(state: GridState, action: GridAction): GridState {
             return {...state, sortDirection: String(payload.value)};
         case 'undo': {
             stackManager.undo();
-            const undoStack = 0 ? 0 : state.undoStack - 1;
+            const undoStack = state.undoStack === 0 ? 0 : state.undoStack - 1;
             return {...state, undoStack};
         }
         case 'redo': {
             stackManager.redo();
-            const undoStack = state.undoStack + 1;
-            return {...state, undoStack};
+            return {...state, undoStack: state.undoStack + 1};
         }
         case "pin": {
             const {payload} = action;
@@ -354,7 +347,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
     const finalColumnSizing = columnSizing && !state.fitContainer ? columnSizing : "equal";
 
     return (
-        <GridContext.Provider value={{
+        <GridContext value={{
             ...state,
             gridRef,
             gridDispatch,
@@ -428,6 +421,6 @@ export default function DataGrid(props: DataGridProps): ReactElement {
                         : ""
                 }
             </div>
-        </GridContext.Provider>
+        </GridContext>
     )
 }
