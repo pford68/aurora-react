@@ -1,4 +1,4 @@
-import {type ReactElement, use, useEffect, useRef, type DragEvent,} from "react";
+import {type ReactElement, use, useEffect, useRef, type DragEvent} from "react";
 import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext";
 import SortButton from "./headers/SortButton";
@@ -41,16 +41,15 @@ export default function Header(props: HeaderProps): ReactElement {
         sortable = true,
         resizable = true,
         wrap = false,
-        sticky = false,
         type,
         title,
+        sticky = false,
     } = props;
 
     const ref = useRef<HTMLDivElement>(null);
     const gridContext = use(GridContext);
     const {
         gridDispatch,
-        stickyHeaders,
         sortColumns,
         pinned,
     } = gridContext;
@@ -59,6 +58,7 @@ export default function Header(props: HeaderProps): ReactElement {
     const active = sortColumns?.[0] === name;
     let sortDirection = gridContext.sortDirection;
     const widthValues = gridContext.columnWidths.values();
+    const isInitialized = useRef(false);
 
     const findOffset = () => {
         const el = ref.current;
@@ -76,15 +76,12 @@ export default function Header(props: HeaderProps): ReactElement {
         return offset;
     }
 
+    if (!isInitialized.current) {
+        if (sticky) pinned.add(name);
+        isInitialized.current = true;
+    }
 
     // ========================================== Effects
-    useEffect(() => {
-        if (sticky) {
-            gridContext.pinned.add(name);
-        }
-    }, [sticky, name, gridContext.pinned]);
-
-
     /*
     Resets column widths and offsets in response changes that cause re-renders.
      */
@@ -165,7 +162,6 @@ export default function Header(props: HeaderProps): ReactElement {
                 styles.header,
                 !wrap ? styles.nowrap : "",
                 resizable ? styles.resizable : "",
-                stickyHeaders ? styles.stickyHeaders : "",
                 gridContext.pinned.has(name) ? styles.stickyColumn : "",
                 gridContext.pinned.size - 1 === colIndex ? styles.divider : "",
                 type != null && styles[type] ? styles[type] : "",

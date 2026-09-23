@@ -1,4 +1,4 @@
-import {type ReactElement, type KeyboardEvent, useReducer, useRef, useEffect} from "react";
+import {type ReactElement, type KeyboardEvent, useReducer, useRef, useEffect, use} from "react";
 import PageFactory from "./PageFactory";
 import ObservableList, {type Entry} from "../../model/ObservableList.ts";
 import type {Struct} from "../../types/types";
@@ -129,7 +129,6 @@ function defaultComparator(a: unknown, b: unknown) {
     }
     return String(a).localeCompare(String(b));
 }
-
 
 
 export type DataGridProps = {
@@ -360,7 +359,6 @@ export default function DataGrid(props: DataGridProps): ReactElement {
             offsets: new Map(),
             selectionModel,
             focusModel,
-            stickyHeaders,
             nullable,
             columnSizing,
             alternateRows,
@@ -392,18 +390,10 @@ export default function DataGrid(props: DataGridProps): ReactElement {
                     )}
                     onKeyDown={onKeyDown}
                 >
-                    <div
-                        className={joinCss(
-                            styles.row,
-                            stickyHeaders ? styles.stickyHeaders : ""
-                        )}
-                        onContextMenuCapture={e => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }}
-                    >
-                        <HeaderRow columnConfigs={visibleColumns} />
-                    </div>
+                    <HeaderRow
+                        columnConfigs={visibleColumns}
+                        stickyHeaders={stickyHeaders}
+                    />
                     <PageFactory
                         data={data.getAll()}
                         root={containerRef}
@@ -430,10 +420,11 @@ export default function DataGrid(props: DataGridProps): ReactElement {
 
 type HeaderRowProps = {
     columnConfigs: TableColumnProps[];
+    stickyHeaders?: boolean,
 }
 
-function HeaderRow({columnConfigs}: HeaderRowProps): ReactElement[] {
-    return columnConfigs.map(config => {
+function HeaderRow({columnConfigs, stickyHeaders}: HeaderRowProps): ReactElement {
+    const headers =  columnConfigs.map(config => {
         const {
             name,
             text,
@@ -453,7 +444,6 @@ function HeaderRow({columnConfigs}: HeaderRowProps): ReactElement[] {
                 name={name}
                 text={text}
                 altText={altText}
-                sticky={sticky}
                 sortable={sortable}
                 visible={visible}
                 type={type}
@@ -461,7 +451,23 @@ function HeaderRow({columnConfigs}: HeaderRowProps): ReactElement[] {
                 title={title}
                 resizable={resizable}
                 renderer={headerRenderer}
+                sticky={sticky}
             />
         );
-    })
+    });
+
+    return (
+        <div
+            className={joinCss(
+                styles.row,
+                stickyHeaders ? styles.stickyHeaders : ""
+            )}
+            onContextMenuCapture={e => {
+                e.preventDefault();
+                e.stopPropagation();
+            }}
+        >
+            {headers}
+        </div>
+    );
 }
