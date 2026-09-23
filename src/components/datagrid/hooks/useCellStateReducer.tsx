@@ -1,6 +1,4 @@
-import {type Dispatch, type RefObject, useContext, useReducer} from "react";
-import SaveCommand from "../commands/SaveCommand.ts";
-import {GridContext} from "../GridContext.ts";
+import {type Dispatch, useReducer} from "react";
 import type {DTO} from "../../../model/dtos.ts";
 
 
@@ -23,52 +21,15 @@ export type CellActivationAction = {
 }
 
 
-type useReducerProps = {
-    /** The reducer uses the value from this element. */
-    ref: RefObject<HTMLInputElement | null>,
-    /** The rowIndex of the cell. */
-    rowIndex: number,
-    /** The name of the cell data from the data row. */
-    name: string,
-}
 
-function findValue(node: HTMLInputElement | null) {
-    let value = node ? node.value : null;
-    if (node instanceof HTMLInputElement && (node.type === "checkbox" || node.type === "radio")) {
-        value = String(node.checked);
-    }
-    return value;
-}
-
-
-export default function useCellStateReducer(props: useReducerProps): [CellActivationState, Dispatch<CellActivationAction>] {
-
-    const {ref, rowIndex} = props;
-    const gridContext = useContext(GridContext);
-    const {
-        items,
-        nullable,
-    } = gridContext;
+export default function useCellStateReducer(): [CellActivationState, Dispatch<CellActivationAction>] {
 
     const reducer = (state: CellActivationState, action: CellActivationAction) => {
         switch (action.type) {
             case "activate":
             case "clear":
                 return {...state, active: true, task: action.type};
-            case "deactivate": { // Sends to focused mode and flushes changes.
-                const {name} = ref.current ?? {};
-                const dto = action.payload;
-                const value = findValue(ref.current);
-                if (items != null && (value != null || nullable)) {
-                    const updatedValue = String(value).trim().length > 0 ? value : null;
-                    const newDto = dto?.clone(updatedValue);
-                    const record = items.get(rowIndex);
-                    const update = {record, value: {[String(name)]: newDto}};
-                    const cmd = new SaveCommand(items, [update]);
-                    cmd.execute();
-                }
-                return {...state, active: false};
-            }
+            case "deactivate":
             case "discard": { // Moves to focus mode and discards changes.
                 return {...state, active: false};
             }

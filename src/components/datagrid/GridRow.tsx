@@ -24,7 +24,7 @@ export default function GridRow(props: GridRowProps): ReactElement {
     return (
         <div className={joinCss(styles.row, alternateRows && rowIndex % 2 !== 0 ? styles.alternate : "")}>
             {columns.map((col, index) => {
-                return cellFactory((col.props), index, rowIndex, row);
+                return cellFactory((col), index, rowIndex, row);
             })}
         </div>
     )
