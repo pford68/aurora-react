@@ -1,4 +1,4 @@
-import {type ReactElement, type KeyboardEvent, useReducer, useRef, useEffect, use} from "react";
+import {type ReactElement, type KeyboardEvent, useReducer, useRef, useEffect} from "react";
 import PageFactory from "./PageFactory";
 import ObservableList, {type Entry} from "../../model/ObservableList.ts";
 import type {Struct} from "../../types/types";
@@ -355,6 +355,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
             gridDispatch,
             items: data,
             columns: visibleColumns,
+            // BUG: If we change columnWidths to a Map() or remove it, the grid does NOT update:  sorting, editing, etc.
             columnWidths: columnWidths.current,
             offsets: new Map(),
             selectionModel,
@@ -395,7 +396,7 @@ export default function DataGrid(props: DataGridProps): ReactElement {
                         stickyHeaders={stickyHeaders}
                     />
                     <PageFactory
-                        data={data.getAll()}
+                        data={data.getAll() as DataGridEntry[]}
                         root={containerRef}
                         offset={pageSize * rowHeight}
                         pageSize={8}
@@ -433,7 +434,7 @@ function HeaderRow({columnConfigs, stickyHeaders}: HeaderRowProps): ReactElement
             sortable,
             visible,
             headerRenderer,
-            type,
+            headerClassName,
             wrap,
             title,
             resizable,
@@ -446,11 +447,11 @@ function HeaderRow({columnConfigs, stickyHeaders}: HeaderRowProps): ReactElement
                 altText={altText}
                 sortable={sortable}
                 visible={visible}
-                type={type}
                 wrap={wrap}
                 title={title}
                 resizable={resizable}
                 renderer={headerRenderer}
+                className={headerClassName}
                 sticky={sticky}
             />
         );

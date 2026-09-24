@@ -78,7 +78,7 @@ export default function PageFactory(props: PageFactoryProps): ReactElement[] {
 
     return buckets.map((bucket, index) => (
         <Page
-            key={`${new Date().getTime()}:${index}`}
+            key={`${index}`}
             rows={data.slice(...bucket)}
             rowHeight={rowHeight}
             pageSize={pageSize}

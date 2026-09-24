@@ -20,10 +20,10 @@ export type HeaderProps = Pick<TableColumnProps,
     "resizable" |
     "wrap" |
     "width" |
-    "type" |
     "title"
 > & {
-    renderer?: (props: RendererProps) => ReactElement;
+    renderer?: (props: RendererProps) => ReactElement,
+    className?: string,
 };
 
 
@@ -41,9 +41,9 @@ export default function Header(props: HeaderProps): ReactElement {
         sortable = true,
         resizable = true,
         wrap = false,
-        type,
         title,
         sticky = false,
+        className,
     } = props;
 
     const ref = useRef<HTMLDivElement>(null);
@@ -57,7 +57,7 @@ export default function Header(props: HeaderProps): ReactElement {
     const selectionModel = gridContext.selectionModel?.current;
     const active = sortColumns?.[0] === name;
     let sortDirection = gridContext.sortDirection;
-    const widthValues = gridContext.columnWidths.values();
+    const widthValues = gridContext.columnWidths?.values();
     const isInitialized = useRef(false);
 
     const findOffset = () => {
@@ -76,6 +76,7 @@ export default function Header(props: HeaderProps): ReactElement {
         return offset;
     }
 
+    // eslint-disable-next-line react-hooks/refs
     if (!isInitialized.current) {
         if (sticky) pinned.add(name);
         isInitialized.current = true;
@@ -90,7 +91,7 @@ export default function Header(props: HeaderProps): ReactElement {
         if (offset != null) {
             gridContext.offsets.set(name, offset);
         }
-        const width = gridContext.columnWidths.get(name);
+        const width = gridContext.columnWidths?.get(name);
         if (ref.current != null) {
             if (width != null) ref.current.style.width = `${width}px`;
         }
@@ -141,7 +142,7 @@ export default function Header(props: HeaderProps): ReactElement {
             let newWidth = width + delta;
             newWidth = newWidth < MIN_COLUMN_WIDTH ? MIN_COLUMN_WIDTH : newWidth;
             ref.current.style.width = `${newWidth}px`;
-            gridContext.columnWidths.set(name, newWidth);
+            gridContext.columnWidths?.set(name, newWidth);
             gridDispatch?.({type: "update"});
         }
     }
@@ -164,7 +165,7 @@ export default function Header(props: HeaderProps): ReactElement {
                 resizable ? styles.resizable : "",
                 gridContext.pinned.has(name) ? styles.stickyColumn : "",
                 gridContext.pinned.size - 1 === colIndex ? styles.divider : "",
-                type != null && styles[type] ? styles[type] : "",
+                className,
             )}
             data-col-index={colIndex}
         >

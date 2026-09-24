@@ -100,7 +100,7 @@ const defaultRenderer = (args: PropsAndArgs) => {
             <TableColumn type="number" name="age" text="Age" />
             <TableColumn type="boolean" name="active" text="Active" formType="checkbox" />
             <TableColumn type="date" name="lastUpdated" text="Last Updated" width={100} />
-            <TableColumn
+            <TableColumn<Measurements>
                 name="measurements"
                 text="Height"
                 renderer={(props: RendererProps) => {
@@ -115,7 +115,7 @@ const defaultRenderer = (args: PropsAndArgs) => {
                         />
                     )
                 }}
-                comparator={(a:Measurements, b:Measurements) => {
+                comparator={(a, b) => {
                     return a.height - b.height;
                 }}
             />
@@ -159,16 +159,15 @@ const peopleTransformer = (person: Struct) => {
 }
 
 
-function airlineSafetyTransformer<T>(item: T){
+function airlineSafetyTransformer(item: Struct){
     const data: Record<string, DTO<string | number | boolean>> = {};
 
     for (const key in item) {
         if (Object.prototype.hasOwnProperty.call(item, key)) {
-            const itemKey = key as keyof T;
-            data[key] = getDecoratorInstance(item[itemKey] as string | number | boolean);
+            data[key] = getDecoratorInstance(item[key] as string | number | boolean);
         }
     }
-    return new ListItem(data) as unknown as Entry<T>;
+    return new ListItem(data) as unknown as Entry;
 }
 
 export const Primary: Story = {

@@ -1,5 +1,5 @@
 import {type ReactElement, } from "react";
-import type {BiFunction, Struct} from "../../types/types";
+import type {BiFunction} from "../../types/types";
 import type {DataTypes} from "../../types/types";
 import type {Configuration, RendererProps} from "./Datagrid.types.ts";
 import type {DataGridEntry} from "./Datagrid.types.ts";
@@ -46,6 +46,7 @@ export type TableColumnProps<V = unknown> = Configuration<{
      * @todo
      */
     headerRenderer?: (props: HeaderProps) => ReactElement,
+    headerClassName?: string,
     /**
      * For showing the full header text if abbreviated.
      * @todo
@@ -76,9 +77,8 @@ export type TableColumnProps<V = unknown> = Configuration<{
 /**
  * Configures cells in a column.
  *
- * @param props {TableColumnProps}
  */
 // @ts-expect-error no-unused-vars
-export default function TableColumn<T extends Struct>(props: TableColumnProps<T>): null {
+export default function TableColumn<V = unknown>(props: TableColumnProps<V>): null {
     return null;
 }
