@@ -195,18 +195,18 @@
 
 
 /* -------------- Sticky headers/cells ----------------------------------------- */
-.row.sticky-headers {
+.row.stickyHeaders {
     position: sticky;
     top: 0 !important;
     z-index: var(--local-header-layer-zIndex);
 }
 
-.sticky-column {
+.stickyColumn {
     position: sticky;
     z-index: calc(var(--local-header-layer-zIndex) - 10);
 }
 
-.header.sticky-headers.sticky-column {
+.row.stickyHeaders .headers.stickyColumn {
     z-index: calc(var(--local-header-layer-zIndex) + 10);
 }
 

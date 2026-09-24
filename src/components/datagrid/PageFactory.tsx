@@ -1,4 +1,4 @@
-import {type ReactElement, type RefObject, useEffect, useRef, useState, useContext} from "react";
+import {type ReactElement, type RefObject, useEffect, useRef, useState, use} from "react";
 import type {Coordinates} from "../../types/types";
 import styles from "./DataGrid.module.css";
 import {Emitter, type Observable} from "../../model/Observable.ts";
@@ -43,26 +43,46 @@ export default function PageFactory(props: PageFactoryProps): ReactElement[] {
     const visiblePages = useRef<Set<number>>(new Set([]));
     const emitter = useRef<Emitter<IntersectionResult>>(new Emitter());
 
+
     // IntersectionObserver: one for all pages
-    const observer = useRef(new IntersectionObserver(intersectionCallback.bind(null, emitter, visiblePages), {
-        root: root?.current,
-        rootMargin: `${offset}px 0px`,
-        threshold,
-    }));
-
-    const initBuckets = [];
-    for (let i = 0; i < data.length; i += pageSize) {
-        initBuckets.push([i, i + pageSize]);
+    const observerRef = useRef<IntersectionObserver | null>(null);
+    if (observerRef.current === null) {
+        // eslint-disable-next-line react-hooks/refs
+        observerRef.current = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const index = entry.target.getAttribute("data-page-index");
+                if (entry.isIntersecting) {
+                    visiblePages.current.add(Number(index));
+                } else {
+                    visiblePages.current.delete(Number(index));
+                }
+            });
+            emitter.current.emit("intersected", { visiblePages: visiblePages.current });
+        }, {
+            root: root?.current ?? null, // Handled inside your layout safety boundary
+            rootMargin: `${offset}px 0px`,
+            threshold,
+        });
     }
-    const buckets = useRef<number[][]>(initBuckets);
 
-    return buckets.current?.map((bucket, index) => (
+    useEffect(() => {
+        return () => {
+            observerRef.current?.disconnect();
+        };
+    }, []);
+
+    const buckets: number[][] = [];
+    for (let i = 0; i < data.length; i += pageSize) {
+        buckets.push([i, i + pageSize]);
+    }
+
+    return buckets.map((bucket, index) => (
         <Page
-            key={`${new Date().getTime()}:${index}`}
+            key={`${index}`}
             rows={data.slice(...bucket)}
             rowHeight={rowHeight}
             pageSize={pageSize}
-            observer={observer.current}
+            observerRef={observerRef}
             emitter={emitter}
             pageIndex={index}
             rowFactory={rowFactory}
@@ -75,7 +95,7 @@ type PageProps<T = number | string | boolean> = {
     rows: DataGridEntry<T>[],
     rowHeight: number,
     pageSize: number,
-    observer: IntersectionObserver,
+    observerRef: RefObject<IntersectionObserver | null>,
     emitter: RefObject<Observable<IntersectionResult>>,
     pageIndex: number,
     rowFactory: (row: DataGridEntry<T>, rowIndex: number) => ReactElement,
@@ -92,17 +112,15 @@ function Page(props: PageProps): ReactElement {
         rows,
         rowHeight,
         pageSize,
-        observer,
+        observerRef,
         pageIndex,
         emitter,
         rowFactory,
     } = props;
-    const gridContext = useContext(GridContext);
-    const selectionModel = gridContext.selectionModel?.current;
-    const focusModel = gridContext.focusModel?.current;
+    const {selectionModel, focusModel} = use(GridContext);
     const [visible, setVisible] = useState(false);
     const height = rowHeight * rows.length;
-    const ref =  useRef<HTMLDivElement>(null);
+    const ref = useRef<HTMLDivElement>(null);
     const start = pageIndex * pageSize;
     const end = (start + rows.length);
 
@@ -111,6 +129,9 @@ function Page(props: PageProps): ReactElement {
      causing the page to intersect and fill with data.
     */
     useEffect(() => {
+        const currFocusModel = focusModel?.current;
+        const currSelectionModel = selectionModel?.current;
+
         const onFocusChanged = (coords: Coordinates | undefined) => {
             const {rowIndex} = coords ?? {};
             if (rowIndex != null && !visible && rowIndex >= start && rowIndex <= end) {
@@ -125,87 +146,62 @@ function Page(props: PageProps): ReactElement {
             }
         }
 
-        focusModel?.on("focusChanged", onFocusChanged);
-        selectionModel?.on("selectionChanged", onSelectionChanged);
+        currFocusModel?.on("focusChanged", onFocusChanged);
+        currSelectionModel?.on("selectionChanged", onSelectionChanged);
 
         return () => {
-            focusModel?.off("focusChanged", onFocusChanged);
-            selectionModel?.off("selectionChanged", onSelectionChanged);
+            currFocusModel?.off("focusChanged", onFocusChanged);
+            currSelectionModel?.off("selectionChanged", onSelectionChanged);
         }
-    }, [visible]);
+    }, [visible, start, end, focusModel, selectionModel]);
 
 
     useEffect(() => {
-        const onIntersecting = (result: IntersectionResult | undefined):void => {
+        const currentEmitter = emitter.current;
+        const onIntersecting = (result: IntersectionResult | undefined): void => {
             setVisible(result?.visiblePages?.has(pageIndex) ?? false);
         }
-        emitter.current?.on("intersected", onIntersecting);
+        currentEmitter?.on("intersected", onIntersecting);
 
         return () => {
-            emitter.current?.off("intersected", onIntersecting);
+            currentEmitter?.off("intersected", onIntersecting);
         };
-    }, [emitter.current]);
+    }, [emitter, pageIndex]);
 
 
     /* IntersectionObserver: start observing  */
     useEffect(() => {
-        if (ref.current) {
-            observer.observe(ref.current);
+        const targetNode = ref.current;
+        const currentObserver = observerRef.current;
+
+        if (targetNode&& currentObserver) {
+            currentObserver.observe(targetNode);
         }
 
         return () => {
-            if (ref.current) {
-                observer.unobserve(ref.current);
+            if (targetNode && currentObserver) {
+                currentObserver.unobserve(targetNode);
             }
         };
-    }, [observer, ref.current]);
+    }, [observerRef, ref]);
 
 
     return (
-        <PageContext.Provider value={{
+        <PageContext value={{
             page: pageIndex,
             start,
             end,
         }}>
             {
-                visible
-                    ? (
-                        <div
-                            ref={ref}
-                            className={styles.page}
-                            style={{height: `${height}px`}}
-                            data-page-index={pageIndex}
-                        >
-                            {rows.map((row, rowIndex) => rowFactory(row, start + rowIndex))}
-                        </div>
-                    )
-                    : (
-                        <div
-                            ref={ref}
-                            className={styles.page}
-                            style={{display: "block", height: `${height}px`, minHeight: `${height}px`}}
-                            data-page-index={pageIndex}
-                        />
-                    )
+                <div
+                    ref={ref}
+                    className={styles.page}
+                    style={{display: visible ? "" : "block", height: `${height}px`, minHeight: `${height}px`}}
+                    data-page-index={pageIndex}
+                >
+                    {visible && rows.map((row, rowIndex) => rowFactory(row, start + rowIndex))}
+                </div>
             }
-        </PageContext.Provider>
+        </PageContext>
     );
-}
-
-
-function intersectionCallback(
-    emitter: RefObject<Emitter<IntersectionResult>>,
-    visiblePages: RefObject<Set<number>>,
-    entries: IntersectionObserverEntry[]
-) {
-    entries.forEach(entry => {
-        const el = entry.target;
-        const index = el.getAttribute("data-page-index");
-        if (entry.isIntersecting) {
-            visiblePages.current?.add(Number(index));
-        } else {
-            visiblePages.current?.delete(Number(index));
-        }
-    });
-    emitter.current?.emit("intersected",{visiblePages: visiblePages.current ?? new Set()});
 }

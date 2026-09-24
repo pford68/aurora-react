@@ -1,12 +1,6 @@
 import {
-    type ComponentType,
-    type KeyboardEvent,
-    type MouseEvent,
-    type ReactElement,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
+    type ComponentType, type KeyboardEvent, type MouseEvent, type ReactElement,
+    type RefObject, use, useEffect, useRef, useState
 } from "react";
 import type {Coordinates} from "../../types/types.ts";
 import {GridContext} from "./GridContext.ts";
@@ -19,7 +13,16 @@ import usePreviousState from "./hooks/usePreviousState.tsx";
 import {PageContext} from "./PageContext.ts";
 import ContextMenu from "../overlays/ContextMenu.tsx";
 import {type DTO} from "../../model/dtos.ts";
+import SaveCommand from "./commands/SaveCommand.ts";
 
+
+function findValue(node: HTMLInputElement | null) {
+    let value = node ? node.value : null;
+    if (node instanceof HTMLInputElement && (node.type === "checkbox" || node.type === "radio")) {
+        value = String(node.checked);
+    }
+    return value;
+}
 
 /**
  * CellFactoryProps does <strong>not</strong> extend BaseRendererProps. While
@@ -33,7 +36,8 @@ export type GridCellProps<V = string | number | boolean> = Configuration<{
     renderer: ComponentType<RendererProps>,
     row: DataGridEntry<V>,
     rowIndex: number,
-    colIndex: number
+    colIndex: number,
+    nullable?: boolean,
 }>
 
 /**
@@ -62,41 +66,51 @@ export default function GridCell(props: GridCellProps): ReactElement {
         wrap = false,
         width,
         contextMenuItems,
+        nullable = false,
     } = props;
-    const gridContext = useContext(GridContext);
-    const {
-        columnWidths,
-        columnSizing,
-        pinned,
-        items,
-    } = gridContext;
+    const gridContext = use(GridContext);
+    const {columnWidths, columnSizing, pinned, items} = gridContext;
     const selectionModel = gridContext.selectionModel?.current;
     const focusModel = gridContext.focusModel?.current;
-    const pageContext = useContext(PageContext);
+    const pageContext = use(PageContext);
     const ref = useRef<HTMLDivElement>(null);
     const rendererRef = useRef<HTMLInputElement>(null);
 
     // ================================================= State
-    const [state, dispatch] = useCellStateReducer({
-        ref: rendererRef,
-        rowIndex,
-        name,
-    });
+    const [state, dispatch] = useCellStateReducer();
     const previousActiveState = usePreviousState({watch: state.active});
     const [selected, setSelected] = useState(() => {
         return  selectionModel?.isContained(rowIndex, colIndex) ?? false;
     });
     const value = items?.get(row.id)?.get(name) as DTO<string | number | boolean>;
+
+    const onDeactivate = (ref: RefObject<HTMLInputElement | null>) => {
+        const {name} = ref.current ?? {};
+        const dto =value;
+        const elementValue = findValue(rendererRef.current);
+        if (items != null && (elementValue != null || nullable)) {
+            const updatedValue = String(elementValue).trim().length > 0 ? elementValue : null;
+            const newDto = dto?.clone(updatedValue);
+            const record = items.get(rowIndex);
+            const update = {record, value: {[String(name)]: newDto}};
+            const cmd = new SaveCommand(items, [update]);
+            cmd.execute();
+        }
+    }
+
     const focusMode = new FocusMode(gridContext);
-    const editMode = new EditMode(value);
+    // eslint-disable-next-line react-hooks/refs
+    const editMode = new EditMode(onDeactivate.bind(null, rendererRef));
 
     //==================================================== Effects
     /*
     Handles auto-sizing by first-page column content.
      */
     useEffect(() => {
-        if (width == null && ref.current != null) {
-            const parent = ref.current.parentElement;
+        const targetNode = ref.current;
+
+        if (width == null && targetNode != null) {
+            const parent = targetNode.parentElement;
             const contextWidth = columnWidths.get(name);
             if (parent != null && pageContext.page === 0) {
                 const width = parent.getBoundingClientRect().width;
@@ -109,10 +123,10 @@ export default function GridCell(props: GridCellProps): ReactElement {
                 parent.style.width = `${columnWidths.get(name)}px`;
             }
         }
+
         return () => {
-            const node = ref.current?.parentElement;
-            if (node != null) {
-                node.style.width = "unset";
+            if (targetNode != null) {
+                targetNode.style.width = "unset";
             }
         }
     }, [
@@ -131,7 +145,8 @@ export default function GridCell(props: GridCellProps): ReactElement {
                 ref.current?.focus();
             } else if (previousActiveState.current === true) {
                 // When we click on another cell, the currently active cell should deactivate.
-                dispatch({type: "deactivate", payload: value});
+                onDeactivate(rendererRef);
+                dispatch({type: "deactivate"});
             }
         }
         const onSelectionChanged = () => {
@@ -161,7 +176,14 @@ export default function GridCell(props: GridCellProps): ReactElement {
         } else if (focusModel?.isFocused(rowIndex, colIndex)){
             ref.current?.focus();
         }
-    }, [state.active, value]);
+    }, [
+        state.active,
+        state.task,
+        rowIndex,
+        colIndex,
+        focusModel,
+        value
+    ]);
 
   
     /*
@@ -176,7 +198,9 @@ export default function GridCell(props: GridCellProps): ReactElement {
     }, [
         pinned,
         focusModel?.focused,
-        state.active
+        state.active,
+        gridContext.offsets,
+        name
     ])
 
 

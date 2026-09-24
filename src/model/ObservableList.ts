@@ -157,7 +157,7 @@ export class ListItem<T> {
 }
 
 
-export type ListChangeType = "added" | "modified" | "deleted" | "inserted";
+export type ListChangeType = "added" | "modified" | "deleted" | "inserted" | "sorted";
 export type ListChange<T> = {
     index: number,
     type: ListChangeType,

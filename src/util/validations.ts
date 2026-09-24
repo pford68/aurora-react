@@ -20,7 +20,7 @@ export function isEmpty(s:unknown): boolean {
 }
 
 export function isIterable(value: unknown): value is Iterable<unknown> {
-    return value != null && typeof (value as any)[Symbol.iterator] === "function";
+    return value != null && typeof (value as Record<PropertyKey, unknown>)[Symbol.iterator] === "function";
 }
 
 export function isPlainObject(value: unknown): value is Struct {

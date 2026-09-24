@@ -8,7 +8,7 @@ import type {TableColumnProps} from "./TableColumn.tsx";
 
 export type GridContextType = {
     items: ObservableList<Struct> | undefined,
-    columns: ReactElement<TableColumnProps>[],
+    columns: TableColumnProps[],
     sortColumns: string[],
     sortDirection: string,
     alternateRows: boolean,
@@ -19,7 +19,6 @@ export type GridContextType = {
     gridDispatch?: Dispatch<GridAction>,
     focusModel?: RefObject<FocusModel>,
     selectionModel?: RefObject<SelectionModel>,
-    stickyHeaders?: boolean,
     nullable?: boolean,
     undoStack?: number,
     gridRef?: RefObject<HTMLDivElement | null>,
@@ -30,7 +29,6 @@ export const initialGridContext: GridContextType = {
     sortColumns: [],
     sortDirection: "",
     items: undefined,
-    stickyHeaders: true,
     nullable: true,
     pinned: new Set<string>(),
     offsets: new Map(),

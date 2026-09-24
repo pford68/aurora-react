@@ -1,11 +1,11 @@
-import {type ReactElement, useContext} from "react";
+import {useContext} from "react";
 import styles from "./DataGrid.module.css";
 import {GridContext} from "./GridContext.ts";
 import type {TableColumnProps} from "./TableColumn.tsx";
 
 type ColumnStyleProps = {
     type: "auto" | "equal",
-    columns: ReactElement<TableColumnProps>[],
+    columns: TableColumnProps[],
     maxWidth?: number,
     minWidth?: number,
 }
@@ -24,7 +24,7 @@ export default function ColumnStyle(props: ColumnStyleProps) {
         minWidth = 32,
     } = props;
     const widths = columns.map(col => {
-        const {width, name} = col.props;
+        const {width, name} = col;
         const assignedWidth = gridContext.columnWidths.get(name) ?? width;
         return assignedWidth != null  ? `${assignedWidth}px` : (type === "equal" ? "1fr" : "auto");
     });
